@@ -1,9 +1,9 @@
 # Genome Contact Map Explorer - gcMapExplorer
 
-It is platform to visualize and analyze the contact maps that are generated from Hi-C experiments. This package is developed by considering the huge size of contact maps at very fine resolution. It contains
+It is a platform to visualize and analyze the contact maps that are generated from Hi-C experiments. This package is developed by considering the huge size of contact maps at very fine resolution. It contains
   * Graphical User Interface - Several windows like applications to perform tasks.
   * Command Line Interface - Several commands to perform tasks.
-  * Application Programming Interface - It can be used to perform analysis by anyy mathematical operations through programming.
+  * Application Programming Interface - It can be used to perform analysis by any mathematical operations through programming.
 
 
 ## Features:
@@ -19,10 +19,10 @@ It is platform to visualize and analyze the contact maps that are generated from
     * **Knight-Ruiz Matrix Balancing** (KR)
     * **Distance-Frequency**
   * A **new file format** for contact map  and genomic datasets:
-    * **Protable**, **platform independent** and can be read through C/C++, JAVA, Python and R programming language.
+    * **Portable**, **platform independent** and can be read through C/C++, JAVA, Python and R programming language.
     * **Very fast to read** - fast browsing of contact maps and genomic datasets
   * Another file format for chormosomal contact map - much faster than above format to read/write but not compact
-  
+  * Easy import of Coordinate Sparse, HOMER Interaction matrix and Bin-Contact formats to the new formats.
 
 # Coming soon !!!
   
