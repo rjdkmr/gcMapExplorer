@@ -1,0 +1,68 @@
+.. GM12878 Hi-C maps
+
+.. |GM12878-10kb-raw-lzf| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CNW5QYnZFb1JJVjQ" target="_blank"> Download </a>
+
+.. |GM12878-10kb-raw-gz| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CM3R5OW9HekpwQjg" target="_blank"> Download </a>
+
+.. |GM12878-10kb-kr-lzf| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6Cd2RnVzFJSFNGTmM" target="_blank"> Download </a>
+
+.. |GM12878-10kb-kr-gz| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CRzFud2JpRVg3d1U" target="_blank"> Download </a>
+
+.. |GM12878-10kb-ic-lzf| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CNXRKSzlUWXZFMGc" target="_blank"> Download </a>
+
+.. |GM12878-10kb-ic-gz| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CU2NnSE1nXzRlLUE" target="_blank"> Download </a>
+
+.. |GM12878-10kb-acd-lzf| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CQ095bnBzNVF6STA" target="_blank"> Download </a>
+
+.. |GM12878-10kb-acd-gz| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CdFNjZlY0NUFkTk0" target="_blank"> Download </a>
+
+
+
+.. K562 Hi-C maps
+.. |K562-10kb-raw-lzf| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CZThaTTl0dFdDUG8" target="_blank"> Download </a>
+
+.. |K562-10kb-raw-gz| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CWWJndXl0MW5qMnc" target="_blank"> Download </a>
+
+.. |K562-10kb-kr-lzf| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CUkVHckRNeWpHWTQ" target="_blank"> Download </a>
+
+.. |K562-10kb-kr-gz| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CYVNmSTh4YUd5N28" target="_blank"> Download </a>
+
+.. |K562-10kb-ic-lzf| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6COWRKeExLUUpBVUU" target="_blank"> Download </a>
+
+.. |K562-10kb-ic-gz| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CMmp0cmhwaXRUX3M" target="_blank"> Download </a>
+
+.. |K562-10kb-acd-lzf| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CVktBTWtkNWFHZUE" target="_blank"> Download </a>
+
+.. |K562-10kb-acd-gz| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CTndDR1NFZi03ZXM" target="_blank"> Download </a>

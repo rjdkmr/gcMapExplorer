@@ -1,0 +1,38 @@
+2016-04-26 16:28:07 cd modules_examples/
+2016-04-26 16:28:08 ls -lhrt
+2016-04-26 16:28:23 ln -s /home/rajendra/workspace/genome_3d_organization/tutorials_modules/import_hicmap.ipynb .
+2016-04-26 16:28:25 ls -lhrt
+2016-04-26 16:28:43 make html
+2016-04-27 12:07:31 cd modules_examples/
+2016-04-27 12:07:51 ln -s ~/workspace/genome_3d_organization/tutorials_modules/normalize_hicmap.ipynb .
+2016-04-27 12:07:53 ls -lhrt
+2016-04-27 12:57:29 rm normalize_hicmap.ipynb
+2016-04-27 13:01:22 ln -s ~/workspace/genome_3d_organization/tutorials_modules/normalize_hicmap.ipynb .
+2016-04-27 13:01:24 ls -lhrt
+2016-04-27 13:05:23 rm import_hicmap.ipynb normalize_hicmap.ipynb
+2016-04-27 13:38:45 ls -lhrt
+2016-04-27 13:38:51 cat .localhistory
+2016-04-27 13:38:56 ln -s ~/workspace/genome_3d_organization/tutorials_modules/normalize_hicmap.ipynb .
+2016-04-27 13:39:01 ln -s /home/rajendra/workspace/genome_3d_organization/tutorials_modules/import_hicmap.ipynb .
+2016-04-27 10:20:53 sudo vim nbsphinx.py
+2016-04-27 13:39:31 locate nbsphinx
+2016-04-27 13:39:01 ln -s /home/rajendra/workspace/genome_3d_organization/tutorials_modules/import_hicmap.ipynb .
+2016-04-27 13:54:50 vim .jupyter/jupyter_notebook_config.py
+2016-04-27 13:39:49 sudo vim /usr/local/lib/python3.4/dist-packages/nbsphinx.py
+2016-04-27 16:10:50 sudo service ssh restart
+2016-04-28 11:24:57 ipython
+2016-04-28 15:33:50 ls -lhrt
+2016-04-28 15:34:34 ln -s /home/rajendra/workspace/genome_3d_organization/tutorials_modules/access_hicmap_data.ipynb .
+2016-04-29 16:48:04 ln -s /home/rajendra/workspace/genome_3d_organization/tutorials_modules/masked_array_hicmap.ipynb .
+2016-04-29 16:48:11 ls -lhrt
+2016-05-16 14:37:04 ln -s /home/rajendra/workspace/genome_3d_organization/tutorials_modules/export_hicmap.ipynb .
+2016-05-16 14:37:06 ls -lhrt
+2016-05-16 14:37:06 ls -lhrt
+2016-06-01 14:04:40 rm *.ipynb
+2016-06-01 14:04:42 ls -lhrt
+2016-06-01 14:05:02 ln -s /home/rajendra/workspace/genome_3d_organization/tutorials_modules/access_ccmap_data.ipynb .
+2016-06-01 14:05:09 ln -s /home/rajendra/workspace/genome_3d_organization/tutorials_modules/import_ccmap.ipynb .
+2016-06-01 14:05:16 ln -s /home/rajendra/workspace/genome_3d_organization/tutorials_modules/normalize_ccmap.ipynb .
+2016-06-01 14:05:25 ln -s /home/rajendra/workspace/genome_3d_organization/tutorials_modules/export_ccmap.ipynb .
+2016-06-01 14:05:31 ln -s /home/rajendra/workspace/genome_3d_organization/tutorials_modules/masked_array_ccmap.ipynb .
+2016-06-01 14:05:32 ls -lhrt
