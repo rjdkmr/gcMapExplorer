@@ -1,7 +1,10 @@
-2016-09-15 14:49:24 cd gcMapExplorer
-2016-09-15 14:49:26 ls -lhrt
-2016-09-15 14:49:30 mkdir docs
-2016-09-15 14:51:08 q!
-2016-09-15 14:51:12 ls -lhrt
-2016-09-15 14:52:42 git add
-2016-09-15 14:52:47 git add --all
+2016-10-20 20:01:16 rm .localhistory
+2016-10-20 20:01:23 rm docs/.localhistory
+2016-10-20 20:01:42 ls -lhrt
+2016-10-20 20:02:17 cp -r ../../genome_3d_organization/gcMapExplorer/gcMapExplorer .
+2016-10-20 20:02:27 cp -r ../../genome_3d_organization/gcMapExplorer/setup.py .
+2016-10-20 20:02:52 cp -r ../../genome_3d_organization/gcMapExplorer/MANIFEST.in .
+2016-10-20 20:02:54 ls -lhrt
+2016-10-20 20:03:18 git commit -a all
+2016-10-20 20:03:28 git commit -a
+2016-10-20 20:03:51 git add --all

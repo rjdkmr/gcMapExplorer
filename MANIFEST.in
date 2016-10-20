@@ -1,0 +1,8 @@
+include gcMapExplorer/gui/UIs/*.ui
+include gcMapExplorer/gui/icons/cmaps/*.ico
+include gcMapExplorer/gui/icons/*.*
+
+include gcMapExplorer/lib/*.pyx
+
+exclude gcMapExplorer/lib/*.c
+global-exclude *.localhistory

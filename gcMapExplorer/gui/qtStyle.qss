@@ -1,0 +1,72 @@
+QWidget	{
+	color: #FFFFFF;
+	background-color: #3A3A3A;
+}
+
+QPushButton  {
+	color: #000000;
+    border: 1px solid #FFAA00;
+    border-radius: 6px;
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #FFAA00, stop: 1 #A46D00);
+    min-width: 90px;
+	min-height: 20px;
+}
+
+QPushButton:pressed {
+	color: #FFFFFF;
+	border: 1px solid #FFAA00;
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #767676  , stop: 1 #303030   );
+}
+
+QPushButton:flat {
+    border: 1px solid #FFAA00;
+}
+
+QPushButton:default {
+    border-color: #00FF00; /* make the default button prominent */
+}
+
+QToolButton {
+	color: #000000;
+    border: 1px solid #FFAA00;
+    border-radius: 6px;
+	background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #FFAA00, stop: 1 #A46D00);
+	min-height: 20px;
+}
+
+QToolButton:pressed {
+	color: #FFFFFF;
+	border: 1px solid #FFAA00;
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #767676  , stop: 1 #303030   );
+}
+
+QToolButton:checked {
+	color: #FFFFFF;
+	border: 1px solid #FFAA00;
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #767676  , stop: 1 #303030   );
+}
+
+QToolButton:hover {
+	color: #FFFFFF;
+	border: 1px solid #FFAA00;
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #767676  , stop: 1 #303030   );
+}
+
+QToolButton:flat {
+    border: 1px solid #FFAA00;
+}
+
+QToolButton:default {
+    border-color: #00FF00; /* make the default button prominent */
+}
+
+QLabel {
+    padding: 2px;
+	color: #FFFFFF;
+}
+
+QAbstractScrollArea	{
+	background-color: qlineargradient(x0: 1, y1: 0, x2: 0, y2: 1, stop: 0 #585858  , stop: 1 #444444  );
+	border: 1px solid #767676;
+	color: #FFFFFF;
+}
