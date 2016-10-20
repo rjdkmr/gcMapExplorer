@@ -1,0 +1,8 @@
+appdirs>=1.4
+numpy>=1.6
+scipy>=0.9
+matplotlib>=1.1.0
+dask>=0.7.3
+toolz>=0.7.4
+h5py>=2.2.1
+Cython>=0.22.0
