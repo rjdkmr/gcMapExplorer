@@ -5,4 +5,4 @@ gcMapExplorer.normalizer
 --------------------------
 
 .. automodule:: gcMapExplorer.lib.normalizer
-	:members: NormalizeKnightRuizOriginal, normalizeByKnightRuiz, normalizeByIC, normalizeByAvgContact
+	:members: NormalizeKnightRuizOriginal, normalizeCCMapByKR, normalizeGCMapByKR, normalizeCCMapByIC, normalizeGCMapByIC, normalizeGCMapByMCFS

@@ -8,11 +8,11 @@ GCMAP class
 
 
 .. autoclass:: gcMapExplorer.lib.gcmap.GCMAP
-   :members: changeMap, changeResolution, toCoarserResolution, toFinerResolution, get_ticks, performDownSampling
+   :members: changeMap, genMapNameList, changeResolution, toCoarserResolution, toFinerResolution, get_ticks, loadSmallestMap, performDownSampling
 
 
 
-gcMapExplorer.ccmap
+gcMapExplorer.gcmap
 -------------------
 
 .. automodule:: gcMapExplorer.lib.gcmap

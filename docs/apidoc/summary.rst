@@ -52,6 +52,12 @@ gcmap module
 .. autosummary::
 	gcmap.GCMAP
 	gcmap.GCMAP.changeMap
+	gcmap.GCMAP.changeResolution
+	gcmap.GCMAP.toFinerResolution
+	gcmap.GCMAP.toCoarserResolution
+	gcmap.GCMAP.loadSmallestMap
+	gcmap.GCMAP.genMapNameList
+	gcmap.GCMAP.performDownSampling
 	gcmap.loadGCMapAsCCMap
 	gcmap.addCCMap2GCMap
 
@@ -77,9 +83,12 @@ normalizer module
 ~~~~~~~~~~~~~~~~~
 .. autosummary::
 		normalizer.NormalizeKnightRuizOriginal
-		normalizer.normalizeByKnightRuiz
-		normalizer.normalizeByIC
-		normalizer.normalizeByAvgContact
+		normalizer.normalizeCCMapByKR
+		normalizer.normalizeGCMapByKR
+		normalizer.normalizeCCMapByIC
+		normalizer.normalizeGCMapByIC
+		normalizer.normalizeCCMapByMCFS
+		normalizer.normalizeGCMapByMCFS
 
 
 cmstats module
