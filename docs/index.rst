@@ -15,9 +15,11 @@ Contents
 .. toctree::
    :maxdepth: 2
 
+   Requirements and Installation <install>
+   How to use gcMapExplorer? <usage.rst>
    About gcmap file <about_gcmap_file>
    About ccmap and npbin files <about_ccmap_file>
-   Download datasets <dLcmaps>
+   Download example datasets <dLcmaps>
    Summary of Python Modules <apidoc/summary>
    Examples using Python Modules <modules_examples/index>
    Python Modules documentation <apidoc/index>

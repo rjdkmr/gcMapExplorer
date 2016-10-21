@@ -1,0 +1,68 @@
+
+.. |Encode-Experiment-Matrix| raw:: html
+
+  <a href="https://genome.ucsc.edu/ENCODE/dataMatrix/encodeDataMatrixHuman.html" target="_blank"> ENCODE Experiment Matrix </a>
+
+
+.. GM12878 datasets
+
+.. |GM12878-RNA-seq| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CUl96X0IzZ1lPdEU" target="_blank"> Download </a>
+
+.. |GM12878-H3K9ac| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CdHVuTGF5dlZKY00" target="_blank"> Download </a>
+
+.. |GM12878-H3K27ac| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CanhTcWpQMktDamM" target="_blank"> Download </a>
+
+.. |GM12878-H3K36me3| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CWk1BWUhCSFhnQXM" target="_blank"> Download </a>
+
+.. |GM12878-H3K79me2| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CSmctRWttMUdXbTA" target="_blank"> Download </a>
+
+.. |GM12878-H3K4me3| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CUlB5djREa3dmV2c" target="_blank"> Download </a>
+
+.. |GM12878-CTCF| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CcENvZDVtbnVhUGs" target="_blank"> Download </a>
+
+
+
+
+.. K562 datasets
+
+.. |K562-RNA-seq| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CWHVxX2Q2cW1Zdkk" target="_blank"> Download </a>
+
+.. |K562-H3K9ac| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CQ2ZJaTBUX3htZkk" target="_blank"> Download </a>
+
+.. |K562-H3K27ac| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CWko4OFJscWJ3M0E" target="_blank"> Download </a>
+
+.. |K562-H3K36me3| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CdHF1Qkc2cE9Rc2M" target="_blank"> Download </a>
+
+.. |K562-H3K79me2| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CRzh0WGJJcUxOc00" target="_blank"> Download </a>
+
+.. |K562-H3K4me3| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CMHFKM1p2V2RweHM" target="_blank"> Download </a>
+
+.. |K562-CTCF| raw:: html
+
+  <a href="https://drive.google.com/uc?export=download&id=0Bw3X95wN7X6CS3I4dkpINTlKMXM" target="_blank"> Download </a>

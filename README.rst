@@ -13,8 +13,7 @@ It is a platform to visualize and analyze the contact maps that are generated fr
 Features:
 ---------
 
-* Support for **huge contact maps** - Use of Disk instead of RAM
-  * Matrices/arrays are stored in Disks - mathematical operations by directly reading/writing from/to Disks, **without loading them into RAM**
+* Support for **huge contact maps** - Use of Disk instead of RAM - Matrices/arrays are stored in Disks - mathematical operations by directly reading/writing from/to Disks, **without loading them into RAM**
 * A browser with rich interfaces for **Comparative** and **Interactive** visualization of **two dimensional contact maps** along with **genomic datasets** such as produced by DNase-seq, ChIP-seq, RNA-seq etc.
 * Contact maps can be **zoomed in/out** from finest resolution to whole chromosome level.
 * Rich customizations of **color scale for contact maps** visualization
