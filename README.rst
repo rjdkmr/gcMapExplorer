@@ -1,4 +1,5 @@
-# Genome Contact Map Explorer - gcMapExplorer
+Genome Contact Map Explorer - gcMapExplorer
+===========================================
 
 It is a platform to visualize and analyze the contact maps that are generated from Hi-C experiments. This package is developed by considering the huge size of contact maps at very fine resolution. It contains
   * Graphical User Interface - Several windows like applications to perform tasks.
@@ -6,16 +7,18 @@ It is a platform to visualize and analyze the contact maps that are generated fr
   * Application Programming Interface - It can be used to perform analysis by any mathematical operations through programming.
 
 
-### For more details, visit http://gcmapexplorer.readthedocs.io/
+**For more details, visit http://gcmapexplorer.readthedocs.io/**
 
-## Features:
+Features:
+---------
+
   * Support for **huge contact maps** - Use of Disk instead of RAM
     * Matrices/arrays are stored in Disks - mathematical operations by directly reading/writing from/to Disks, **without loading them into RAM**
   * A browser with rich interfaces for **Comparative** and **Interactive** visualization of **two dimensional contact maps** along with **genomic datasets** such as produced by DNase-seq, ChIP-seq, RNA-seq etc.
-  * Contact maps can be **zoomed in/out** from finest resolution to whole chromosome level. 
+  * Contact maps can be **zoomed in/out** from finest resolution to whole chromosome level.
   * Rich customizations of **color scale for contact maps** visualization
   * Rich customizations of **X- and Y- axis properties**.
-  * Normalization of contact maps by 
+  * Normalization of contact maps by
     * **Iterative Correction** (IC)
     * **Knight-Ruiz Matrix Balancing** (KR)
     * **Distance-Frequency**
@@ -27,34 +30,42 @@ It is a platform to visualize and analyze the contact maps that are generated fr
   * Interface for data conversion
   * Interface for Normalization
   * Publication ready images at one click.
-  
----
 
-## Interfaces and Commands
 
-### Usage
-`gcMapExplorer [Command]`
+----
 
-Command are listed below.
 
-### Graphical User Interface
+Interfaces and Commands
+-----------------------
+
+Usage
+~~~~~
+
+``gcMapExplorer [Command]``
+
+Run ``gcMapExplorer`` command on terminal to get list of all sub-commands.
+
+Following sub-commands are available:
+
+Graphical User Interface
+~~~~~~~~~~~~~~~~~~~~~~~~
 * **browser** : Interactive Browser for genomic contact maps
 * **importer** : Interface to import contact maps and datasets
 * **normalizer** : Interface to normalize contact maps
 
-### Commands to convert or import data
+Commands to convert or import data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * **coo2cmap** : Import COO sparse matrix format to ccmap or gcmap
 * **homer2cmap** : Import HOMER Hi-C interaction matrix to ccmap or gcmap
 * **bc2cmap** : Import Bin-Contact format files to ccmap or gcmap
 * **bigwig2h5** : Import a bigWig file to HDF5 format h5 file
 
-### Commands to normalize contact map
+Commands to normalize contact map
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * **normKR** : Normalization using Knight-Ruiz matrix balancing
 * **normIC** : Normalization using Iterative Correction
 * **normMCFS** : Normalization by Median Contact Frequency Scaling
 
-### Commands for Analysis
+Commands for Analysis
+~~~~~~~~~~~~~~~~~~~~~
 * **corrBWcmaps** : Calculate correlation between contact maps
-
-
-  
