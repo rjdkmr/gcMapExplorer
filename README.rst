@@ -8,7 +8,7 @@ It is a platform to visualize and analyze the contact maps that are generated fr
   * Application Programming Interface - It can be used to perform analysis by any mathematical operations through programming.
 
 
-**For more details, visit http://gcmapexplorer.readthedocs.io/**
+**For more details, visit `Homepage <http://gcmapexplorer.readthedocs.io/>`_ **
 
 Features:
 ---------
@@ -30,7 +30,7 @@ Features:
 
   * **Portable**, **platform independent** and can be read through C/C++, JAVA, Python and R programming language.
   * **Very fast to read** - fast browsing of contact maps and genomic datasets
-  
+
 * Another file format for chormosomal contact map - much faster than above format to read/write but not compact
 * Easy import of Coordinate Sparse, HOMER Interaction matrix and Bin-Contact formats to the new formats.
 * Interface for data conversion
