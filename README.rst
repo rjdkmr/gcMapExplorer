@@ -19,13 +19,18 @@ Features:
 * Contact maps can be **zoomed in/out** from finest resolution to whole chromosome level.
 * Rich customizations of **color scale for contact maps** visualization
 * Rich customizations of **X- and Y- axis properties**.
+
 * Normalization of contact maps by
+
   * **Iterative Correction** (IC)
   * **Knight-Ruiz Matrix Balancing** (KR)
   * **Distance-Frequency**
+
 * A **new file format** for contact map  and genomic datasets:
+
   * **Portable**, **platform independent** and can be read through C/C++, JAVA, Python and R programming language.
   * **Very fast to read** - fast browsing of contact maps and genomic datasets
+  
 * Another file format for chormosomal contact map - much faster than above format to read/write but not compact
 * Easy import of Coordinate Sparse, HOMER Interaction matrix and Bin-Contact formats to the new formats.
 * Interface for data conversion
