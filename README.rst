@@ -8,7 +8,7 @@ It is a platform to visualize and analyze the contact maps that are generated fr
   * Application Programming Interface - It can be used to perform analysis by any mathematical operations through programming.
 
 
-**For more details, visit `Homepage <http://gcmapexplorer.readthedocs.io/>`_ **
+**For more details, visit:** `gcMapExplorer Homepage <http://gcmapexplorer.readthedocs.io/>`_
 
 Features:
 ---------
