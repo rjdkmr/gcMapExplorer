@@ -6,14 +6,15 @@ It is a platform to visualize and analyze the contact maps that are generated fr
   * Application Programming Interface - It can be used to perform analysis by any mathematical operations through programming.
 
 
+### For more details, visit http://gcmapexplorer.readthedocs.io/
+
 ## Features:
   * Support for **huge contact maps** - Use of Disk instead of RAM
     * Matrices/arrays are stored in Disks - mathematical operations by directly reading/writing from/to Disks, **without loading them into RAM**
-  * A browser with rich interfaces for **Comparative** and **Interactive** visualization of **two dimensional contact maps** with **one dimensional genomic datasets** such as DNase-seq, ChIP-seq, RNA-seq etc.
+  * A browser with rich interfaces for **Comparative** and **Interactive** visualization of **two dimensional contact maps** along with **genomic datasets** such as produced by DNase-seq, ChIP-seq, RNA-seq etc.
   * Contact maps can be **zoomed in/out** from finest resolution to whole chromosome level. 
   * Rich customizations of **color scale for contact maps** visualization
   * Rich customizations of **X- and Y- axis properties**.
-  * Publication ready images at one click.
   * Normalization of contact maps by 
     * **Iterative Correction** (IC)
     * **Knight-Ruiz Matrix Balancing** (KR)
@@ -23,6 +24,37 @@ It is a platform to visualize and analyze the contact maps that are generated fr
     * **Very fast to read** - fast browsing of contact maps and genomic datasets
   * Another file format for chormosomal contact map - much faster than above format to read/write but not compact
   * Easy import of Coordinate Sparse, HOMER Interaction matrix and Bin-Contact formats to the new formats.
+  * Interface for data conversion
+  * Interface for Normalization
+  * Publication ready images at one click.
+  
+---
 
-# Coming soon !!!
+## Interfaces and Commands
+
+### Usage
+`gcMapExplorer [Command]`
+
+Command are listed below.
+
+### Graphical User Interface
+* **browser** : Interactive Browser for genomic contact maps
+* **importer** : Interface to import contact maps and datasets
+* **normalizer** : Interface to normalize contact maps
+
+### Commands to convert or import data
+* **coo2cmap** : Import COO sparse matrix format to ccmap or gcmap
+* **homer2cmap** : Import HOMER Hi-C interaction matrix to ccmap or gcmap
+* **bc2cmap** : Import Bin-Contact format files to ccmap or gcmap
+* **bigwig2h5** : Import a bigWig file to HDF5 format h5 file
+
+### Commands to normalize contact map
+* **normKR** : Normalization using Knight-Ruiz matrix balancing
+* **normIC** : Normalization using Iterative Correction
+* **normMCFS** : Normalization by Median Contact Frequency Scaling
+
+### Commands for Analysis
+* **corrBWcmaps** : Calculate correlation between contact maps
+
+
   
