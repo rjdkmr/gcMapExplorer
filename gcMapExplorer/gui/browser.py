@@ -2480,9 +2480,29 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
                     return self.hiCmapAxes[i]
 
     def save_plot(self):
-        file_choices = "PNG (*.png)"
+        """ Save plot as a image
+        """
+        # Get list of all available formats
+        formatGroups = self.canvas.get_supported_filetypes_grouped()
 
-        path = QFileDialog.getSaveFileName(self, 'Save file', '', file_choices)
+        # Make full list of formats
+        file_choices = 'Image formats ('
+        for desc in formatGroups:
+            for imgFormat in formatGroups[desc]:
+                file_choices += ' *.{0}'.format(imgFormat)
+        file_choices += ')'
+
+        # Make list format by each category
+        for desc in formatGroups:
+            file_choices += ';;{0} ('.format(desc)
+            for imgFormat in formatGroups[desc]:
+                file_choices += ' *.{0}'.format(imgFormat)
+            file_choices += ')'
+
+        # Just added for any formats
+        file_choices += ";;All formats (*.*)"
+
+        path = QFileDialog.getSaveFileName(self, 'Save image file', '', file_choices)
 
         if path[0]:
             self.figure.savefig(path[0], dpi=300)

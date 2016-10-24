@@ -19,8 +19,6 @@ Summary of Python Modules
 ccmap module
 ~~~~~~~~~~~~
 .. autosummary::
-	ccmap.CCMAP.matrix
-	ccmap.CCMAP.state
 	ccmap.CCMAP.copy
 	ccmap.CCMAP.get_ticks
 	ccmap.CCMAP.make_readable
@@ -33,7 +31,7 @@ ccmap module
 	ccmap.dejsonify
 	ccmap.save_ccmap
 	ccmap.load_ccmap
-	ccmap.export_ccmap
+	ccmap.export_cmap
 
 
 ccmapHelpers module
@@ -60,6 +58,7 @@ gcmap module
 	gcmap.GCMAP.performDownSampling
 	gcmap.loadGCMapAsCCMap
 	gcmap.addCCMap2GCMap
+	gcmap.changeGCMapCompression
 
 
 importer module

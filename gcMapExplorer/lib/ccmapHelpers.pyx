@@ -189,7 +189,7 @@ def get_nonzeros_index(matrix, thershold_percentile=None, thershold_data_occup=N
 
 	Parameters
 	----------
-	matrix : numpy.memmap or :attr:`hiCMapAnalyze.HiCMapMain.CCMAP.matrix`
+	matrix : numpy.memmap or :attr:`gcMapExplorer.lib.ccmap.CCMAP.matrix`
 		Input matrix
 	percentile_thershold_no_data : int
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
@@ -266,7 +266,7 @@ def remove_zeros(matrix, thershold_percentile=None, thershold_data_occup=None, w
 
 	Parameters
 	----------
-	matrix : numpy.memmap or :attr:`hiCMapAnalyze.HiCMapMain.CCMAP.matrix`
+	matrix : numpy.memmap or :attr:`gcMapExplorer.lib.ccmap.CCMAP.matrix`
 		Input matrix
 	percentile_thershold_no_data : int
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.

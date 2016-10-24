@@ -1,20 +1,42 @@
 
 
+importer module
+===============
 
-gcMapExplorer.importer
+.. currentmodule:: gcMapExplorer.lib
+
+.. autosummary::
+		importer.CooMatrixHandler
+		importer.CooMatrixHandler.save_ccmaps
+		importer.CooMatrixHandler.save_gcmap
+		importer.CooMatrixHandler.setLabels
+		importer.CooMatrixHandler.setOutputFileList
+		importer.HomerInputHandler
+		importer.HomerInputHandler.save_ccmaps
+		importer.HomerInputHandler.save_gcmap
+		importer.BinsNContactFilesHandler
+		importer.BinsNContactFilesHandler.save_ccmaps
+		importer.BinsNContactFilesHandler.save_gcmap
+		importer.gen_map_from_locations_value
+
+
+
+CooMatrixHandler class
 ----------------------
-
-.. currentmodule:: gcMapExplorer.lib.importer
-
-
-.. autoclass:: CooMatrixHandler
+.. autoclass:: gcMapExplorer.lib.importer.CooMatrixHandler
   :members: save_ccmaps, save_gcmap, setLabels, setOutputFileList
 
-.. autoclass:: HomerInputHandler
+HomerInputHandler class
+-----------------------
+.. autoclass:: gcMapExplorer.lib.importer.HomerInputHandler
   :members: save_ccmaps, save_gcmap
 
-.. autoclass:: BinsNContactFilesHandler
+BinsNContactFilesHandler class
+------------------------------
+.. autoclass:: gcMapExplorer.lib.importer.BinsNContactFilesHandler
   :members: save_ccmaps, save_gcmap
 
+Other functions of importer module
+----------------------------------
 .. automodule:: gcMapExplorer.lib.importer
 	:members: gen_map_from_locations_value

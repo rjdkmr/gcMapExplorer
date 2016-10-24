@@ -14,6 +14,24 @@
 ccmap module
 ============
 
+.. currentmodule:: gcMapExplorer.lib
+
+.. autosummary::
+	ccmap.CCMAP.copy
+	ccmap.CCMAP.get_ticks
+	ccmap.CCMAP.make_readable
+	ccmap.CCMAP.make_unreadable
+	ccmap.CCMAP.make_writable
+	ccmap.CCMAP.make_editable
+	ccmap.resolutionToBinsize
+	ccmap.binsizeToResolution
+	ccmap.jsonify
+	ccmap.dejsonify
+	ccmap.save_ccmap
+	ccmap.load_ccmap
+	ccmap.export_cmap
+	
+
 ccmap.CCMAP class
 -----------------
 
@@ -26,4 +44,4 @@ ccmap module
 ------------
 
 .. automodule:: gcMapExplorer.lib.ccmap
-	:members: resolutionToBinsize, binsizeToResolution, jsonify, dejsonify, save_ccmap, load_ccmap, export_ccmap
+	:members: resolutionToBinsize, binsizeToResolution, jsonify, dejsonify, save_ccmap, load_ccmap, export_cmap

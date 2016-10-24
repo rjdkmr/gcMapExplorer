@@ -49,7 +49,7 @@ def _checkCCMAP(ccMap, workDir=None):
 
 	Returns
 	-------
-	ccMap : :class:`CCMAP` or str
+	ccMap : :class:`gcMapExplorer.lib.ccmap.CCMAP` or str
 		CCMAP object or ccmap file.
 
 	ccmapType : str
@@ -86,7 +86,7 @@ def NormalizeKnightRuizOriginal(ccMapObj, tol=1e-12, x0=None, delta=0.1, Delta=3
 
 	Parameters
 	----------
-	ccMapObj : :class:`CCMAP`
+	ccMapObj : :class:`gcMapExplorer.lib.ccmap.CCMAP`
 		A CCMAP object containing observed contact frequency
 
 	Returns
@@ -262,7 +262,7 @@ def normalizeCCMapByKR(ccMap, memory='RAM', tol=1e-12, outFile=None, percentile_
 
 	Parameters
 	----------
-	ccMap : :class:`CCMAP` or ccmap file
+	ccMap : :class:`gcMapExplorer.lib.ccmap.CCMAP` or ccmap file
 		A CCMAP object containing observed contact frequency or a ccmap file.
 
 	memory : str
@@ -300,7 +300,7 @@ def normalizeCCMapByKR(ccMap, memory='RAM', tol=1e-12, outFile=None, percentile_
 
 	Returns
 	-------
-	ccMapObj : :class:`CCMAP` or ``None``
+	ccMapObj : :class:`gcMapExplorer.lib.ccmap.CCMAP` or ``None``
 		Normalized Contact map. When ``outFile`` is provided, ``None`` is returned. In case of any other error, ``None`` is returned.
 
 	"""
@@ -490,7 +490,7 @@ def normalizeCCMapByIC(ccMap, tol=1e-4, outFile=None, iteration=500, percentile_
 
 	Parameters
 	----------
-	ccMap : :class:`ccmap.CCMAP` or ccmap file.
+	ccMap : :class:`gcMapExplorer.lib.ccmap.CCMAP` or ccmap file.
 		A CCMAP object containing observed contact frequency or a ccmap file
 
 	tol : float
@@ -524,7 +524,7 @@ def normalizeCCMapByIC(ccMap, tol=1e-4, outFile=None, iteration=500, percentile_
 
 	Returns
 	-------
-	normCCMap : :class:`ccmap.CCMAP` or ``None``
+	normCCMap : :class:`gcMapExplorer.lib.ccmap.CCMAP` or ``None``
 		Normalized Contact map. When ``outFile`` is provided, ``None`` is returned. In case of any other error, ``None`` is returned.
 
 	"""
@@ -706,7 +706,7 @@ def normalizeCCMapByMCFS(ccMap, stats='median', outFile=None, percentile_thersho
 
 	Parameters
 	----------
-	ccMapObj : :class:`CCMAP` or ccmap file
+	ccMapObj : :class:`gcMapExplorer.lib.ccmap.CCMAP` or ccmap file
 		A CCMAP object containing observed contact frequency or a ccmap file
 
 	stats : str
@@ -737,7 +737,7 @@ def normalizeCCMapByMCFS(ccMap, stats='median', outFile=None, percentile_thersho
 
 	Returns
 	-------
-	ccMapObj : :class:`CCMAP` or ``None``
+	ccMapObj : :class:`gcMapExplorer.lib.ccmap.CCMAP` or ``None``
 		Normalized Contact map. When ``outFile`` is provided, ``None`` is returned. In case of any other error, ``None`` is returned.
 
 	"""

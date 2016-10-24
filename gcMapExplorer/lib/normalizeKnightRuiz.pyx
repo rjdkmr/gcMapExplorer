@@ -545,7 +545,7 @@ class KnightRuizNorm:
 		fl : int
 			Its value should be zero
 
-		OutMatrix : :attr:`hiCMapAnalyze.HiCMapMain.CCMAP.matrix`
+		OutMatrix : :attr:`gcMapExplorer.lib.ccmap.CCMAP.matrix`
 			Output matrix of Hi-C map to which normalized matrix is returned.
 
 		bNoData : numpy.ndarray[bool]

@@ -46,10 +46,10 @@ def correlateCMaps(ccMapObjOne, ccMapObjTwo, ignore_triangular=True, diagonal_of
 
 	Parameters
 	----------
-	ccMapObjOne : :class:`CCMAP`
-		First :class:`CCMAP` instance containing Hi-C data
-	ccMapObjTwo : :class:`CCMAP`
-		Second :class:`CCMAP` instance containing Hi-C data
+	ccMapObjOne : :class:`gcMapExplorer.lib.ccmap.CCMAP`
+		First :class:`gcMapExplorer.lib.ccmap.CCMAP` instance containing Hi-C data
+	ccMapObjTwo : :class:`gcMapExplorer.lib.ccmap.CCMAP`
+		Second :class:`gcMapExplorer.lib.ccmap.CCMAP` instance containing Hi-C data
 	ignore_triangular : bool
 		Whether entire matrix is considered or only one half triangular region of matrixis considered.
 	diagonal_offset : int
@@ -326,10 +326,10 @@ def correlateCMapsBinWise(ccMapObjOne, ccMapObjTwo, corrType='pearson', cutoffPe
 
 	Parameters
 	----------
-	ccMapObjOne : :class:`CCMAP`
-		First :class:`CCMAP` instance containing Hi-C data
-	ccMapObjTwo : :class:`CCMAP`
-		Second :class:`CCMAP` instance containing Hi-C data
+	ccMapObjOne : :class:`gcMapExplorer.lib.ccmap.CCMAP`
+		First :class:`gcMapExplorer.lib.ccmap.CCMAP` instance containing Hi-C data
+	ccMapObjTwo : :class:`gcMapExplorer.lib.ccmap.CCMAP`
+		Second :class:`gcMapExplorer.lib.ccmap.CCMAP` instance containing Hi-C data
 	ignore_triangular : bool
 		Whether entire matrix is considered or only one half triangular region of matrixis considered.
 	diagonal_offset : int
@@ -462,7 +462,7 @@ def getAvgContactByDistance(ccmaps, stats='median'):
 
     Parameters
     ----------
-    hicmaps : :class:`CCMAP` or list[:class:`CCMAP`]
+    hicmaps : :class:`gcMapExplorer.lib.ccmap.CCMAP` or list[:class:`gcMapExplorer.lib.ccmap.CCMAP`]
 
     Returns
     -------

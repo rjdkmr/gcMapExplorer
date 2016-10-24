@@ -36,8 +36,8 @@ from . import ccmapHelpers as cmh
 class GCMAP:
     """To access Genome wide contact map.
 
-    It is similar to :class:`ccmap.CCMAP` and contains same attributes.
-    Therefore, both :class:`ccmap.CCMAP` and ``GCMAP`` can be used in same way to accesss attributes.
+    It is similar to :class:`gcMapExplorer.lib.ccmap.CCMAP` and contains same attributes.
+    Therefore, both :class:`gcMapExplorer.lib.ccmap.CCMAP` and ``GCMAP`` can be used in same way to accesss attributes.
     It also contains additional attributes because it uses HDF5 file to read the maps on demand.
 
     Structure of gcmap file:
@@ -96,7 +96,7 @@ class GCMAP:
         * To perform calculation, use :meth:`gcMapExplorer.lib.gcmap.loadGCMapAsCCMap` as it returns :class:`gcMapExplorer.lib.ccmap.CCMAP`.
 
     The class is instantiated by two methods:
-        >>> ccMapObj = CCMAP(hdf5, 'chr22')    # To read chr22 vs chr22 map
+        >>> ccMapObj = gcMapExplorer.lib.ccmap.CCMAP(hdf5, 'chr22')    # To read chr22 vs chr22 map
         >>> ccMapObj.matrix[200:400, 200:400]  # Read region between 200 to 400 of chr22 vs chr22 map.
 
 
@@ -432,7 +432,7 @@ class GCMAP:
         It can be used to change the map. For example, to access the map of 'chr20' instead of 'chr22', use this function.
 
         For example:
-            >>> ccMapObj = CCMAP(hdf5, 'chr22')    # To read chr22 vs chr22 map
+            >>> ccMapObj = gcMapExplorer.lib.ccmap.CCMAP(hdf5, 'chr22')    # To read chr22 vs chr22 map
             >>> ccMapObj.matrix[200:400, 200:400]  # To access region between 200 to 400 of chr22 vs chr22 map.
             >>> ccMapObj.changeMap('chr20')        # Changed to read chr20 vs chr20 map
             >>> ccMapObj.matrix[200:400, 200:400]  # Now, to access region between 200 to 400 of chr20 vs chr20 map.
@@ -611,7 +611,7 @@ class GCMAP:
 
 
 def loadGCMapAsCCMap(filename, mapName=None, chromAtX=None, chromAtY=None, resolution=None, workDir=None):
-    """ Load a map from gcmap file as a :class:`ccmap.CCMAP`.
+    """ Load a map from gcmap file as a :class:`gcMapExplorer.lib.ccmap.CCMAP`.
 
     Parameters
     ----------
@@ -630,7 +630,7 @@ def loadGCMapAsCCMap(filename, mapName=None, chromAtX=None, chromAtY=None, resol
 
     Returns
     -------
-    ``None`` or :class:`gcMapExplorer.lib.ccmap.CCMAP`
+    object : None or :class:`gcMapExplorer.lib.ccmap.CCMAP`
 
     """
 
@@ -723,12 +723,12 @@ def loadGCMapAsCCMap(filename, mapName=None, chromAtX=None, chromAtY=None, resol
 
 
 def addCCMap2GCMap(cmap, filename, compression='lzf', generateCoarse=True, coarsingMethod='sum', logHandler=None):
-    """ Add :class:`ccmap.CCMAP` to a gcmap file
+    """ Add :class:`gcMapExplorer.lib.ccmap.CCMAP` to a gcmap file
 
     Parameters
     ----------
-    cmap : :class:`ccmap.CCMAP`
-        An instance of :class:`ccmap.CCMAP`, which will be added to gcmap file
+    cmap : :class:`gcMapExplorer.lib.ccmap.CCMAP`
+        An instance of :class:`gcMapExplorer.lib.ccmap.CCMAP`, which will be added to gcmap file
     filename : str
         Name of ``gcmap`` file
     compression : str

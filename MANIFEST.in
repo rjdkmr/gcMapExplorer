@@ -5,4 +5,5 @@ include gcMapExplorer/gui/icons/*.*
 include gcMapExplorer/lib/*.pyx
 
 exclude gcMapExplorer/lib/*.c
+recursive-exclude test *.*
 global-exclude *.localhistory

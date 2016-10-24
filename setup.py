@@ -30,19 +30,21 @@ from Cython.Build import cythonize
 
 here = path.abspath(path.dirname(__file__))
 
+def read(fname):
+    return open(path.join(path.dirname(__file__), fname)).read()
 
 ext_modules = [
-    Extension("gcMapExplorer.lib.ccmapHelpers",            ["gcMapExplorer/lib/ccmapHelpers.pyx"],            compiler_directives={'embedsignature': True}),
-    Extension("gcMapExplorer.lib.genomicsDataHandler",     ["gcMapExplorer/lib/genomicsDataHandler.pyx"],     compiler_directives={'embedsignature': True}),
-    Extension("gcMapExplorer.lib.normalizeAverageContact", ["gcMapExplorer/lib/normalizeAverageContact.pyx"], compiler_directives={'embedsignature': True}),
-    Extension("gcMapExplorer.lib.normalizeKnightRuiz",     ["gcMapExplorer/lib/normalizeKnightRuiz.pyx"],     compiler_directives={'embedsignature': True}),
-    Extension("gcMapExplorer.lib.normalizeIC",             ["gcMapExplorer/lib/normalizeIC.pyx"],       compiler_directives={'embedsignature': True}),
-    Extension("gcMapExplorer.lib.TadFinder",               ["gcMapExplorer/lib/TadFinder.pyx"],               compiler_directives={'embedsignature': True}),
+    Extension("gcMapExplorer.lib.ccmapHelpers",            ["gcMapExplorer/lib/ccmapHelpers.pyx"]             ),
+    Extension("gcMapExplorer.lib.genomicsDataHandler",     ["gcMapExplorer/lib/genomicsDataHandler.pyx"]      ),
+    Extension("gcMapExplorer.lib.normalizeAverageContact", ["gcMapExplorer/lib/normalizeAverageContact.pyx"]  ),
+    Extension("gcMapExplorer.lib.normalizeKnightRuiz",     ["gcMapExplorer/lib/normalizeKnightRuiz.pyx"]      ),
+    Extension("gcMapExplorer.lib.normalizeIC",             ["gcMapExplorer/lib/normalizeIC.pyx"]              ),
+    Extension("gcMapExplorer.lib.TadFinder",               ["gcMapExplorer/lib/TadFinder.pyx"]                ),
     ]
 
 setup(
     name = 'gcMapExplorer',
-    version = '1.0a',
+    version = '1.0.0',
 
     # Required packages
     install_requires = [ 'appdirs>=1.4', 'numpy>=1.6',  'scipy>=0.9', 'matplotlib>=1.1.0', 'dask>=0.7.3', 'toolz>=0.7.4', 'h5py>=2.2.1', 'Cython>=0.23.0' ],
@@ -57,11 +59,28 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={'console_scripts': [ 'gcMapExplorer=gcMapExplorer:main.main',], },
 
+    include_package_data=True,
+
     # metadata for upload to pypi
     author = "Rajendra Kumar",
     author_email = "rjdkmr@gmail.com",
-    description = "This package is used for analysis of Hi-C Map",
-    keywords = "Hi-C genomics genome",
-    include_package_data=True,
-
+    url = 'https://github.com/rjdkmr/gcMapExplorer',
+    description = "A platform to visualize and analyze genome contact maps",
+    long_description = read('README.rst'),
+    keywords = ["Hi-C", "Genome Contact Map Explorer", "Contact Map Explorer", "3D Genome Organization"],
+    license = 'GNU General Public License v3 (GPLv3)',
+    classifiers = [
+        'Environment :: Console',
+        'Environment :: X11 Applications :: Qt',
+        'Intended Audience :: Developers',
+        'Intended Audience :: End Users/Desktop',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'Natural Language :: English',
+        'Operating System :: MacOS',
+        'Operating System :: Microsoft :: Windows',
+        'Operating System :: POSIX :: Linux',
+        'Programming Language :: Python :: 3 :: Only',
+        'Topic :: Scientific/Engineering :: Bio-Informatics',
+    ],
 )

@@ -49,7 +49,7 @@ Run ``gcMapExplorer normalizer`` command.
 
 To Launch Importer
 ------------------
-Run ``gcMapExplorer browser`` command.
+Run ``gcMapExplorer importer`` command.
 
 To get help for a command
 -------------------------

@@ -167,8 +167,8 @@ class CCMAP:
 	"""This class contains variables to store Hi-C Data.
 
 	The class is instantiated by two methods:
-		>>> ccMapObj = CCMAP()
-		>>> ccMapObj = CCMAP(dtype='float32')
+		>>> ccMapObj = gcMapExplorer.lib.ccmap.CCMAP()
+		>>> ccMapObj = gcMapExplorer.lib.ccmap.CCMAP(dtype='float32')
 
 	Parameters
 	----------
@@ -309,7 +309,7 @@ class CCMAP:
 		"""Enable reading the numpy array binary file.
 
 		Matrix file is saved on local file system. This file can be only read after mapping to a memmap object. This method maps the numpy memmap object to self.matrix variable.
-		After using this method, :attr:`CCMAP.matrix` can be used directly as similar to numpy array. Please see details in |numpy memmap|
+		After using this method, :attr:`gcMapExplorer.lib.ccmap.CCMAP.matrix` can be used directly as similar to numpy array. Please see details in |numpy memmap|
 
 		"""
 		if self.matrix is not None:
@@ -348,7 +348,7 @@ class CCMAP:
 	def copy(self, fill=None):
 		"""To create a new copy of CCMAP object
 
-		This method can be used to create a new copy of :class:`CCMAP`.
+		This method can be used to create a new copy of :class:`gcMapExplorer.lib.ccmap.CCMAP`.
 		A new numpy array binary file will be created and all values from old file will be copied.
 
 		Parameters
@@ -409,13 +409,13 @@ def jsonify(ccMapObj):
 
 
 	..	warning::
-		If a object is passed through this method, it should be again passed through :meth:`hiCMapAnalyze.HiCMapMain.dejsonify` for any further use.
+		If a object is passed through this method, it should be again passed through :meth:`gcMapExplorer.lib.ccmap.dejsonify` for any further use.
 		Otherwise, this object cannot be used in any other methods because of the attributes data type modifications.
 
 
 	Parameters
 	----------
-	ccMapObj	:	:class:`CCMAP`
+	ccMapObj	:	:class:`gcMapExplorer.lib.ccmap.CCMAP`
 		A CCMAP object
 
 	Returns
@@ -443,11 +443,11 @@ def dejsonify(ccMapObj, json_dict=None):
 
 	Before loading the CCMAP object, its attributes data types are neccessary to change back.
 
-	Therefore, it is converted into original data types as shown in a table (see :meth:`hiCMapAnalyze.HiCMapMain.jsonify`)
+	Therefore, it is converted into original data types as shown in a table (see :meth:`gcMapExplorer.lib.ccmap.jsonify`)
 
 	Parameters
 	----------
-	ccMapObj	:	:class:`CCMAP`
+	ccMapObj	:	:class:`gcMapExplorer.lib.ccmap.CCMAP`
 		A CCMAP object
 
 	json_dict	:	dict, Optional
@@ -487,7 +487,7 @@ def save_ccmap(ccMapObj, outfile,  compress=False, logHandler=None):
 
 	Parameters
 	----------
-	ccMapObj : :class:`hiCMapAnalyze.HiCMapMain.CCMAP`
+	ccMapObj : :class:`gcMapExplorer.lib.ccmap.CCMAP`
 		A CCMAP object, which has to be saved
 	outfile : str
 		Name of output file including path to the directory/folder where file should be saved.
@@ -577,7 +577,7 @@ def save_ccmap(ccMapObj, outfile,  compress=False, logHandler=None):
 def load_ccmap(infile, workDir=None):
 	""" Load CCMAP object from an input file
 
-	CCMAP object can be created from the input file, which was earlier saved using :meth:`hiCMapAnalyze.HiCMapMain.save_ccmap`.
+	CCMAP object can be created from the input file, which was earlier saved using :meth:`gcMapExplorer.lib.ccmap.save_ccmap`.
 	If the binary numpy array is compressed, this file is automatically extracted in the current working directory. After completion of the execution,
 	this decompressed file will be automatically deleted. The compressed saved file will be remained unchanged.
 
@@ -591,7 +591,7 @@ def load_ccmap(infile, workDir=None):
 
 	Returns
 	-------
-	ccMapObj : :class:`hiCMapAnalyze.HiCMapMain.CCMAP`
+	ccMapObj : :class:`gcMapExplorer.lib.ccmap.CCMAP`
 		A CCMAP object
 
 	"""
@@ -636,7 +636,7 @@ def load_ccmap(infile, workDir=None):
 
 	return ccMapObj
 
-def export_cmap(cmap, outfile, doNotWriteMinimum=True):
+def export_cmap(cmap, outfile, doNotWriteZeros=True):
 	"""To export ``.ccmap`` as text file
 
 	This function export ``.ccmap`` as coordinate list (COO) format sparse matrix file.
@@ -644,13 +644,12 @@ def export_cmap(cmap, outfile, doNotWriteMinimum=True):
 
 	Parameters
 	----------
-	ccmap : :class:`CCMAP`
-		An instance of :class:`CCMAP`, which is need to be exported.
+	ccmap : :class:`gcMapExplorer.lib.ccmap.CCMAP`
+		An instance of :class:`gcMapExplorer.lib.ccmap.CCMAP`, which is need to be exported.
 	outfile : str
 		Output file name.
-	doNotWriteMinimum : bool
-		Do not write minimum value. It reduces memory of file. Minimum value is either zero in raw maps or
-		some value filled at place of missing data/zeros in normalized maps.
+	doNotWriteZeros : bool
+		Do not write Zero values. It reduces memory of file.
 
 	"""
 
@@ -662,8 +661,8 @@ def export_cmap(cmap, outfile, doNotWriteMinimum=True):
 	try:
 		for i in range(ccmap.shape[0]):
 			for j in range(i+1):
-				if doNotWriteMinimum:
-					if ccmap.matrix[i][j] > ccmap.minvalue:
+				if doNotWriteZeros:
+					if ccmap.matrix[i][j] != 0:
 						fout.write('{0}\t{1}\t{2}\n'.format(i, j, ccmap.matrix[i][j] ))
 					else:
 						fout.write('{0}\t{1}\t{2}\n'.format(i, j, ccmap.matrix[i][j] ))
@@ -788,7 +787,7 @@ def smoothen_map(ccMapObj, filter_pass=1):
 
 	Parameters
 	----------
-	ccMapObj : :class:`hiCMapAnalyze.HiCMapMain.CCMAP`
+	ccMapObj : :class:`gcMapExplorer.lib.ccmap.CCMAP`
 		A CCMAP object, which has to be smoothen.
 	filter_pass : int
 		Number of pass to smooth. Larger the number of pass, more smoother is the map. However, pattern in maps may be difficult to identify when
@@ -796,7 +795,7 @@ def smoothen_map(ccMapObj, filter_pass=1):
 
 	Returns
 	-------
-	ccMapObj : :class:`hiCMapAnalyze.HiCMapMain.CCMAP`
+	ccMapObj : :class:`gcMapExplorer.lib.ccmap.CCMAP`
 		The smoothed CCMAP.
 
 	"""
@@ -817,7 +816,7 @@ def GetTransitionProbablityMatrix(ccMapObj,  percentile_thershold_no_data=None, 
 
 	Parameters
 	----------
-	ccMapObj : :class:`hiCMapAnalyze.HiCMapMain.CCMAP`
+	ccMapObj : :class:`gcMapExplorer.lib.ccmap.CCMAP`
 		A CCMAP object, which has to be smoothen.
 
 	percentile_thershold_no_data : int
@@ -838,7 +837,7 @@ def GetTransitionProbablityMatrix(ccMapObj,  percentile_thershold_no_data=None, 
 
 	Returns
 	-------
-	ccMapObj : :class:`hiCMapAnalyze.HiCMapMain.CCMAP`
+	ccMapObj : :class:`gcMapExplorer.lib.ccmap.CCMAP`
 		The smoothed CCMAP.
 
 	"""
