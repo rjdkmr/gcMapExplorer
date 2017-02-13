@@ -851,24 +851,41 @@ def normalizeGCMapByMCFS(gcMapInputFile, gcMapOutFile, stats='median', percentil
 	gcmap = gmp.GCMAP(gcMapInputFile)
 	gcmap.loadSmallestMap()
 	mapList = gcmap.mapNameList.copy()
-	del gcmap
 
 	for mapName in mapList:
-		ccMap = gmp.loadGCMapAsCCMap(gcMapInputFile, mapName=mapName, workDir=workDir)
 
-		try:
-			norm_ccmap = normalizeCCMapByMCFS(ccMap, stats=stats,
-						percentile_thershold_no_data=percentile_thershold_no_data,
-						thershold_data_occup=thershold_data_occup,
-						workDir=workDir)
+		# Iterate over available resolutions
+		gcmap.changeMap(mapName)
+		previousResolution = gcmap.resolution
 
-			if norm_ccmap is not None:
-				gmp.addCCMap2GCMap(norm_ccmap, gcMapOutFile,
-									compression=compression,
-									generateCoarse=True, coarsingMethod='max',
-									logHandler=logHandler)
+		while True:
+			ccMap = gmp.loadGCMapAsCCMap(gcmap.hdf5, mapName=mapName, resolution=gcmap.resolution, workDir=workDir)
 
-		# In case of program termination, delete the newly created ccmap and raise error
-		except (KeyboardInterrupt, SystemExit) as e:
-			if 'ccMap' in locals():	del ccMap
-			raise e
+			try:
+				norm_ccmap = normalizeCCMapByMCFS(ccMap, stats=stats,
+							percentile_thershold_no_data=percentile_thershold_no_data,
+							thershold_data_occup=thershold_data_occup,
+							workDir=workDir)
+
+				if norm_ccmap is not None:
+					gmp.addCCMap2GCMap(norm_ccmap, gcMapOutFile,
+										compression=compression,
+										generateCoarse=False, replaceCMap=False,
+										logHandler=logHandler)
+
+					del norm_ccmap
+
+				else:
+					break
+
+				gcmap.toCoarserResolution()
+				if previousResolution == gcmap.resolution:
+					break
+				else:
+					previousResolution = gcmap.resolution
+
+			# In case of program termination, delete the newly created ccmap and raise error
+			except (KeyboardInterrupt, SystemExit) as e:
+				if 'norm_ccmap' in locals():	del norm_ccmap
+				if 'gcmap' in locals():	del gcmap
+				raise e

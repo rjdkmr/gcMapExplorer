@@ -44,12 +44,12 @@ ext_modules = [
 
 setup(
     name = 'gcMapExplorer',
-    version = '1.0.0',
+    version = '1.0.2',
 
     # Required packages
     install_requires = [ 'appdirs>=1.4', 'numpy>=1.6',  'scipy>=0.9', 'matplotlib>=1.1.0', 'dask>=0.7.3', 'toolz>=0.7.4', 'h5py>=2.2.1', 'Cython>=0.23.0' ],
     #ext_modules = cythonize("gcMapExplorer/lib/*.pyx", compiler_directives={'embedsignature': True}),
-    ext_modules = ext_modules,
+    ext_modules = cythonize(ext_modules, compiler_directives={'embedsignature': True}),
     packages=find_packages(),
 
     package_data = { '': ['*.ico', '*.png', '*.ui'] },

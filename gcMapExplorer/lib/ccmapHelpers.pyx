@@ -220,13 +220,14 @@ def get_nonzeros_index(matrix, thershold_percentile=None, thershold_data_occup=N
 
 	zero_count = []
 	for i in range(mx):
-		if matrix[i].sum() == 0.0:
+		if np.sum( matrix[i] ) == 0.0:
 			bData[i] = False
 			# Although whole column/row is zero, count of zero taken as zero
 			zero_count.append(0)
 		else:
 			bData[i] = True
 			zero_count.append(np.nonzero( matrix[i] == 0 )[0].shape[0])
+
 
 	zero_count = np.asarray(zero_count)
 

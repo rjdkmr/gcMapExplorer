@@ -474,7 +474,7 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
     def constructMcfsCommand(self, cmdDict):
         """ Construct normMCFS command
         """
-        command = ' normIC '
+        command = ' normMCFS '
         command += ' -i ' + cmdDict['-i']
         command += ' -fi ' + cmdDict['-fi']
         command += ' -o ' + cmdDict['-o']

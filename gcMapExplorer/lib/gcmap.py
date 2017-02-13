@@ -616,7 +616,7 @@ def loadGCMapAsCCMap(filename, mapName=None, chromAtX=None, chromAtY=None, resol
     Parameters
     ----------
     filename : str
-        A gcmap file to which map will be added
+        Either a gcmap file or h5py.File instance or GCMAP.hdf5 from which contact map data will be read.
     mapName : str
         Name of contact map. e.g.: ``chr1`` or ``chr2``.
     chromAtX : str
@@ -634,7 +634,15 @@ def loadGCMapAsCCMap(filename, mapName=None, chromAtX=None, chromAtY=None, resol
 
     """
 
-    hdf5 = h5py.File(filename)
+    # Check if h5py.File instance is provided or a name is provided
+    fileOpened = False
+    if isinstance(filename, str):
+        hdf5 = h5py.File(filename)
+        fileOpened = True
+    elif isinstance(filename, h5py.File):
+        hdf5 = filename
+    else:
+        raise TypeError ('{0} is not a gcmap file or h5py.File instance'.format(hdf5))
 
     # Working and output directory
     if workDir is None:
@@ -717,12 +725,13 @@ def loadGCMapAsCCMap(filename, mapName=None, chromAtX=None, chromAtY=None, resol
 
     cmap.make_unreadable()
 
-    hdf5.close()
+    if fileOpened:
+        hdf5.close()
 
     return cmap
 
 
-def addCCMap2GCMap(cmap, filename, compression='lzf', generateCoarse=True, coarsingMethod='sum', logHandler=None):
+def addCCMap2GCMap(cmap, filename, compression='lzf', generateCoarse=True, coarsingMethod='sum', replaceCMap=True, logHandler=None):
     """ Add :class:`gcMapExplorer.lib.ccmap.CCMAP` to a gcmap file
 
     Parameters
@@ -730,7 +739,7 @@ def addCCMap2GCMap(cmap, filename, compression='lzf', generateCoarse=True, coars
     cmap : :class:`gcMapExplorer.lib.ccmap.CCMAP`
         An instance of :class:`gcMapExplorer.lib.ccmap.CCMAP`, which will be added to gcmap file
     filename : str
-        Name of ``gcmap`` file
+        Name of ``gcmap`` file or h5py.File instance or GCMAP.hdf5 to which output data will be written.
     compression : str
         Compression method. Presently allowed : ``lzf`` for LZF compression and ``gzip`` for GZIP compression.
     generateCoarse : bool
@@ -740,7 +749,8 @@ def addCCMap2GCMap(cmap, filename, compression='lzf', generateCoarse=True, coars
     coarsingMethod : str
         Method of downsampling. Three accepted methods are ``sum``: sum all values, ``mean``: Average of all values
         and ``max``: Maximum of all values.
-
+    replaceCMap : bool
+        Replace entire old ccmap data including resolutions and coarsed data.
 
     Returns
     -------
@@ -761,8 +771,16 @@ def addCCMap2GCMap(cmap, filename, compression='lzf', generateCoarse=True, coars
     if compression not in allowed_compressions:
         raise KeyError('Compression method: "{0}" is not a valid keyword. Use "lzf" or "gzip".'.format(compression))
 
-    hdf5 = h5py.File(filename)
-    logger.info(' Opened file [{0}] for reading writing..'.format(filename))
+    # Check if h5py.File instance is provided or a name is provided
+    fileOpened = False
+    if isinstance(filename, str):
+        hdf5 = h5py.File(filename)
+        logger.info(' Opened file [{0}] for reading writing..'.format(filename))
+        fileOpened = True
+    elif isinstance(filename, h5py.File):
+        hdf5 = filename
+    else:
+        raise TypeError ('{0} is not a gcmap file or h5py.File instance'.format(hdf5))
 
     cmap.make_readable()
 
@@ -779,19 +797,27 @@ def addCCMap2GCMap(cmap, filename, compression='lzf', generateCoarse=True, coars
 
     try:
         # If map is already present in file, remove it
-        logger.info(' Adding data to [{0}] for [{1}] ...'.format(filename, groupName))
-        if groupName in hdf5:
+        if replaceCMap and groupName in hdf5:
             logger.info(' Data for {0} is already present in [{1}], replacing it... '.format(groupName, filename))
             hdf5.pop(groupName)
 
         # Create group
-        group = hdf5.create_group(groupName)
+        if groupName not in hdf5:
+            group = hdf5.create_group(groupName)
+        else:
+            group = hdf5[groupName]
+
         group.attrs['xlabel'] = xlabel
         group.attrs['ylabel'] = ylabel
         group.attrs['compression'] = compression
 
         # Create and add map
         resolution = cmp.binsizeToResolution(cmap.binsize)
+        if generateCoarse:
+            logger.info(' Adding data to [{0}] for [{1}] ...'.format(filename, groupName))
+        else:
+            logger.info(' Adding data to [{0}] for [{1} - {2}] ...'.format(filename, groupName, resolution))
+
         if compression == 'lzf':
             newCmap = group.create_dataset(resolution, cmap.shape, dtype=cmap.dtype, data=cmap.matrix, chunks=True, compression="lzf", shuffle=True)
         else:
@@ -826,8 +852,9 @@ def addCCMap2GCMap(cmap, filename, compression='lzf', generateCoarse=True, coars
             del gcmap
             logger.info('     ... Finished downsampling for [{0}] ...'.format(groupName))
 
-        hdf5.close()
-        logger.info(' Closed file [{0}]...'.format(filename))
+        if fileOpened:
+            hdf5.close()
+            logger.info(' Closed file [{0}]...'.format(filename))
 
         if logHandler is not None:
             logger.removeHandler( logHandler )
