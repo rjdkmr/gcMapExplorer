@@ -1,4 +1,6 @@
 
+.. currentmodule:: gcMapExplorer.lib
+
 gcmap module
 ============
 

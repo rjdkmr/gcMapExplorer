@@ -3,7 +3,7 @@
 # Author: Rajendra Kumar
 #
 # This file is part of gcMapExplorer
-# Copyright (C) 2016  Rajendra Kumar, Ludvig Lizana, Per Stenberg
+# Copyright (C) 2016-2017  Rajendra Kumar, Ludvig Lizana, Per Stenberg
 #
 # gcMapExplorer is a free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

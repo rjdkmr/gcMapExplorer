@@ -3,7 +3,7 @@
 # Author: Rajendra Kumar
 #
 # This file is part of gcMapExplorer
-# Copyright (C) 2016  Rajendra Kumar, Ludvig Lizana, Per Stenberg
+# Copyright (C) 2016-2017  Rajendra Kumar, Ludvig Lizana, Per Stenberg
 #
 # gcMapExplorer is a free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -152,7 +152,7 @@ def main():
 
     if args.ccmapSuffix is None and args.fileGCMap is None:
         showErrorAndExit(parser, "No output format directed!!!\n")
-        
+
     # Check for scratch directory
     if not os.path.isdir(args.workDir):
         showErrorAndExit(parser, '\nScratch Dirctory "{0}" not found !!!\n'.format(args.workDir))

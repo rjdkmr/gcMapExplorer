@@ -37,7 +37,7 @@ HDF5Handler class
 -----------------
 
 .. autoclass:: gcMapExplorer.lib.genomicsDataHandler.HDF5Handler
-  :members: getChromList, getResolutionList, getDataNameList, buildDataTree, _addDataByArray
+  :members: getChromList, getResolutionList, getDataNameList, buildDataTree, addDataByArray
 
 
 BigWigHandler class

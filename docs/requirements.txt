@@ -7,3 +7,4 @@ toolz>=0.7.4
 h5py>=2.2.1
 Cython>=0.22.0
 nbsphinx>=0.2.8
+jupyter>=4.1.0
