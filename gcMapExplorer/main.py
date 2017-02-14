@@ -26,7 +26,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 gui_tools =      ['browser', 'importer', 'normalizer']
-convert_tools =  ['coo2cmap', 'homer2cmap', 'bc2cmap', 'bigwig2h5']
+convert_tools =  ['coo2cmap', 'pairCoo2cmap', 'homer2cmap', 'bc2cmap', 'bigwig2h5']
 norm_tools =     ['normKR', 'normIC', 'normMCFS']
 analysis_tools = ['corrBWcmaps']
 
@@ -35,6 +35,7 @@ def main():
                'importer':'Interface to import contact maps and datasets',
                'normalizer' : 'Interface to normalize contact maps',
                'coo2cmap':'Import COO sparse matrix format to ccmap or gcmap',
+               'pairCoo2cmap': 'Import map from files similar to paired sparse matrix Coordinate (COO) format',
                'homer2cmap':'Import HOMER Hi-C interaction matrix to ccmap or gcmap',
                'bc2cmap': 'Import Bin-Contact format files to ccmap or gcmap',
                'bigwig2h5': 'Import a bigWig file to HDF5 format h5 file',
@@ -66,6 +67,10 @@ def main():
     if sys.argv[1] == 'coo2cmap':
         from .clui import coo2cmap
         coo2cmap.main()
+
+    if sys.argv[1] == 'pairCoo2cmap':
+        from .clui import pairCoo2cmap
+        pairCoo2cmap.main()
 
     if sys.argv[1] == 'homer2cmap':
         from .clui import homer2cmap

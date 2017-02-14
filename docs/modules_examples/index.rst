@@ -36,3 +36,4 @@ Contents
    How to access Hi-C data from ccmap file? <access_ccmap_data>
    Using masked array with Hi-C map <masked_array_ccmap>
 	 How to export Hi-C data as text file? <export_ccmap>
+	 How to access map from gcmap file? <access_gcmap_data>

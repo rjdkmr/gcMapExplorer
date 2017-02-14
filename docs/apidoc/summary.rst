@@ -69,6 +69,9 @@ importer module
 		importer.CooMatrixHandler.save_gcmap
 		importer.CooMatrixHandler.setLabels
 		importer.CooMatrixHandler.setOutputFileList
+		importer.PairCooMatrixHandler
+		importer.PairCooMatrixHandler.setGCMapOptions
+		importer.PairCooMatrixHandler.runConversion
 		importer.HomerInputHandler
 		importer.HomerInputHandler.save_ccmaps
 		importer.HomerInputHandler.save_gcmap

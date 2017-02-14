@@ -585,6 +585,206 @@ class CooMatrixHandler:
                     del ccmap
                 raise e
 
+class PairCooMatrixHandler:
+    """To import ccmap from files similar to paired sparse matrix Coordinate (COO) format
+
+    This format is very similar to COO format with addiotional infromation of chromosome. Therefore,
+    maps for all chromosome could be contained in a single file.
+
+    This type of format appeared with following publication:
+        * http://dx.doi.org/10.1016/j.cell.2015.10.026 --- https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE72512
+
+    Following file format can be read as a text file, where first and second column is location on chromosome and third column is the value:
+    ::
+
+        chr4     60000   75000   chr4    60000   75000   0.1163470887070292
+        chr4     60000   75000   chr4    105000  120000  0.01292745430078102
+        chr4     60000   75000   chr4    435000  450000  0.01292745430078102
+        chr4     75000   90000   chr4    75000   90000   0.05170981720312409
+        chr4     75000   90000   chr4    345000  360000  0.01292745430078102
+        chr4     90000   105000  chr4    90000   105000  0.01292745430078102
+        .
+        .
+        .
+        .
+        .
+        .
+
+
+    Parameters
+    ----------
+    inputFile : str
+        name of a input file
+    ccmapOutDir : str
+        name of directory where all ccmap file will be stored.
+    ccmapSuffix : str
+    	Suffix for ccmap file name.
+    gcmapOut : str
+        Name of output gcmap file.
+    workDir : str
+        Directory where temporary files will be stored.
+
+
+    Attributes
+    ----------
+    inputFile : str
+        name of a input file
+    ccmapOutDir : str
+        name of directory where all ccmap file will be stored.
+    ccmapSuffix : str
+    	Suffix for ccmap file name.
+    gcmapOut : str
+        Name of output gcmap file.
+    gcmapOutOptions : dict
+        Dictionary for gcmap output options.
+    workDir : str
+        Directory where temporary files will be stored.
+
+
+    Examples
+    --------
+        >>> pair_map_handle = PairCooMatrixHandler('GSM1863750_tethered_rep1_contacts.txt', gcmapOut='GSM1863750_tethered_rep1_contacts.gcmap')
+        >>> pair_map_handle.setGCMapOptions()
+        >>> pair_map_handle.runConversion()
+
+
+    """
+
+    def __init__(self, inputFile, ccmapOutDir=None, ccmapSuffix=None, gcmapOut=None, workDir=None, logHandler=None):
+        self.inputFile = inputFile
+        self.ccmapOutDir = ccmapOutDir
+        self.ccmapSuffix = ccmapSuffix
+        self.gcmapOut = gcmapOut
+        self.gcmapOutOptions = None
+        self._fin = None
+        self.workDir = workDir
+        self.logHandler = logHandler
+
+        # Working and output directory
+        if workDir is not None:
+            self.workDir = workDir
+        else:
+            self.workDir = config['Dirs']['WorkingDirectory']
+        # logger
+        self.logHandler = logHandler
+        self.logger = logging.getLogger('PairCooMatrixHandler')
+        if logHandler is not None:
+            self.logger.propagate = False
+            self.logger.addHandler(logHandler)
+        self.logger.setLevel(logging.INFO)
+
+    def setGCMapOptions(self, compression='lzf', generateCoarse=True, coarsingMethod='sum', replaceCMap=True):
+        """ Set options for output gcmap file
+
+        Parameters
+        ----------
+        compression : str
+            Compression method. Presently allowed : ``lzf`` for LZF compression and ``gzip`` for GZIP compression.
+        generateCoarse : bool
+            Also generates all coarser maps where resolutions will be coarsed by a factor of two, consequetively.
+            e.g.: In case of 10 kb input resolution, downsampled maps of ``20kb``, ``40kb``, ``80kb``, ``160kb``, ``320kb`` etc.
+            will be generated untill, map size is less than 500.
+        coarsingMethod : str
+            Method of downsampling. Three accepted methods are ``sum``: sum all values, ``mean``: Average of all values
+            and ``max``: Maximum of all values.
+        replaceCMap : bool
+            Replace entire old ccmap data including resolutions and coarsed data.
+
+        """
+        self.gcmapOutOptions = dict()
+        self.gcmapOutOptions['compression'] = compression
+        self.gcmapOutOptions['generateCoarse'] = generateCoarse
+        self.gcmapOutOptions['coarsingMethod'] = coarsingMethod
+        self.gcmapOutOptions['replaceCMap'] = replaceCMap
+
+    def _convertProcessedValues(self, i, j, value, chrom):
+        self.logger.info('##### CONVERTING FOR {0} #######'.format(chrom))
+        ccmap = gen_map_from_locations_value(i, j, value, mapType='intra', workDir=self.workDir, logHandler=self.logHandler)
+        ccmap.xlabel = chrom
+        ccmap.ylabel = chrom
+
+        if self.ccmapOutDir is not None or self.ccmapSuffix is not None:
+            self._save_ccmap(ccmap, chrom, cmp.binsizeToResolution(ccmap.binsize))
+
+        if self.gcmapOut is not None:
+            self._save_gcmap(ccmap)
+
+        del ccmap
+        self.logger.info('##### ################# #######\n'.format(chrom))
+
+    def _save_ccmap(self, ccmap, title, resolution):
+        if self.ccmapOutDir is None:
+            self.ccmapOutDir = os.getcwd()
+
+        if self.ccmapSuffix is None:
+            outFileName = title + '_' + resolution + '.ccmap'
+        else:
+            outFileName = title + '_' + resolution + '_' + self.ccmapSuffix + '.ccmap'
+
+        fullOutPath = os.path.join(self.ccmapOutDir, outFileName)
+        cmp.save_ccmap(ccmap, fullOutPath, compress=True)
+
+
+    def _save_gcmap(self, ccmap):
+        if self.gcmapOutOptions is None:
+            raise ValueError('No options set for output gcmap file!!. Use PairCooMatrix.setGCMapOptions() to set the options.')
+
+        compression = self.gcmapOutOptions['compression']
+        generateCoarse = self.gcmapOutOptions['generateCoarse']
+        coarsingMethod = self.gcmapOutOptions['coarsingMethod']
+        replaceCMap = self.gcmapOutOptions['replaceCMap']
+        gmp.addCCMap2GCMap(ccmap, self.gcmapOut,
+                                compression=compression,
+                                generateCoarse=generateCoarse,
+                                coarsingMethod=coarsingMethod,
+                                replaceCMap=replaceCMap,
+                                logHandler=self.logHandler)
+
+    def runConversion(self):
+        """ Perform conversion and save to ccmap and/or gcmap file.
+
+        Read the input file, process the data, and convert it to ccmap
+        or gcmap file. For output gcmap, :meth:`PairCooMatrixHandler.setGCMapOptions`
+        should be called to set the neccessary options.
+        """
+        # Check if gcmap output is given and gcmap options are set
+        if self.gcmapOutOptions is None and self.gcmapOut is not None:
+            raise ValueError('No options set for output gcmap file!!. Use PairCooMatrix.setGCMapOptions() to set the options.')
+
+        # At the start of file
+        if self._fin is None:
+            self._fin = open(self.inputFile, 'r')
+        else:
+            self._fin.seek(0)
+
+        prevChrom = 'dummy'
+        i, j, value = [], [], []
+        for line in self._fin:
+
+            # Process and break line
+            line = line.rstrip().lstrip()
+            temp = re.split('\s+', line)
+
+            # Check for intra-chromosomal contact map
+            if temp[0] == temp[3] and not temp[0] == prevChrom and value:
+                self._convertProcessedValues(i, j, value, prevChrom)
+                self.logger.info('##### Started Reading For {0} #######'.format(temp[0]))
+
+                i, j, value = [], [], []
+
+            # assign chromosome name
+            prevChrom = temp[0]
+
+            # Append only in case of intra-chromosomal map
+            if temp[0] == temp[3]:
+                i.append(int(temp[2]))
+                j.append(int(temp[5]))
+                value.append(float(temp[6]))
+
+        # Convert for last map --- intra-chromosomal
+        if temp[0] == temp[3]:
+            self._convertProcessedValues(i, j, value, temp[0])
+            i, j, value = [], [], []
 
 class HomerInputHandler:
     """To import ccmap from Hi-C maps generated by HOMER

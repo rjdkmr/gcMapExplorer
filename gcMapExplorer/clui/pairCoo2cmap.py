@@ -20,6 +20,7 @@
 #
 #=============================================================================
 
+
 import os
 import sys
 import re
@@ -33,56 +34,38 @@ from gcMapExplorer.config import getConfig
 config = getConfig()
 
 description = \
-"""Import Bin-Contact format files
-=================================================
-In this format, two separate files are available. One file contains bins
-information and other contains contact frequency.
+"""Import map from files similar to paired sparse matrix Coordinate (COO) format
+===============================================================================
 
-These types of files are present in following GEO data:
-* http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE61471
-* http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE34453
+This format is very similar to COO format with addiotional infromation of
+chromosome. Therefore, maps for all chromosome could be contained in a single
+file.
 
-This format contains a pair of file:
-BIN file:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cbin	chr	from.coord	to.coord	count
-1	2L	0	160000	747
-2	2L	160000	320000	893
-3	2L	320000	480000	1056
-4	2L	480000	640000	1060
-5	2L	640000	800000	978
-6	2L	800000	960000	926
-.
-.
-.
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This type of format appeared with following publication:
+            http://dx.doi.org/10.1016/j.cell.2015.10.026
+       GEO: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE72512
 
-CONTACT file in list format:
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cbin1	cbin2	expected_count	observed_count
-1	1	40.245201	21339
-1	2	83.747499	5661
-1	3	92.12501	1546
-1	4	93.401273	864
-1	5	87.265472	442
-.
-.
-.
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Following file format can be read as a text file, where first and second
+column is location on chromosome and third column is the value:
 
+    chr4     60000   75000   chr4    60000   75000   0.1163470887070292
+    chr4     60000   75000   chr4    105000  120000  0.01292745430078102
+    chr4     60000   75000   chr4    435000  450000  0.01292745430078102
+    chr4     75000   90000   chr4    75000   90000   0.05170981720312409
+    chr4     75000   90000   chr4    345000  360000  0.01292745430078102
+    chr4     90000   105000  chr4    90000   105000  0.01292745430078102
+    .
+    .
+    .
+    .
+    .
+    .
 
-Both BIN and CONTACT files are neccessary for the conversion.
-
-=================================================
+===============================================================================
 """
 
-inputBinFileHelp = \
-""" Input BIN file as shown above.
-
-"""
-
-inputContactFileHelp = \
-""" Input CONTACT file as shown above.
+inputFileHelp = \
+""" Input file name.
 
 """
 
@@ -130,21 +113,13 @@ def main():
     # Construct command line arguments and parsed it
     parser, args = parseArguments()
 
-    # Input Bin file
-    inputBinFile = None
-    if args.inputBinFile is not None:
-        inputBinFile = args.inputBinFile.name
-        args.inputBinFile.close()
+    # Input File
+    inputFile = None
+    if args.inputFile is not None:
+        inputFile = args.inputFile.name
+        args.inputFile.close()
     else:
-        showErrorAndExit(parser, "No BIN Input File!!!\n")
-
-    # Input contact file
-    inputContactFile = None
-    if args.inputContactFile is not None:
-        inputContactFile = args.inputContactFile.name
-        args.inputContactFile.close()
-    else:
-        showErrorAndExit(parser, "No CONTACT Input File!!!\n")
+        showErrorAndExit(parser, "No Input File!!!\n")
 
     if args.ccmapSuffix is not None and args.outDir is None:
         msg = "No output directory is given for ccmap files!!!\n"
@@ -157,38 +132,29 @@ def main():
     if not os.path.isdir(args.workDir):
         showErrorAndExit(parser, '\nScratch Dirctory "{0}" not found !!!\n'.format(args.workDir))
 
-    # Initialize
-    binContactReader = gmlib.importer.BinsNContactFilesHandler(
-                                        inputBinFile,
-                                        inputContactFile,
-                                        workDir=args.workDir)
+    # Main region here
+    pair_coo_reader = gmlib.importer.PairCooMatrixHandler(
+                                    inputFile,
+                                    ccmapOutDir = args.outDir,
+                                    ccmapSuffix=args.ccmapSuffix,
+                                    gcmapOut=args.fileGCMap)
 
-    # Convert ccmaps
-    if args.ccmapSuffix is not None:
-        # Save ccmaps
-        binContactReader.save_ccmaps(args.outDir, args.ccmapSuffix)
+    pair_coo_reader.setGCMapOptions(
+            coarsingMethod=args.coarsingMethod,
+            compression=args.compression
+        )
 
-    # Convert gcmap
-    if args.fileGCMap is not None:
-        binContactReader.save_gcmap(args.fileGCMap,
-                                    coarsingMethod=args.coarsingMethod,
-                                    compression=args.compression)
+    pair_coo_reader.runConversion()
 
 def parseArguments():
     parser = argparse.ArgumentParser(
-                prog='gcMapExplorer bc2cmap',
+                prog='gcMapExplorer pairCoo2cmap',
                 description=description,
                 formatter_class=argparse.RawTextHelpFormatter)
 
-    parser.add_argument('-ib', '--input-bin', action='store',
-                        type=argparse.FileType('r'),
-                        metavar='nm_none_160000.bins',
-                        dest='inputBinFile', help=inputBinFileHelp)
-
-    parser.add_argument('-ic', '--input-contact', action='store',
-                        type=argparse.FileType('r'),
-                        metavar='nm_none_160000.n_contact',
-                        dest='inputContactFile', help=inputContactFileHelp)
+    parser.add_argument('-i', '--input', action='store',
+                        type=argparse.FileType('r'), metavar='maps.txt',
+                        dest='inputFile', help=inputFileHelp)
 
     parser.add_argument('-ccm', '--ccmap', action='store', dest='ccmapSuffix',
                         metavar='RawObserved', help=ccmapSuffixHelp)
@@ -214,7 +180,7 @@ def parseArguments():
                         metavar=config['Dirs']['WorkingDirectory'],
                         help='Directory where temporary files will be stored.')
 
-    idx = sys.argv.index("bc2cmap")+1
+    idx = sys.argv.index("pairCoo2cmap")+1
     args = parser.parse_args(args=sys.argv[idx:])
 
     return parser, args

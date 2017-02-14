@@ -104,8 +104,8 @@ provided.
 """
 
 ccmapSuffixHelp = \
-""" Use this to convert all contact maps to ccmaps file Provide suffix of ccmap
-file names with this option and it will enable the conversion.
+""" Use this to convert all contact maps to ccmaps file. Provide suffix of
+ccmap file names with this option and it will enable the conversion.
 
 Ouput ccmap file name is generated outmatically as follows;
 if xlabel is not equal to ylabel: <xlabel>_<ylabel>_<suffix>.ccmap
@@ -123,8 +123,8 @@ option is used.
 """
 
 fileGCMapHelp = \
-"""Provide gcmap file to convert all contact maps into one gcmap file File name
-should contain full path because -od/--out-dir is not considered
+"""Provide gcmap file to convert all contact maps into one gcmap file.
+File name should contain full path because -od/--out-dir is not considered
 for thi conversion.
 
 """

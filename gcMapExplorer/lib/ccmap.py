@@ -516,7 +516,7 @@ def save_ccmap(ccMapObj, outfile,  compress=False, logHandler=None):
 		outfile = outfile + '.ccmap'
 
 	# Getting output directory and generating path name for numpy array file
-	outdir = os.path.dirname( os.path.abspath(outfile) )
+	outdir = os.path.dirname( os.path.abspath( os.path.expanduser(outfile)) )
 	basename = os.path.basename( outfile )
 
 	nparrayFileName = os.path.splitext(basename)[0] + '.npbin'
@@ -548,7 +548,7 @@ def save_ccmap(ccMapObj, outfile,  compress=False, logHandler=None):
 		ccMapObj.state = 'saved'
 
 	# saving .ccmap
-	fout =  open( outfile, "w" )
+	fout =  open( os.path.abspath( os.path.expanduser(outfile)), "w" )
 	json.dump(ccMapObj.__dict__, fout, indent=4, separators=(',', ':'))
 	fout.close()
 
@@ -567,7 +567,7 @@ def save_ccmap(ccMapObj, outfile,  compress=False, logHandler=None):
 		if os.path.exists(nparrayfile):
 			os.remove(nparrayfile)
 
-	logger.info("       Finished!!!")
+	logger.info("       Finished!!!\n")
 
 	# Reverting the path of matrix file so that this object can be still used
 	ccMapObj.path2matrix = t_path2matrix
@@ -612,7 +612,7 @@ def load_ccmap(infile, workDir=None):
 	dejsonify(ccMapObj, json_dict)
 
 	# Generating full path to numpy array file
-	indir = os.path.dirname( os.path.abspath(infile) )
+	indir = os.path.dirname( os.path.abspath( os.path.expanduser(infile) ) )
 	nparrayInFile = os.path.join( indir, ccMapObj.path2matrix)
 
 	# if numpy array file is compressed, extract it and move to current working directory

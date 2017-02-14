@@ -11,6 +11,9 @@ importer module
 		importer.CooMatrixHandler.save_gcmap
 		importer.CooMatrixHandler.setLabels
 		importer.CooMatrixHandler.setOutputFileList
+		importer.PairCooMatrixHandler
+		importer.PairCooMatrixHandler.setGCMapOptions
+		importer.PairCooMatrixHandler.runConversion
 		importer.HomerInputHandler
 		importer.HomerInputHandler.save_ccmaps
 		importer.HomerInputHandler.save_gcmap
@@ -25,6 +28,11 @@ CooMatrixHandler class
 ----------------------
 .. autoclass:: gcMapExplorer.lib.importer.CooMatrixHandler
   :members: save_ccmaps, save_gcmap, setLabels, setOutputFileList
+
+PairCooMatrixHandler class
+--------------------------
+.. autoclass:: gcMapExplorer.lib.importer.PairCooMatrixHandler
+  :members: setGCMapOptions, runConversion
 
 HomerInputHandler class
 -----------------------
