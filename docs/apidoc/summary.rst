@@ -112,11 +112,16 @@ genomicsDataHandler module
 		genomicsDataHandler.BigWigHandler
 		genomicsDataHandler.BigWigHandler.getBigWigInfo
 		genomicsDataHandler.BigWigHandler.bigWigtoWig
-		genomicsDataHandler.BigWigHandler.saveToH5
+		genomicsDataHandler.BigWigHandler.saveAsH5
 		genomicsDataHandler.WigHandler
 		genomicsDataHandler.WigHandler.parseWig
-		genomicsDataHandler.WigHandler.convertWigToH5
+		genomicsDataHandler.WigHandler.setChromosome
+		genomicsDataHandler.WigHandler.saveAsH5
 		genomicsDataHandler.WigHandler.getRawWigDataAsDictionary
+		genomicsDataHandler.BEDHandler
+		genomicsDataHandler.BEDHandler.parseBed
+		genomicsDataHandler.BEDHandler.setChromosome
+		genomicsDataHandler.BEDHandler.saveAsH5
 		genomicsDataHandler.TextFileHandler
 		genomicsDataHandler.TextFileHandler.readData
 		genomicsDataHandler.TempNumpyArrayFiles

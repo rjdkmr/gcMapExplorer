@@ -1654,7 +1654,7 @@ def gen_map_from_locations_value(i, j, value, resolution=None, mapType='intra', 
 
     Returns
     -------
-    ccMapObj : :class:`hiCMapAnalyze.HiCMapMain.CCMAP`
+    ccMapObj : :class:`gcMapExplorer.lib.ccmap.CCMAP`
     	A CCMAP object
 
     """

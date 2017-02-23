@@ -6,46 +6,72 @@ This module is developed to visualize and analyze Genomics data with respect to 
 The hdf5 file gives us flexibility to access the data for given range of location of a specific chromosome at particular resolution.
 
 
-.. currentmodule:: gcMapExplorer.lib
+.. currentmodule:: gcMapExplorer.lib.genomicsDataHandler
 
 .. autosummary::
-		genomicsDataHandler.HDF5Handler
-		genomicsDataHandler.HDF5Handler.getChromList
-		genomicsDataHandler.HDF5Handler.getResolutionList
-		genomicsDataHandler.HDF5Handler.getDataNameList
-		genomicsDataHandler.HDF5Handler.buildDataTree
-		genomicsDataHandler.BigWigHandler
-		genomicsDataHandler.BigWigHandler.getBigWigInfo
-		genomicsDataHandler.BigWigHandler.bigWigtoWig
-		genomicsDataHandler.BigWigHandler.saveToH5
-		genomicsDataHandler.WigHandler
-		genomicsDataHandler.WigHandler.parseWig
-		genomicsDataHandler.WigHandler.convertWigToH5
-		genomicsDataHandler.WigHandler.getRawWigDataAsDictionary
-		genomicsDataHandler.TextFileHandler
-		genomicsDataHandler.TextFileHandler.readData
-		genomicsDataHandler.TempNumpyArrayFiles
-		genomicsDataHandler.TempNumpyArrayFiles.updateArraysByBigWig
-		genomicsDataHandler.TempNumpyArrayFiles.updateArraysByChromSize
-		genomicsDataHandler.TempNumpyArrayFiles.addChromSizeInfo
-		genomicsDataHandler.TempNumpyArrayFiles.genrateAllTempNumpyFiles
-		genomicsDataHandler.TempNumpyArrayFiles.generateTempNumpyFile
-		genomicsDataHandler.TempNumpyArrayFiles.fillAllArraysWithZeros
+		HDF5Handler
+		HDF5Handler.getChromList
+		HDF5Handler.getResolutionList
+		HDF5Handler.getDataNameList
+		HDF5Handler.buildDataTree
+		BigWigHandler
+		BigWigHandler.getBigWigInfo
+		BigWigHandler.bigWigtoWig
+		BigWigHandler.saveAsH5
+		WigHandler
+		WigHandler.parseWig
+		WigHandler.setChromosome
+		WigHandler.saveAsH5
+		WigHandler.getRawWigDataAsDictionary
+		BEDHandler
+		BEDHandler.parseBed
+		BEDHandler.setChromosome
+		BEDHandler.saveAsH5
+		TextFileHandler
+		TextFileHandler.readData
+		TempNumpyArrayFiles
+		TempNumpyArrayFiles.updateArraysByBigWig
+		TempNumpyArrayFiles.updateArraysByChromSize
+		TempNumpyArrayFiles.addChromSizeInfo
+		TempNumpyArrayFiles.genrateAllTempNumpyFiles
+		TempNumpyArrayFiles.generateTempNumpyFile
+		TempNumpyArrayFiles.fillAllArraysWithZeros
 
 
 HDF5Handler class
 -----------------
 
 .. autoclass:: gcMapExplorer.lib.genomicsDataHandler.HDF5Handler
-  :members: getChromList, getResolutionList, getDataNameList, buildDataTree, addDataByArray
-
+		:members:
+		:private-members:
 
 BigWigHandler class
 -------------------
 
 .. autoclass:: gcMapExplorer.lib.genomicsDataHandler.BigWigHandler
-  :members: _getBigWigInfo, _bigWigtoWig, getBigWigInfo, bigWigtoWig, saveToH5
+		:members:
+		:private-members:
 
+WigHandler class
+----------------
+
+.. autoclass:: gcMapExplorer.lib.genomicsDataHandler.WigHandler
+		:members:
+		:private-members:
+
+
+BEDHandler class
+----------------
+
+.. autoclass:: gcMapExplorer.lib.genomicsDataHandler.BEDHandler
+		:members:
+		:private-members:
+
+TempNumpyArrayFiles class
+-------------------------
+
+.. autoclass:: gcMapExplorer.lib.genomicsDataHandler.TempNumpyArrayFiles
+  :members: _getBigWigInfo, _generateTempNumpyFile, updateArraysByBigWig, updateArraysByChromSize, addChromSizeInfo, genrateAllTempNumpyFiles, generateTempNumpyFile, fillAllArraysWithZeros
 
 
 TextFileHandler class
@@ -53,17 +79,3 @@ TextFileHandler class
 
 .. autoclass:: gcMapExplorer.lib.genomicsDataHandler.TextFileHandler
   :members: _getBinSize, readData
-
-
-WigHandler class
-----------------
-
-.. autoclass:: gcMapExplorer.lib.genomicsDataHandler.WigHandler
-  :members: _PerformDataCoarsing, _getChromTitle_parseWig, _getChromTitleBedgraph_parseWig, _getStartStepFixedStep_parseWig, _getSpan_parseWig, _FillDataInNumpyArrayFile, _StoreInHdf5File, parseWig, _parseWig, convertWigToH5, getRawWigDataAsDictionary
-
-
-TempNumpyArrayFiles class
--------------------------
-
-.. autoclass:: gcMapExplorer.lib.genomicsDataHandler.TempNumpyArrayFiles
-  :members: _getBigWigInfo, _generateTempNumpyFile, updateArraysByBigWig, updateArraysByChromSize, addChromSizeInfo, genrateAllTempNumpyFiles, generateTempNumpyFile, fillAllArraysWithZeros

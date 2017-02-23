@@ -35,7 +35,6 @@ def read(fname):
 
 ext_modules = [
     Extension("gcMapExplorer.lib.ccmapHelpers",            ["gcMapExplorer/lib/ccmapHelpers.pyx"]             ),
-    Extension("gcMapExplorer.lib.genomicsDataHandler",     ["gcMapExplorer/lib/genomicsDataHandler.pyx"]      ),
     Extension("gcMapExplorer.lib.normalizeAverageContact", ["gcMapExplorer/lib/normalizeAverageContact.pyx"]  ),
     Extension("gcMapExplorer.lib.normalizeKnightRuiz",     ["gcMapExplorer/lib/normalizeKnightRuiz.pyx"]      ),
     Extension("gcMapExplorer.lib.normalizeIC",             ["gcMapExplorer/lib/normalizeIC.pyx"]              ),
@@ -44,7 +43,7 @@ ext_modules = [
 
 setup(
     name = 'gcMapExplorer',
-    version = '1.0.2',
+    version = '1.0.3',
 
     # Required packages
     install_requires = [ 'appdirs>=1.4', 'numpy>=1.6',  'scipy>=0.9', 'matplotlib>=1.1.0', 'dask>=0.7.3', 'toolz>=0.7.4', 'h5py>=2.2.1', 'Cython>=0.23.0' ],

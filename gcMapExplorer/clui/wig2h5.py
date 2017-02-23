@@ -33,24 +33,14 @@ from gcMapExplorer.config import getConfig
 config = getConfig()
 
 description = \
-"""Import a bigWig file to HDF5 format h5 file
+"""Import a wig file to HDF5 format h5 file
 ============================================
 
-bigWig file can be converted into gcMapExplorer compaitable HDF5 file using
+wig file can be converted into gcMapExplorer compaitable HDF5 file using
 this tool. This HDF5 file can be loaded into gcMapExplorer browser for
 interactive visualization.
 
-Requirements
-============
-1) bigWigToWig : It converts binary bigWig file to ascii Wig file.
-2) bigWigInfo : It fetches the information about chromosomes from bigWig file.
-
-Both tools can be downloaded from http://hgdownload.cse.ucsc.edu/admin/exe/
-for linux and Mac platform. However, these tools are not yet available for
-Windows OS.
-
-Path to these tools can be set using gcMapExplorer configure utility or can be
-given with the command.
+This tool does not require any external program.
 
 Resolutions
 ===========
@@ -83,29 +73,7 @@ data to reduce the file size. To keep the original data in h5 file, used
 """
 
 inputFileHelp = \
-"""Input bigWig file.
-
-"""
-
-bigWigToWigHelp = \
-"""Path to bigWigToWig tool.
-
-This is not neccessary when bigWigToWig path is already set using gcMapExplorer
-configure utility.
-
-It can be downloaded from http://hgdownload.cse.ucsc.edu/admin/exe/
-for linux and Mac platform.
-
-"""
-
-bigWigInfoHelp = \
-""" Path to bigWigInfo tool.
-
-This is not neccessary when bigWigInfo path is already set using gcMapExplorer
-configure utility.
-
-It can be downloaded from http://hgdownload.cse.ucsc.edu/admin/exe/
-for linux and Mac platform.
+"""Input wig file.
 
 """
 
@@ -155,27 +123,27 @@ file size significantly.
 
 """
 
+indexFileHelp = \
+"""Index file in json format.
+A file in json format containing indices (position in wig file) and sizes of
+chromosomes. If this file is not present and given as input, a new file will be
+generated. If this file is present, indices andsizes will be taken from this
+file. If index and size of input chromosome is not present in json file, these
+will be determined from wig file and stored in same json file. This file could
+be very helpful in case when same wig file has to be read many times because
+step to determine index and size of chromosome is skipped.
+
+"""
+
 def main():
     # Construct command line arguments and parsed it
     parser, args = parseArguments()
 
-    # Check for bigWigToWig program
-    bigWigToWig = args.bigWigToWig
-    if bigWigToWig == 'None':
-        showErrorAndExit(parser, '\nPath to bigWigToWig not provided!!!\n')
-    checkFileExist(bigWigToWig, parser)
-
-    # Check for bigWigInfo program
-    bigWigInfo = args.bigWigInfo
-    if bigWigInfo == 'None':
-        showErrorAndExit(parser, '\nPath to bigWigInfo not provided!!!\n')
-    checkFileExist(bigWigInfo, parser)
-
     # Check for input bigWig File
-    if args.inputBigWigFile is None:
-        showErrorAndExit(parser, '\nInput bigWig file is not given!!!\n')
-    inputBigWigFile = args.inputBigWigFile.name
-    args.inputBigWigFile.close()
+    if args.inputWigFile is None:
+        showErrorAndExit(parser, '\nInput wig file is not given!!!\n')
+    inputWigFile = args.inputWigFile.name
+    args.inputWigFile.close()
 
     # Check for additional resolutions
     resolutions = args.resolutions
@@ -199,15 +167,15 @@ def main():
         showErrorAndExit(parser, '\nScratch Dirctory "{0}" not found !!!\n'.format(args.workDir))
 
     # Main conversion start here
-    bigwig = gmlib.genomicsDataHandler.BigWigHandler(inputBigWigFile,
-                            bigWigToWig, bigWigInfo,
+    wig = gmlib.genomicsDataHandler.WigHandler(inputWigFile,
+                             indexFile=args.indexFile,
                             chromName=args.chromName, workDir=args.workDir)
 
-    bigwig.saveAsH5(outFile, title=args.title, resolutions=resolutions,
+    wig.saveAsH5(outFile, title=args.title, compression=args.compression,
+                    resolutions=resolutions,
                     coarsening_methods=coarsening_methods,
-                    compression=args.compression,
                     keep_original=args.keep_original)
-    del bigwig
+    del wig
 
 def get_resolution_list(resolution, parser):
     rlist = []
@@ -245,7 +213,7 @@ def check_overwrite_status(outFile, overwrite, parser):
 
     # Else do check other stuffs
     if os.path.isfile(outFile):
-        print('\n WARNING: Output File "{0}" already exist.!!!'.format(outFile))
+        print('\nWARNING: Output File "{0}" already exist.!!!'.format(outFile))
 
         s = input('\n Are you sure to overwrite datasets [y/n] (default: n): ')
         while(True):
@@ -265,38 +233,28 @@ def check_overwrite_status(outFile, overwrite, parser):
 
 def parseArguments():
     parser = argparse.ArgumentParser(
-                prog='gcMapExplorer bigwig2h5',
+                prog='gcMapExplorer wig2h5',
                 description=description,
                 formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument('-i', '--input', action='store',
-                        type=argparse.FileType('rb'), metavar='input.bigWig',
-                        dest='inputBigWigFile', help=inputFileHelp)
+                        type=argparse.FileType('rb'), metavar='input.wig',
+                        dest='inputWigFile', help=inputFileHelp)
 
     parser.add_argument('-t', '--title', action='store',
                         dest='title', metavar='"Genomic Dataset"',
                         default='"Genomic Dataset"',
                         help='Title of the dataset.\n')
-
-    parser.add_argument('-b2w', '--bigWigToWig', action='store',
-                        type=str, metavar='bigWigToWig',
-                        default=config['Programs']['bigWigToWig'],
-                        dest='bigWigToWig', help=bigWigToWigHelp)
-
-    parser.add_argument('-binfo', '--bigWigInfo', action='store', type=str,
-                        metavar='bigWigInfo', dest='bigWigInfo',
-                        default=config['Programs']['bigWigInfo'],
-                        help=bigWigInfoHelp)
     parser.add_argument('-r', '--resolutions', action='store', type=str,
                         metavar='"List of Resolutions"', dest='resolutions',
                         help=resolutionHelp)
-    parser.add_argument('-icn', '--input-chromosome', action='store',
-                        dest='chromName',
-                        help=inputChromosomeHelp)
     parser.add_argument('-dm', '--downsample-method', action='store', type=str,
                         metavar='"List of downsampling method"',
                         dest='coarsening_methods',
                         help=coarseningMethodHelp)
+    parser.add_argument('-icn', '--input-chromosome', action='store',
+                        dest='chromName',
+                        help=inputChromosomeHelp)
     parser.add_argument('-cmeth', '--compression-method', action='store',
                         dest='compression', metavar='lzf',
                         choices=['lzf', 'gzip'], default='lzf',
@@ -313,12 +271,16 @@ def parseArguments():
                         default = False,
                         dest='keep_original', help=keepOriginalHelp)
 
+    parser.add_argument('-idf', '--index-file', action='store',
+                        metavar='index.json', dest='indexFile',
+                        help=indexFileHelp)
+
     parser.add_argument('-wd', '--work-dir', action='store', dest='workDir',
                         default=config['Dirs']['WorkingDirectory'],
                         metavar=config['Dirs']['WorkingDirectory'],
                         help='Directory where temporary files will be stored.')
 
-    idx = sys.argv.index("bigwig2h5")+1
+    idx = sys.argv.index("wig2h5")+1
     args = parser.parse_args(args=sys.argv[idx:])
 
     return parser, args

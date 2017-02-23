@@ -25,6 +25,7 @@ Graphical User Interface
 Commands to convert or import data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 * **coo2cmap** : Import COO sparse matrix format to ccmap or gcmap
+* **pairCoo2cmap** : Import map from files similar to paired COO format
 * **homer2cmap** : Import HOMER Hi-C interaction matrix to ccmap or gcmap
 * **bc2cmap** : Import Bin-Contact format files to ccmap or gcmap
 * **bigwig2h5** : Import a bigWig file to HDF5 format h5 file

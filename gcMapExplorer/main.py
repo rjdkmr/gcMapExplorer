@@ -26,7 +26,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 gui_tools =      ['browser', 'importer', 'normalizer']
-convert_tools =  ['coo2cmap', 'pairCoo2cmap', 'homer2cmap', 'bc2cmap', 'bigwig2h5']
+convert_tools =  ['coo2cmap', 'pairCoo2cmap', 'homer2cmap', 'bc2cmap', 'bigwig2h5', 'wig2h5', 'bed2h5']
 norm_tools =     ['normKR', 'normIC', 'normMCFS']
 analysis_tools = ['corrBWcmaps']
 
@@ -39,6 +39,8 @@ def main():
                'homer2cmap':'Import HOMER Hi-C interaction matrix to ccmap or gcmap',
                'bc2cmap': 'Import Bin-Contact format files to ccmap or gcmap',
                'bigwig2h5': 'Import a bigWig file to HDF5 format h5 file',
+               'wig2h5': 'Import a wig file to HDF5 format h5 file',
+               'bed2h5' : 'Import a bed file to HDF5 format h5 file',
                'normKR' : 'Normalization using Knight-Ruiz matrix balancing',
                'normIC' : 'Normalization using Iterative Correction',
                'normMCFS' : 'Normalization by Median Contact Frequency Scaling',
@@ -83,6 +85,14 @@ def main():
     if sys.argv[1] == 'bigwig2h5':
         from .clui import bigwig2h5
         bigwig2h5.main()
+
+    if sys.argv[1] == 'wig2h5':
+        from .clui import wig2h5
+        wig2h5.main()
+
+    if sys.argv[1] == 'bed2h5':
+        from .clui import bed2h5
+        bed2h5.main()
 
     if sys.argv[1] == 'normKR':
         from .clui import normKR

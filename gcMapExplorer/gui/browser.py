@@ -2733,6 +2733,17 @@ class GenomicDataPlotAxis:
         else:
             self.ax.set_xlabel(value, fontsize=12)
 
+
+    def selectGenomicDataByH5Conversion(self, filename, chrom):
+        """ This can be used to load a dataset by converting any other format
+        like bigwig, wig or bed format to H5 format.
+
+        NOTE: temporary H5 file should be deleted when browser is closed.
+
+        """
+
+        pass
+
     def selectGenomicDataHdf5ByDialogBox(self, filename, filesOpened):
         """DIalog box to select genomiec displayed_dataset
         A dialog box will be opened and content of hdf5 file will be read.
