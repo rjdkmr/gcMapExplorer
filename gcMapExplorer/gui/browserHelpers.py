@@ -32,6 +32,8 @@ from PyQt5.QtGui import *
 from PyQt5.uic import loadUiType
 
 import matplotlib as mpl
+from matplotlib import font_manager as mplFontManager
+from matplotlib import colors as mplColors
 from matplotlib.ticker import AutoMinorLocator, MaxNLocator
 
 from gcMapExplorer import cmstats
@@ -361,7 +363,7 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
                 mplTtfList.append(os.path.join(mplTtfFontPath, f))
 
         # Getting name of each font from ttf files
-        mplFontNameList = [mpl.font_manager.FontProperties(fname=fname).get_name() for fname in mplTtfList]
+        mplFontNameList = [mplFontManager.FontProperties(fname=fname).get_name() for fname in mplTtfList]
 
         # Getting name of each font from qt font database
         qtFontNameListQtype = self.qtFontDatabase.families()
@@ -379,9 +381,9 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
 
     def is_font_exist_in_mpl(self, fontname):
         result = None
-        result = mpl.font_manager.findfont(mpl.font_manager.FontProperties(family=fontname))
+        result = mplFontManager.findfont(mplFontManager.FontProperties(family=fontname))
 
-        if mpl.font_manager.FontProperties(fname=result).get_name() == fontname:
+        if mplFontManager.FontProperties(fname=result).get_name() == fontname:
             return True
         else:
             return False
@@ -2182,7 +2184,7 @@ class DialogUserColorMap(DialogUserColorMapBase, Ui_DialogUserColorMap):
             # Check if it is a LinearSegmentedColormap.
             # If a user added the colormap it is  LinearSegmentedColormap
             # otherwise a string
-            if isinstance(colormapList[colormap], mpl.colors.LinearSegmentedColormap):
+            if isinstance(colormapList[colormap], mplColors.LinearSegmentedColormap):
                 # Find index in QComboBox
                 idx = self.cmapListCBox.findText(colormapList[colormap].name, Qt.MatchExactly)
 
@@ -2384,7 +2386,7 @@ class DialogUserColorMap(DialogUserColorMapBase, Ui_DialogUserColorMap):
 
                 # Check if color is readable
                 color = jsonColorInfo['colors'][key]
-                if not mpl.colors.is_color_like(color):
+                if not mplColors.is_color_like(color):
                     raise(ValueError)
 
                 colorInfo['colors'][float(key)] = color
@@ -2536,7 +2538,7 @@ def segmentDataColorMapToColorInfo(colormap):
         g = colormap._segmentdata['green'][i][1]
         b = colormap._segmentdata['blue'][i][1]
         a = colormap._segmentdata['alpha'][i][1]
-        colorInfo['colors'][value] = mpl.colors.to_hex((r, g, b, a))
+        colorInfo['colors'][value] = mplColors.to_hex((r, g, b, a))
 
     return colorInfo
 
@@ -2550,7 +2552,7 @@ def colorInfoToSegmentDataColorMap(colorInfo):
     for i in range(len(keys)):
         color_list.append( (keys[i], cdict[keys[i]]) )
 
-    colormap = mpl.colors.LinearSegmentedColormap.from_list(colorInfo['name'], color_list)
+    colormap = mplColors.LinearSegmentedColormap.from_list(colorInfo['name'], color_list)
     return colormap
 
 def add_external_colormap_to_combobox(cbox, colorMapList, colorInfo):

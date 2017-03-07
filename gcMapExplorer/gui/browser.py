@@ -36,6 +36,8 @@ from PyQt5.QtPrintSupport import *
 from PyQt5.uic import loadUiType
 
 import matplotlib as mpl
+from matplotlib import figure as mplFigure
+from matplotlib import widgets as mplWidgtes
 mpl.use("Qt5Agg")
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -820,7 +822,7 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         self.dpi = 100
 
         # New figure object of given figure size
-        self.figure = mpl.figure.Figure(dpi=self.dpi, facecolor='white', figsize=self.figsize)
+        self.figure = mplFigure.Figure(dpi=self.dpi, facecolor='white', figsize=self.figsize)
 
         # New canvas object connect with figure object
         self.canvas = FigureCanvas(self.figure)
@@ -1690,11 +1692,11 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         self.markerLineWidth = self.markerLineWidthSpinBox.value()
 
         if self.markerCBox.currentIndex() == 1:
-            self.marker = mpl.widgets.MultiCursor(self.canvas, axis_list, horizOn=True, color=self.markerColor, linewidth=self.markerLineWidth)
+            self.marker = mplWidgtes.MultiCursor(self.canvas, axis_list, horizOn=True, color=self.markerColor, linewidth=self.markerLineWidth)
         elif self.markerCBox.currentIndex() == 2:
-            self.marker = mpl.widgets.MultiCursor(self.canvas, axis_list, horizOn=True, vertOn=False, color=self.markerColor, linewidth=self.markerLineWidth)
+            self.marker = mplWidgtes.MultiCursor(self.canvas, axis_list, horizOn=True, vertOn=False, color=self.markerColor, linewidth=self.markerLineWidth)
         elif self.markerCBox.currentIndex() == 3:
-            self.marker = mpl.widgets.MultiCursor(self.canvas, axis_list, horizOn=False, color=self.markerColor, linewidth=self.markerLineWidth)
+            self.marker = mplWidgtes.MultiCursor(self.canvas, axis_list, horizOn=False, color=self.markerColor, linewidth=self.markerLineWidth)
         else:
             pass
 
