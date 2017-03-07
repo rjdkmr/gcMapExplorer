@@ -2538,7 +2538,7 @@ def segmentDataColorMapToColorInfo(colormap):
         g = colormap._segmentdata['green'][i][1]
         b = colormap._segmentdata['blue'][i][1]
         a = colormap._segmentdata['alpha'][i][1]
-        colorInfo['colors'][value] = mplColors.to_hex((r, g, b, a))
+        colorInfo['colors'][value] = mplColors.rgb2hex((r, g, b, a))
 
     return colorInfo
 
