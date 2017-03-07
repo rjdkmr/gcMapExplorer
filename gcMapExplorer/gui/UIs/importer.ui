@@ -45,7 +45,52 @@
       <item>
        <widget class="QComboBox" name="inputSelectorQCBox">
         <property name="whatsThis">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select Input Format from this list:&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;1) COO Matrix&lt;/span&gt;: COO sparse matrix format. As shown below in example, in this format, first and second column is location on chromosome and third column is the respective value:&lt;/p&gt;&lt;p&gt;20000000	    20000000       2692.0&lt;/p&gt;&lt;p&gt;20000000        20100000        885.0&lt;/p&gt;&lt;p&gt;20100000        20100000        6493.0&lt;/p&gt;&lt;p&gt;20000000        20200000        15.0&lt;/p&gt;&lt;p&gt;20100000        20200000        52.0&lt;/p&gt;&lt;p&gt;20200000        20200000        2.0&lt;/p&gt;&lt;p&gt;20000000        20300000        18.0&lt;/p&gt;&lt;p&gt;20100000        20300000        40.0&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>Select Input Format from this list:
+
+1) COO Matrix: COO sparse matrix format. As shown below in example, in this format, first and second column is location on chromosome and third column is the respective value:
+20000000 20000000 2692.0
+20000000 20100000 885.0
+20100000 20100000 6493.0 
+20000000 20200000 15.0 
+20100000 20200000 52.0 
+20200000 20200000 2.0 
+20000000 20300000 18.0 
+20100000 20300000 40.0 
+
+2) HOMER Hi-C interaction matrix : HOMER package (http://homer.salk.edu/homer/interactions/) contains modules to analyze genome wide interaction data. It creates Hi-C matrix in a specific format as shown as shown here: http://homer.salk.edu/homer/interactions/HiCmatrices.html. This format contains contact map in a matrix format.
+
+3) Bin-Contact format : In this format, two separate files are available. One file contains bins information and other contains contact frequency.
+These types of files are present in following GEO data:
+* http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE61471
+* http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE34453
+This format contains a pair of file:
+BIN file:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cbin chr from.coord to.coord count
+1 2L 0 160000 747
+2 2L 160000 320000 893
+3 2L 320000 480000 1056
+4 2L 480000 640000 1060
+5 2L 640000 800000 978
+6 2L 800000 960000 926
+.
+.
+.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+CONTACT file in list format:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cbin1 cbin2 expected_count observed_count
+1 1 40.245201 21339
+1 2 83.747499 5661
+1 3 92.12501 1546
+1 4 93.401273 864
+1 5 87.265472 442
+.
+.
+.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Both BIN and CONTACT files are neccessary for the conversion.</string>
         </property>
         <item>
          <property name="text">
@@ -180,7 +225,7 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                <item>
                 <widget class="QTableWidget" name="cooMatIOTable">
                  <property name="whatsThis">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Table containing Input file  with respective xlabel and ylabel. xlabel and ylabel is neccessary for identification of data. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Table containing Input file with respective xlabel and ylabel. xlabel and ylabel is neccessary for identification of data.&lt;/p&gt;&lt;p&gt;An input file can be directly entered in first column by selecting a cell and by clicking on &amp;quot;Add File&amp;quot; button at  the right.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
                  <property name="editTriggers">
                   <set>QAbstractItemView::AnyKeyPressed|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
@@ -252,7 +297,7 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                  <item>
                   <widget class="QPushButton" name="cooMatIOAddFromFileButton">
                    <property name="whatsThis">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Meta input file&lt;/span&gt; containing input contact map files list with respective xlabel and ylabel. xlabel should be always provided. In case of intra-chromosomal map, only xlabel is sufficient because both x and y axis are of same chromosome. However for inter-chromosomal map, both xlabel and ylabel should be provided.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Example format&lt;/span&gt;:&lt;/p&gt;&lt;p&gt;100kb_resolution_intrachromosomal/chr1/MAPQGE30/chr1_100kb.RAWobserved chr1&lt;/p&gt;&lt;p&gt;100kb_resolution_intrachromosomal/chr5/MAPQGE30/chr5_100kb.RAWobserved chr5&lt;/p&gt;&lt;p&gt;100kb_resolution_intrachromosomal/chr15/MAPQGE30/chr15_100kb.RAWobserved chr15&lt;/p&gt;&lt;p&gt;100kb_resolution_intrachromosomal/chr20/MAPQGE30/chr20_100kb.RAWobserved chr20&lt;/p&gt;&lt;p&gt;100kb_resolution_intrachromosomal/chr21/MAPQGE30/chr21_100kb.RAWobserved chr21&lt;/p&gt;&lt;p&gt;100kb_resolution_intrachromosomal/chr22/MAPQGE30/chr22_100kb.RAWobserved chr22&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Meta input file containing input contact map files list with respective xlabel and ylabel. xlabel should be always provided. In case of intra-chromosomal map, only xlabel is sufficient because both x and y axis are of same chromosome. However for inter-chromosomal map, both xlabel and ylabel should be provided. Example format:&lt;/p&gt;&lt;p&gt;100kb_resolution_intrachromosomal/chr1/MAPQGE30/chr1_100kb.RAWobserved chr1&lt;/p&gt;&lt;p&gt;100kb_resolution_intrachromosomal/chr5/MAPQGE30/chr5_100kb.RAWobserved chr5&lt;/p&gt;&lt;p&gt;100kb_resolution_intrachromosomal/chr15/MAPQGE30/chr15_100kb.RAWobserved chr15&lt;/p&gt;&lt;p&gt;100kb_resolution_intrachromosomal/chr20/MAPQGE30/chr20_100kb.RAWobserved chr20&lt;/p&gt;&lt;p&gt;100kb_resolution_intrachromosomal/chr21/MAPQGE30/chr21_100kb.RAWobserved chr21&lt;/p&gt;&lt;p&gt;100kb_resolution_intrachromosomal/chr22/MAPQGE30/chr22_100kb.RAWobserved chr22 &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="text">
                     <string>Add from File</string>
@@ -334,6 +379,12 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                </item>
                <item>
                 <widget class="QComboBox" name="cooMatMapTypeCBox">
+                 <property name="toolTip">
+                  <string>Type of listed contact maps: &quot;intra&quot; or &quot;inter&quot; chromosomal map.</string>
+                 </property>
+                 <property name="whatsThis">
+                  <string>Type of listed contact maps: &quot;intra&quot; or &quot;inter&quot; chromosomal map.</string>
+                 </property>
                  <item>
                   <property name="text">
                    <string>intra</string>
@@ -382,6 +433,12 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                </item>
                <item>
                 <widget class="QComboBox" name="cooMatCoordTypeCBox">
+                 <property name="toolTip">
+                  <string>Real coordinate or index in input file.</string>
+                 </property>
+                 <property name="whatsThis">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;It determines whether contact map files have real coordinate of chromosome or index number. If &amp;quot;index&amp;quot; is selected, resolution should be sprovided.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
                  <item>
                   <property name="text">
                    <string>real</string>
@@ -409,6 +466,12 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
+                 <property name="toolTip">
+                  <string>Resolution of all maps</string>
+                 </property>
+                 <property name="whatsThis">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Resolution of all maps. It is an optional argument. Note that, if this option is not provided, resolution will be automatically determined from the contact map file. However, in case of &amp;quot;Coordinate -&amp;gt; index&amp;quot; option, resolution should be provided because it cannot be determined from input contact map file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
                  <property name="text">
                   <string/>
                  </property>
@@ -432,6 +495,12 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
              </item>
              <item>
               <widget class="QGroupBox" name="cooMatCCMapGroupBox">
+               <property name="toolTip">
+                <string>Save as ccmap file</string>
+               </property>
+               <property name="whatsThis">
+                <string>Save as ccmap file</string>
+               </property>
                <property name="title">
                 <string>Save as CCMAP files</string>
                </property>
@@ -459,7 +528,14 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLineEdit" name="cooMatCCMapOutSuffixLineEdit"/>
+                 <widget class="QLineEdit" name="cooMatCCMapOutSuffixLineEdit">
+                  <property name="toolTip">
+                   <string>Suffix of ccmap files</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use this to convert all contact maps to ccmap format files. Provide suffix of ccmap file names with this option and it will enable the conversion.&lt;/p&gt;&lt;p&gt;Ouput ccmap file name is generated outmatically as follows; if xlabel is not equal to ylabel: &amp;quot;&amp;lt;xlabel&amp;gt;_&amp;lt;ylabel&amp;gt;_&amp;lt;suffix&amp;gt;.ccmap&amp;quot; else: &amp;quot;&amp;lt;xlabel&amp;gt;_&amp;lt;suffix&amp;gt;.ccmap&amp;quot;&lt;/p&gt;&lt;p&gt;Note that &amp;quot;Ouput Directory&amp;quot; is also required because all ccmaps will be saved in this directory.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                 </widget>
                 </item>
                 <item>
                  <widget class="QLabel" name="cooMatOutDirQLabel">
@@ -469,7 +545,14 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLineEdit" name="cooMatOutDIrLineEdit"/>
+                 <widget class="QLineEdit" name="cooMatOutDIrLineEdit">
+                  <property name="toolTip">
+                   <string>Directory to save all ccmap files.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>Directory to save all ccmap files.</string>
+                  </property>
+                 </widget>
                 </item>
                 <item>
                  <widget class="QPushButton" name="cooMatOutDirBrowseButton">
@@ -490,6 +573,12 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
              </item>
              <item>
               <widget class="QGroupBox" name="cooMatGCMapBoxGroupBox">
+               <property name="toolTip">
+                <string> To save all maps in a gcmap file</string>
+               </property>
+               <property name="whatsThis">
+                <string> To save all maps in a gcmap file</string>
+               </property>
                <property name="title">
                 <string>Save as GCMAP file</string>
                </property>
@@ -510,7 +599,14 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                  <number>2</number>
                 </property>
                 <item row="0" column="1">
-                 <widget class="QLineEdit" name="cooMatGCMapOutLineEdit"/>
+                 <widget class="QLineEdit" name="cooMatGCMapOutLineEdit">
+                  <property name="toolTip">
+                   <string>Output gcmap file.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Output gcmap file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                 </widget>
                 </item>
                 <item row="0" column="0">
                  <widget class="QLabel" name="cooMatGCMapOutQlabel">
@@ -540,6 +636,12 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                     <height>16777215</height>
                    </size>
                   </property>
+                  <property name="toolTip">
+                   <string>Data compression method in gcmap file.Data compression method in gcmap file.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Data compression method in gcmap file.&lt;/p&gt;&lt;p&gt;LZF : This method is very fast, and allow the rapid contact map reading. However, the size reduction is moderate in comparison with GZIP compression method. &lt;/p&gt;&lt;p&gt;GZIP: Slow but high compression ratio. use this method, if file has to read from other external software.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
                   <item>
                    <property name="text">
                     <string>LZF</string>
@@ -561,6 +663,12 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                 </item>
                 <item row="0" column="6">
                  <widget class="QComboBox" name="cooMatGCMapDownsampleCBox">
+                  <property name="toolTip">
+                   <string>Downsampling method to coarsen the resolution in gcmap file.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Downsampling method to coarsen the resolution in gcmap file. Three implemented methods are&lt;/p&gt;&lt;p&gt;1) Sum : sum of values,&lt;/p&gt;&lt;p&gt;2) Average : Average of values and&lt;/p&gt;&lt;p&gt;3) Maximum : Maximum of values.&lt;/p&gt;&lt;p&gt;This option generates all coarser maps where resolutions will be coarsened by a factor of two, consequetively. e.g.: In case of 10 kb input resolution, downsampled maps of &amp;quot;20kb&amp;quot;, &amp;quot;40kb&amp;quot;, &amp;quot;80kb&amp;quot;, &amp;quot;160kb&amp;quot;, &amp;quot;320kb&amp;quot; etc. will be generated until, map size is less than 500.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
                   <item>
                    <property name="text">
                     <string>Sum</string>
@@ -612,7 +720,14 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="cooMatScratchDirLineEdit"/>
+                <widget class="QLineEdit" name="cooMatScratchDirLineEdit">
+                 <property name="toolTip">
+                  <string>Directory where temporary files will be stored.</string>
+                 </property>
+                 <property name="whatsThis">
+                  <string>Directory where temporary files will be stored.</string>
+                 </property>
+                </widget>
                </item>
                <item>
                 <widget class="QPushButton" name="cooMatScratchDirBrowsButton">
@@ -653,6 +768,12 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                    <bold>true</bold>
                   </font>
                  </property>
+                 <property name="toolTip">
+                  <string>Stop coversion</string>
+                 </property>
+                 <property name="whatsThis">
+                  <string>Stop coversion</string>
+                 </property>
                  <property name="text">
                   <string>Stop</string>
                  </property>
@@ -678,6 +799,12 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                    <weight>75</weight>
                    <bold>true</bold>
                   </font>
+                 </property>
+                 <property name="toolTip">
+                  <string>Start coversion</string>
+                 </property>
+                 <property name="whatsThis">
+                  <string>Start coversion</string>
                  </property>
                  <property name="text">
                   <string>Run</string>
@@ -728,7 +855,14 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="homerInputFileLineEdit"/>
+                <widget class="QLineEdit" name="homerInputFileLineEdit">
+                 <property name="toolTip">
+                  <string>File containing HOMER Hi-C ineraction matrix format contact map</string>
+                 </property>
+                 <property name="whatsThis">
+                  <string>File containing HOMER Hi-C ineraction matrix format contact map</string>
+                 </property>
+                </widget>
                </item>
                <item>
                 <widget class="QPushButton" name="homerInputFileBrowsButton">
@@ -748,6 +882,12 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
              </item>
              <item>
               <widget class="QGroupBox" name="homerCCMapGroupBox">
+               <property name="toolTip">
+                <string>Save as ccmap file</string>
+               </property>
+               <property name="whatsThis">
+                <string>Save as ccmap file</string>
+               </property>
                <property name="title">
                 <string>Save as CCMAP Files:</string>
                </property>
@@ -782,6 +922,12 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                     <height>16777215</height>
                    </size>
                   </property>
+                  <property name="toolTip">
+                   <string>Suffix of ccmap files</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use this to convert all contact maps to ccmap format files. Provide suffix of ccmap file names with this option and it will enable the conversion.&lt;/p&gt;&lt;p&gt;Ouput ccmap file name is generated outmatically as follows; if xlabel is not equal to ylabel: &amp;quot;&amp;lt;xlabel&amp;gt;_&amp;lt;ylabel&amp;gt;_&amp;lt;suffix&amp;gt;.ccmap&amp;quot; else: &amp;quot;&amp;lt;xlabel&amp;gt;_&amp;lt;suffix&amp;gt;.ccmap&amp;quot;&lt;/p&gt;&lt;p&gt;Note that &amp;quot;Ouput Directory&amp;quot; is also required because all ccmaps will be saved in this directory.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
                  </widget>
                 </item>
                 <item>
@@ -799,7 +945,14 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLineEdit" name="homerOutDIrLineEdit"/>
+                 <widget class="QLineEdit" name="homerOutDIrLineEdit">
+                  <property name="toolTip">
+                   <string>Directory to save all ccmap files.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>Directory to save all ccmap files.</string>
+                  </property>
+                 </widget>
                 </item>
                 <item>
                  <widget class="QPushButton" name="homerOutDirBrowseButton">
@@ -835,7 +988,14 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLineEdit" name="homerGCMapOutLineEdit"/>
+                 <widget class="QLineEdit" name="homerGCMapOutLineEdit">
+                  <property name="toolTip">
+                   <string> To save all maps in a gcmap file</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string> To save all maps in a gcmap file</string>
+                  </property>
+                 </widget>
                 </item>
                 <item>
                  <widget class="QPushButton" name="homerGCMapOutSelectButton">
@@ -872,6 +1032,12 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                     <height>16777215</height>
                    </size>
                   </property>
+                  <property name="toolTip">
+                   <string>Data compression method in gcmap file.Data compression method in gcmap file.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Data compression method in gcmap file.&lt;/p&gt;&lt;p&gt;LZF : This method is very fast, and allow the rapid contact map reading. However, the size reduction is moderate in comparison with GZIP compression method. &lt;/p&gt;&lt;p&gt;GZIP: Slow but high compression ratio. use this method, if file has to read from other external software.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
                   <item>
                    <property name="text">
                     <string>LZF</string>
@@ -900,6 +1066,12 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                 </item>
                 <item>
                  <widget class="QComboBox" name="homerGCMapDownsampleCBox">
+                  <property name="toolTip">
+                   <string>Downsampling method to coarsen the resolution in gcmap file.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Downsampling method to coarsen the resolution in gcmap file. Three implemented methods are&lt;/p&gt;&lt;p&gt;1) Sum : sum of values,&lt;/p&gt;&lt;p&gt;2) Average : Average of values and&lt;/p&gt;&lt;p&gt;3) Maximum : Maximum of values.&lt;/p&gt;&lt;p&gt;This option generates all coarser maps where resolutions will be coarsened by a factor of two, consequetively. e.g.: In case of 10 kb input resolution, downsampled maps of &amp;quot;20kb&amp;quot;, &amp;quot;40kb&amp;quot;, &amp;quot;80kb&amp;quot;, &amp;quot;160kb&amp;quot;, &amp;quot;320kb&amp;quot; etc. will be generated until, map size is less than 500.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
                   <item>
                    <property name="text">
                     <string>Sum</string>
@@ -937,7 +1109,14 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="homerScratchDirLineEdit"/>
+                <widget class="QLineEdit" name="homerScratchDirLineEdit">
+                 <property name="toolTip">
+                  <string>Directory where temporary files will be stored.</string>
+                 </property>
+                 <property name="whatsThis">
+                  <string>Directory where temporary files will be stored.</string>
+                 </property>
+                </widget>
                </item>
                <item>
                 <widget class="QPushButton" name="homerScratchDirBrowsButton">
@@ -1054,7 +1233,26 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="binContactInputBinFileLineEdit"/>
+                <widget class="QLineEdit" name="binContactInputBinFileLineEdit">
+                 <property name="toolTip">
+                  <string>Input BIN file</string>
+                 </property>
+                 <property name="whatsThis">
+                  <string>Input BIN file. For Example:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cbin chr from.coord to.coord count
+1 2L 0 160000 747
+2 2L 160000 320000 893
+3 2L 320000 480000 1056
+4 2L 480000 640000 1060
+5 2L 640000 800000 978
+6 2L 800000 960000 926
+.
+.
+.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</string>
+                 </property>
+                </widget>
                </item>
                <item>
                 <widget class="QPushButton" name="binContactInputBinFileBrowsButton">
@@ -1082,7 +1280,25 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="binContactInputContactFileLineEdit"/>
+                <widget class="QLineEdit" name="binContactInputContactFileLineEdit">
+                 <property name="toolTip">
+                  <string>Input CONTACT file</string>
+                 </property>
+                 <property name="whatsThis">
+                  <string>Input CONTACT file. For Example:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+cbin1 cbin2 expected_count observed_count
+1 1 40.245201 21339
+1 2 83.747499 5661
+1 3 92.12501 1546
+1 4 93.401273 864
+1 5 87.265472 442
+.
+.
+.
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</string>
+                 </property>
+                </widget>
                </item>
                <item>
                 <widget class="QPushButton" name="binContactInputContactFileBrowsButton">
@@ -1102,6 +1318,12 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
              </item>
              <item>
               <widget class="QGroupBox" name="binContactCCMapGroupBox">
+               <property name="toolTip">
+                <string>Save as ccmap file</string>
+               </property>
+               <property name="whatsThis">
+                <string>Save as ccmap file</string>
+               </property>
                <property name="title">
                 <string>Save as CCMAP Files:</string>
                </property>
@@ -1136,6 +1358,12 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                     <height>16777215</height>
                    </size>
                   </property>
+                  <property name="toolTip">
+                   <string>Suffix of ccmap files</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use this to convert all contact maps to ccmap format files. Provide suffix of ccmap file names with this option and it will enable the conversion.&lt;/p&gt;&lt;p&gt;Ouput ccmap file name is generated outmatically as follows; if xlabel is not equal to ylabel: &amp;quot;&amp;lt;xlabel&amp;gt;_&amp;lt;ylabel&amp;gt;_&amp;lt;suffix&amp;gt;.ccmap&amp;quot; else: &amp;quot;&amp;lt;xlabel&amp;gt;_&amp;lt;suffix&amp;gt;.ccmap&amp;quot;&lt;/p&gt;&lt;p&gt;Note that &amp;quot;Ouput Directory&amp;quot; is also required because all ccmaps will be saved in this directory.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
                  </widget>
                 </item>
                 <item>
@@ -1153,7 +1381,14 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLineEdit" name="binContactOutDIrLineEdit"/>
+                 <widget class="QLineEdit" name="binContactOutDIrLineEdit">
+                  <property name="toolTip">
+                   <string>Directory to save all ccmap files.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>Directory to save all ccmap files.</string>
+                  </property>
+                 </widget>
                 </item>
                 <item>
                  <widget class="QPushButton" name="binContactOutDirBrowseButton">
@@ -1189,7 +1424,14 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLineEdit" name="binContactGCMapOutLineEdit"/>
+                 <widget class="QLineEdit" name="binContactGCMapOutLineEdit">
+                  <property name="toolTip">
+                   <string> To save all maps in a gcmap file</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string> To save all maps in a gcmap file</string>
+                  </property>
+                 </widget>
                 </item>
                 <item>
                  <widget class="QPushButton" name="binContactGCMapOutSelectButton">
@@ -1226,6 +1468,12 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                     <height>16777215</height>
                    </size>
                   </property>
+                  <property name="toolTip">
+                   <string>Data compression method in gcmap file.Data compression method in gcmap file.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Data compression method in gcmap file.&lt;/p&gt;&lt;p&gt;LZF : This method is very fast, and allow the rapid contact map reading. However, the size reduction is moderate in comparison with GZIP compression method. &lt;/p&gt;&lt;p&gt;GZIP: Slow but high compression ratio. use this method, if file has to read from other external software.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
                   <item>
                    <property name="text">
                     <string>LZF</string>
@@ -1254,6 +1502,12 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                 </item>
                 <item>
                  <widget class="QComboBox" name="binContactGCMapDownsampleCBox">
+                  <property name="toolTip">
+                   <string>Downsampling method to coarsen the resolution in gcmap file.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Downsampling method to coarsen the resolution in gcmap file. Three implemented methods are&lt;/p&gt;&lt;p&gt;1) Sum : sum of values,&lt;/p&gt;&lt;p&gt;2) Average : Average of values and&lt;/p&gt;&lt;p&gt;3) Maximum : Maximum of values.&lt;/p&gt;&lt;p&gt;This option generates all coarser maps where resolutions will be coarsened by a factor of two, consequetively. e.g.: In case of 10 kb input resolution, downsampled maps of &amp;quot;20kb&amp;quot;, &amp;quot;40kb&amp;quot;, &amp;quot;80kb&amp;quot;, &amp;quot;160kb&amp;quot;, &amp;quot;320kb&amp;quot; etc. will be generated until, map size is less than 500.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
                   <item>
                    <property name="text">
                     <string>Sum</string>
@@ -1291,7 +1545,14 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                 </widget>
                </item>
                <item>
-                <widget class="QLineEdit" name="binContactScratchDirLineEdit"/>
+                <widget class="QLineEdit" name="binContactScratchDirLineEdit">
+                 <property name="toolTip">
+                  <string>Directory where temporary files will be stored.</string>
+                 </property>
+                 <property name="whatsThis">
+                  <string>Directory where temporary files will be stored.</string>
+                 </property>
+                </widget>
                </item>
                <item>
                 <widget class="QPushButton" name="binContactScratchDirBrowsButton">

@@ -186,10 +186,9 @@ def get_resolution_list(resolution, parser):
             continue
         try:
             b = gmlib.ccmap.resolutionToBinsize(r)
+            rlist.append( gmlib.ccmap.binsizeToResolution(b) )
         except ValueError:
             showErrorAndExit(parser, '\n"{0}" contains resolution "{1}", which is not an acceptable resolution.\n'.format(resolution, r))
-
-        rlist.append(r)
 
     return rlist
 
@@ -258,7 +257,7 @@ def parseArguments():
     parser.add_argument('-cmeth', '--compression-method', action='store',
                         dest='compression', metavar='lzf',
                         choices=['lzf', 'gzip'], default='lzf',
-                        help='Data compression method for gcmap file.\n')
+                        help='Data compression method in h5 file.\n')
 
     parser.add_argument('-o', '--out', action='store', dest='h5Name',
                         metavar='out.h5', help=outHelp)

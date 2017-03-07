@@ -104,8 +104,8 @@ provided.
 """
 
 ccmapSuffixHelp = \
-""" Use this to convert all contact maps to ccmaps file. Provide suffix of
-ccmap file names with this option and it will enable the conversion.
+""" Use this to convert all contact maps to ccmap format files. Provide suffix
+of ccmap file names with this option and it will enable the conversion.
 
 Ouput ccmap file name is generated outmatically as follows;
 if xlabel is not equal to ylabel: <xlabel>_<ylabel>_<suffix>.ccmap
@@ -125,7 +125,7 @@ option is used.
 fileGCMapHelp = \
 """Provide gcmap file to convert all contact maps into one gcmap file.
 File name should contain full path because -od/--out-dir is not considered
-for thi conversion.
+for this conversion.
 
 """
 
@@ -258,7 +258,7 @@ def parseArguments():
     parser.add_argument('-cmeth', '--compression-method', action='store',
                         dest='compression', metavar='lzf',
                         choices=['lzf', 'gzip'], default='lzf',
-                        help='Data compression method for gcmap file.\n')
+                        help='Data compression method in gcmap file.\n')
 
     parser.add_argument('-dmeth', '--downsample-method', action='store',
                         dest='coarsingMethod', metavar='sum',

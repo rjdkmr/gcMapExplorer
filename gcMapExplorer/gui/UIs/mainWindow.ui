@@ -132,6 +132,9 @@
            <property name="toolTip">
             <string>List of all plots.</string>
            </property>
+           <property name="whatsThis">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;It contains list of plots. To activate a plot, user may select a plot in this list.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
            <property name="frameShadow">
             <enum>QFrame::Raised</enum>
            </property>
@@ -249,6 +252,9 @@
              <property name="toolTip">
               <string>Resolution of presently activated map.</string>
              </property>
+             <property name="whatsThis">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Resolution of presently activated map. Presently, resolution cannot be changed from here. Resolution is changed automatically by using zoom in and out function.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="readOnly">
               <bool>true</bool>
              </property>
@@ -272,6 +278,9 @@
             <widget class="QLineEdit" name="mapUnitLineEdit">
              <property name="toolTip">
               <string>Unit of presently activated map.</string>
+             </property>
+             <property name="whatsThis">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Unit of ticks in presently activated map or plot.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="readOnly">
               <bool>true</bool>
@@ -300,6 +309,12 @@
             <widget class="QComboBox" name="contactMapNameCBox">
              <property name="enabled">
               <bool>false</bool>
+             </property>
+             <property name="toolTip">
+              <string>Name of contact map</string>
+             </property>
+             <property name="whatsThis">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Name of contact map. It is mostly chromosome name.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
             </widget>
            </item>
@@ -355,6 +370,12 @@
                <width>16777215</width>
                <height>16777215</height>
               </size>
+             </property>
+             <property name="toolTip">
+              <string>Different settings for visualizations.</string>
+             </property>
+             <property name="whatsThis">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Different settings for visualizations.&lt;/p&gt;&lt;p&gt;1) Settings for color of contact map&lt;/p&gt;&lt;p&gt;2) Settings for genomic dataset plot&lt;/p&gt;&lt;p&gt;3) Setting for marker&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <item>
               <property name="text">
@@ -438,6 +459,9 @@
                  <property name="toolTip">
                   <string>Minimum value for color-scale.</string>
                  </property>
+                 <property name="whatsThis">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Minimum value for color-scale. Color of map is accrdingly modfied.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
                 </widget>
                </item>
                <item row="2" column="0" alignment="Qt::AlignLeft">
@@ -498,6 +522,9 @@
                  <property name="toolTip">
                   <string>Maximum value of the color-scale.</string>
                  </property>
+                 <property name="whatsThis">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Maximum value of the color-scale. Color of map is accordingly modified,&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
                 </widget>
                </item>
                <item row="0" column="1">
@@ -519,6 +546,9 @@
                    <property name="toolTip">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Reset&lt;/span&gt; the &lt;span style=&quot; font-weight:600;&quot;&gt;color range &lt;/span&gt;to original &lt;span style=&quot; font-weight:600;&quot;&gt;minimum&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;maximum&lt;/span&gt; values from presently shown &lt;span style=&quot; font-weight:600;&quot;&gt;resolution&lt;/span&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
+                   <property name="whatsThis">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Reset&lt;/span&gt; the &lt;span style=&quot; font-weight:600;&quot;&gt;color range &lt;/span&gt;to original &lt;span style=&quot; font-weight:600;&quot;&gt;minimum&lt;/span&gt; and &lt;span style=&quot; font-weight:600;&quot;&gt;maximum&lt;/span&gt; values from presently shown &lt;span style=&quot; font-weight:600;&quot;&gt;resolution&lt;/span&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
                    <property name="text">
                     <string>Reset</string>
                    </property>
@@ -536,6 +566,9 @@
                     </size>
                    </property>
                    <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Change the minimum and maximum value to modify the color range.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="whatsThis">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Change the minimum and maximum value to modify the color range.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="text">
@@ -595,7 +628,7 @@
                     <string>Maximum value for color-scale.</string>
                    </property>
                    <property name="whatsThis">
-                    <string notr="true"/>
+                    <string notr="true">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Maximum value for color-scale. It can be used to change the maximum value dynamically.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="layoutDirection">
                     <enum>Qt::LeftToRight</enum>
@@ -648,6 +681,9 @@
                  <property name="toolTip">
                   <string>Maximum value for the color-scale.</string>
                  </property>
+                 <property name="whatsThis">
+                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Maximum value for color-scale. It can be used to change the maximum value dynamically.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
                  <property name="maximum">
                   <number>100</number>
                  </property>
@@ -698,6 +734,9 @@
                     </sizepolicy>
                    </property>
                    <property name="toolTip">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Change color-scale.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="whatsThis">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Change color-scale.&lt;/p&gt;&lt;p&gt;1) Change color linearly: Color-scale is linear and above slider changes maximum to minimum linearly.&lt;/p&gt;&lt;p&gt;2) Change color logarithmically: Color scale is linear and above slider changes maximum to minimum logarithmically.&lt;/p&gt;&lt;p&gt;3) Logarithm of Map: Whole map is expressed as logarithm of map, color-scale is logarithmic and slider changes linearly on logarthimic scale. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <item>
@@ -768,8 +807,8 @@
                  <number>4</number>
                 </property>
                 <item>
-                 <layout class="QFormLayout" name="interpolationCmapTypeLayout">
-                  <item row="0" column="0">
+                 <layout class="QHBoxLayout" name="interpolationLayout">
+                  <item>
                    <widget class="QLabel" name="interPolationLabel">
                     <property name="enabled">
                      <bool>true</bool>
@@ -779,7 +818,7 @@
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="1">
+                  <item>
                    <widget class="QComboBox" name="interpolationCBox">
                     <property name="enabled">
                      <bool>false</bool>
@@ -794,6 +833,12 @@
                      <font>
                       <pointsize>9</pointsize>
                      </font>
+                    </property>
+                    <property name="toolTip">
+                     <string>Interpolation method to smoothen the map.</string>
+                    </property>
+                    <property name="whatsThis">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;It can be used to smoothen the map that is performed by interpolation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <item>
                      <property name="text">
@@ -882,31 +927,47 @@
                     </item>
                    </widget>
                   </item>
-                  <item row="1" column="0">
+                 </layout>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="colorMapLayout">
+                  <item>
                    <widget class="QLabel" name="cmapLabel">
                     <property name="enabled">
                      <bool>true</bool>
                     </property>
                     <property name="text">
-                     <string>Color Map Type:</string>
+                     <string>Color Map:</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="1">
+                  <item>
                    <widget class="QComboBox" name="cmapCBox">
                     <property name="enabled">
                      <bool>false</bool>
                     </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>220</width>
+                      <height>0</height>
+                     </size>
+                    </property>
                     <property name="maximumSize">
                      <size>
-                      <width>160</width>
+                      <width>220</width>
                       <height>16777215</height>
                      </size>
                     </property>
                     <property name="font">
                      <font>
-                      <pointsize>1</pointsize>
+                      <pointsize>9</pointsize>
                      </font>
+                    </property>
+                    <property name="toolTip">
+                     <string>Colormap type</string>
+                    </property>
+                    <property name="whatsThis">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Changes the colormap for contact map. New colormap can be created from &amp;quot;Edit -&amp;gt; Add/Modify colormap&amp;quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
                     <property name="insertPolicy">
                      <enum>QComboBox::InsertAtTop</enum>
@@ -2549,6 +2610,7 @@
     <addaction name="separator"/>
     <addaction name="menuChange_Page_Size"/>
     <addaction name="menuChange_Page_Orientation"/>
+    <addaction name="actionAddModifyColormap"/>
    </widget>
    <widget class="QMenu" name="menuAnalysis">
     <property name="title">
@@ -2556,9 +2618,17 @@
     </property>
     <addaction name="actionCorrelationMaps"/>
    </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionWhatIsThis"/>
+    <addaction name="actionAbout"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuAnalysis"/>
+   <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="status_bar"/>
   <widget class="QToolBar" name="navToolBar">
@@ -2810,6 +2880,21 @@
   <action name="actionCorrelationMaps">
    <property name="text">
     <string>Correlation between maps</string>
+   </property>
+  </action>
+  <action name="actionAddModifyColormap">
+   <property name="text">
+    <string>Add/Modify colormap</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+  <action name="actionWhatIsThis">
+   <property name="text">
+    <string>What is this?</string>
    </property>
   </action>
  </widget>

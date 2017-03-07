@@ -37,6 +37,8 @@ from matplotlib.ticker import AutoMinorLocator, MaxNLocator
 from gcMapExplorer import cmstats
 from gcMapExplorer import ccmap as cmp
 from gcMapExplorer import ccmapHelpers as cmh
+from gcMapExplorer import genomicsDataHandler as gdh
+
 from . import guiHelpers
 
 # Determine absolute path to UIs directory. Relative path from this directory does not work.
@@ -965,10 +967,14 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
 pathToThisUI = os.path.join(PathToUIs, 'genomicDataSelector.ui')
 Ui_DialogGenomicsDataSelector, QDialogGenomicsDataSelectorBase = loadUiType(pathToThisUI)
 class DialogGenomicsDataSelector(QDialogGenomicsDataSelectorBase, Ui_DialogGenomicsDataSelector):
-    def __init__(self, data, title, requestedBinsize=None):
+    def __init__(self, hdf5Handle, requestedBinsize=None):
         super(DialogGenomicsDataSelector, self).__init__()
         self.setupUi(self)
-        self.data = data
+
+        self.hdf5Handle = None
+        self.closeFile = False
+
+        self.data = None
         self.requestedBinsize = requestedBinsize
         self.resolutions = None
         self.dataNames = None
@@ -977,19 +983,38 @@ class DialogGenomicsDataSelector(QDialogGenomicsDataSelectorBase, Ui_DialogGenom
         self.selected_data = None
         self.whereToPlot = None
 
+        if isinstance(hdf5Handle, gdh.HDF5Handler):
+            self.hdf5Handle = hdf5Handle
+            if self.hdf5Handle.hdf5 is None:
+                self.hdf5Handle.open()
+        else:
+            self.hdf5Handle = gdh.HDF5Handler(hdf5Handle)
+            self.hdf5Handle.open()
+            self.closeFile = True
+
         # Add chromosomes in list
         self.chroms = []
-        for key in self.data:
+        for key in self.hdf5Handle.hdf5:
             self.chroms.append(key)
         self.chromNameListWidget.addItems(cmh.sorted_nicely(self.chroms))
-
-        # Set title
-        self.titleText.setText(title)
 
         # Connect to interface
         self.chromNameListWidget.itemSelectionChanged.connect(self.chromosomeSelector)
         self.chromResolutionListWidget.itemSelectionChanged.connect(self.resolutionSelector)
         self.openAbortButton.clicked.connect(self.on_button_clicked)
+
+    def setChromosome(self, chromosome):
+        """ Set chromsome in list widget
+        """
+        if self.hdf5Handle.hasChromosome(chromosome):
+            self.chromNameListWidget.setCurrentItem( self.chromNameListWidget.findItems(chromosome, Qt.MatchExactly)[0] )
+
+    def setChromosomeResolution(self, chrom, res):
+        """ Set both chromosome and resolution in list widget
+        """
+        if self.hdf5Handle.hasResolution(chrom, res):
+            self.chromNameListWidget.setCurrentItem( self.chromNameListWidget.findItems(chrom, Qt.MatchExactly)[0] )
+            self.chromResolutionListWidget.setCurrentItem( self.chromResolutionListWidget.findItems(res, Qt.MatchExactly)[0] )
 
     def chromosomeSelector(self):
         """ To display/change resolution list when a chromosome is selected by user
@@ -1014,7 +1039,7 @@ class DialogGenomicsDataSelector(QDialogGenomicsDataSelectorBase, Ui_DialogGenom
         # Generating new resolution list
         self.resolutions = []
         currentText = self.chromNameListWidget.currentItem().text()
-        for key in self.data[currentText]:
+        for key in self.hdf5Handle.hdf5[currentText]:
             self.resolutions.append(key)
 
         # Sort from fine to coarse resolution
@@ -1040,7 +1065,7 @@ class DialogGenomicsDataSelector(QDialogGenomicsDataSelectorBase, Ui_DialogGenom
         self.dataNames = []
         currentChrom = self.chromNameListWidget.currentItem().text()
         currentResolution = self.chromResolutionListWidget.currentItem().text()
-        for key in self.data[currentChrom][currentResolution]:
+        for key in self.hdf5Handle.hdf5[currentChrom][currentResolution]:
             if key in self.coarse_methods_name:
                 self.dataNames.append(self.coarse_methods_name[key])
             else:
@@ -1987,6 +2012,450 @@ class menuRightClick(QMenu):
         self.actionYtickLabel = self.addAction("Edit Y-ticks Label...")
         self.actionList[3] = self.actionYtickLabel
 
+# Dialog box to change page size by custom length
+# Dialog box to choose and load genomic data
+pathToThisUI = os.path.join(PathToUIs, 'aboutBrowser.ui')
+Ui_aboutBrowserDialog, aboutBrowserDialogBase = loadUiType(pathToThisUI)
+class aboutBrowserDialog(aboutBrowserDialogBase, Ui_aboutBrowserDialog):
+    def __init__(self, parent=None):
+        super(aboutBrowserDialog, self).__init__(parent=parent)
+        self.setupUi(self)
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.okButton.clicked.connect( self.close )
+        self.textBrowser.setOpenExternalLinks(True)
+
+
+# Dialog box to change page size by custom length
+# Dialog box to choose and load genomic data
+pathToThisUI = os.path.join(PathToUIs, 'userColorMapDialog.ui')
+Ui_DialogUserColorMap, DialogUserColorMapBase = loadUiType(pathToThisUI)
+class DialogUserColorMap(DialogUserColorMapBase, Ui_DialogUserColorMap):
+    def __init__(self, parent=None):
+        super(DialogUserColorMap, self).__init__(parent=parent)
+        self.setupUi(self)
+        self.setAttribute(Qt.WA_DeleteOnClose)
+
+        self.qdSpinBoxToButton = dict()
+        """ dictionary from QDoubleSpinBox to QPushButton in QTableWidget"""
+
+        self.buttonToqdSpinBox = dict()
+        """ dictionary from QPushButton to QDoubleSpinBox in QTableWidget"""
+
+        self.resultColorInfo = None
+        """ Contain resulted color information dictionary
+
+            Structure of colorInfo dictionary
+
+            colorInfo ----- 'name'
+                |
+                └------ 'colors'
+                            |
+                            ├------ values -> color
+                            |
+                            ├------ values -> color
+                            |
+                            :
+                            └------ values -> color
+        """
+
+        self.standardColorMaps = None
+        """ Contain lsit of standard color maps """
+
+        self.userColorMaps = dict()
+        """ Dictionary of user defined color maps. It is used to reload table
+        when user select different color maps in QComboBox."""
+
+        # Hide tabbars
+        tabbars = self.addModifyWidget.findChildren(QTabBar)
+        for tabbar in tabbars:
+            tabbar.hide()
+
+        # Initialize table
+        self.tableWidget.verticalHeader().setMinimumWidth(30)
+        self.initTable()
+        self.previewColorMap()
+
+        self.addModifyCBox.currentIndexChanged.connect( self.addModifyWidget.setCurrentIndex )
+        self.addRowTableButton.clicked.connect( self.addRowToTable )
+        self.removeRowTableButton.clicked.connect( self.removeRowFromTable )
+        self.saveTableButton.clicked.connect( self.saveColorMap )
+        self.loadTableButton.clicked.connect( self.loadColorMapFromJson )
+        self.cmapListCBox.currentIndexChanged.connect( self.loadColorInfoFromSpinbox )
+        self.cmapListCBox.activated.connect( self.loadColorInfoFromSpinbox )
+
+        self.helpButton.clicked.connect( QWhatsThis.enterWhatsThisMode )
+
+        self.okCancelButtonBox.rejected.connect( self.reject )
+        self.okCancelButtonBox.accepted.connect( self.dialogAccepted )
+
+    def initTable(self):
+        """ Initialize table with three colors
+        """
+        colors = ['#0000FF', '#00FF00', '#FF0000']
+        value = [0, 0.5, 1]
+        for r in [0, 1, 2]:
+            self.tableWidget.insertRow(r)
+            if self.tableWidget.item(r, 0) is None:
+                self.addContentsToRow(r, color=colors[r], value=value[r])
+
+    def addRowToTable(self):
+        """Add a new row with QDoubleSpinBox and QPushButton
+        at the end of table widget
+        """
+        row = self.tableWidget.rowCount()
+        self.tableWidget.insertRow(row)
+        self.addContentsToRow(row)
+
+    def addContentsToRow(self, row, color=None, value=None):
+        """ Add QDoubleSpinBox and QPushButton to cells of input row in table
+        """
+        # Add Spin box
+        qsbox = QDoubleSpinBox(self)
+        qsbox.setRange(0, 1)
+        qsbox.setDecimals(3)
+        qsbox.setSingleStep(0.05)
+        if value is not None:
+            qsbox.setValue(value)
+        qsbox.valueChanged.connect( self.previewColorMap )
+        self.tableWidget.setCellWidget( row, 0, qsbox )
+
+        # Add Button
+        qButton = QPushButton(self)
+        qButton.setFlat(True)
+        self.tableWidget.setCellWidget( row, 1, qButton )
+        if color is not None:
+            style = 'background-color: {0}; border: none;'.format(color)
+            qButton.setStyleSheet(style)
+        qButton.clicked.connect( self.chooseColorByButton )
+
+        # Modify dictionaries
+        self.qdSpinBoxToButton[qsbox] = qButton
+        self.buttonToqdSpinBox[qButton] = qsbox
+
+    def removeRowFromTable(self):
+        """Remove a selected row from color table
+        """
+        # Get selected cell
+        row, col = getSelectedRowColumnFromTable(self.tableWidget)
+
+        # If no cell is selected in "Input Files row", raise a message
+        if row is None:
+            msgBox = QMessageBox(self)
+            msgBox.setWindowModality(Qt.WindowModal)
+            msgBox.setWindowTitle('Information')
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText('       A row is not selected \n\nSelect a Row to remove from table')
+            msgBox.setStandardButtons(QMessageBox.Cancel)
+            msgBox.exec_()
+            msgBox.close()
+            return
+
+        # determine QDoubleSpinBox and QPushButton
+        qsbox = self.tableWidget.cellWidget(row, 0)
+        qButton = self.tableWidget.cellWidget(row, 1)
+
+        # Remove row, QDoubleSpinBox, and QPushButton
+        self.qdSpinBoxToButton.pop(qsbox)
+        self.buttonToqdSpinBox.pop(qButton)
+        self.tableWidget.removeRow(row)
+
+    def clearTable(self):
+        """ Clear entire table
+        """
+        while self.tableWidget.rowCount() != 0:
+            # determine QDoubleSpinBox and QPushButton
+            qsbox = self.tableWidget.cellWidget(0, 0)
+            qButton = self.tableWidget.cellWidget(0, 1)
+
+            # Remove row, QDoubleSpinBox, and QPushButton
+            self.qdSpinBoxToButton.pop(qsbox)
+            self.buttonToqdSpinBox.pop(qButton)
+            self.tableWidget.removeRow(0)
+
+    def setColorMapList(self, colormapList):
+        """ Set color map list from browser
+        """
+        self.standardColorMaps = []
+        self.cmapListCBox.blockSignals(True)   # Block signal fo QComboBox
+
+        for colormap in colormapList:
+            # Check if it is a LinearSegmentedColormap.
+            # If a user added the colormap it is  LinearSegmentedColormap
+            # otherwise a string
+            if isinstance(colormapList[colormap], mpl.colors.LinearSegmentedColormap):
+                # Find index in QComboBox
+                idx = self.cmapListCBox.findText(colormapList[colormap].name, Qt.MatchExactly)
+
+                # Only add when this colormap when it is not present in QComboBox
+                if idx == -1:
+                    colorInfo = segmentDataColorMapToColorInfo(colormapList[colormap])
+                    self.userColorMaps[colormapList[colormap].name] = colorInfo
+                    self.cmapListCBox.addItem(colormapList[colormap].name)
+            else:
+                self.standardColorMaps.append(colormapList[colormap])
+
+        self.cmapListCBox.blockSignals(False)
+
+    def previewColorMap(self):
+        """ Update preview of color map
+        """
+        colorDict = self.getColorDictFromTable()
+        style = 'background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0'
+        for value in colorDict:
+            style += ', stop:{0} {1}'.format(value, colorDict[value])
+        style += ');'
+        self.previewColorMapWidget.setStyleSheet(style)
+
+    def getColorDictFromTable(self):
+        """ Get color dictionary from table
+        """
+        valuesToSBox = dict()
+        colorDict = dict()
+        for qsbox in self.qdSpinBoxToButton:
+            valuesToSBox[qsbox.value()] = qsbox
+
+        values = list(valuesToSBox.keys())
+        values = np.sort(values)
+
+        for i in range(len(values)):
+            button = self.qdSpinBoxToButton[valuesToSBox[values[i]]]
+            color = button.palette().color(button.backgroundRole())
+            colorDict[values[i]] = color.name()
+
+        return colorDict
+
+    def chooseColorByButton(self):
+        """ Choose color of a button and set it
+        """
+        if self.sender() == 0:
+            return
+        # Get the button from where signal was originated
+        button = self.sender()
+
+        # Get the background-color of button
+        qcolor = button.palette().color(button.backgroundRole())
+
+        # QColorDialog open here
+        colorDialog = QColorDialog(qcolor, self)
+        colorDialog.setWindowTitle("Choose a Color")
+        colorDialog.exec_()
+
+        if colorDialog.result() == QDialog.Accepted:
+            # Get new color from the user
+            pickedColor = colorDialog.selectedColor()
+
+            # Set new color to button
+            style = 'background-color: {0}; border: none;'.format(pickedColor.name())
+            button.setStyleSheet(style)
+
+            # Update preview color map
+            self.previewColorMap()
+
+    def getColorInformation(self):
+        """ Get color-information dictionary by parsing displayed widgets.
+
+        Structure of colorInfo dictionary
+
+        colorInfo ----- 'name'
+            |
+            └------ 'colors'
+                        |
+                        ├------ values -> color
+                        |
+                        ├------ values -> color
+                        |
+                        :
+                        └------ values -> color
+
+
+        """
+        if self.addModifyCBox.currentText() == 'Add':
+            name = self.cmapNameLineEdit.text()
+            if not name:
+                msgBox = QMessageBox(self)
+                msgBox.setWindowModality(Qt.WindowModal)
+                msgBox.setWindowTitle('Warning')
+                msgBox.setIcon(QMessageBox.Information)
+                msgBox.setText(' No name !!')
+                msgBox.setStandardButtons(QMessageBox.Cancel)
+                msgBox.exec_()
+                msgBox.close()
+                self.cmapNameLineEdit.setFocus(True)
+                return
+
+        if self.addModifyCBox.currentText() == 'Modify':
+            name = self.cmapListCBox.currentText()
+
+        if name in self.standardColorMaps:
+            msgBox = QMessageBox(self)
+            msgBox.setWindowModality(Qt.WindowModal)
+            msgBox.setWindowTitle('Warning')
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText(' colormap "{0}" already present in standard maps.\n Please choose another name.'.format(name))
+            msgBox.setStandardButtons(QMessageBox.Cancel)
+            msgBox.exec_()
+            msgBox.close()
+            self.cmapNameLineEdit.setFocus(True)
+            return
+
+        colorInfo = dict()
+        colorInfo['name'] = name
+        colorInfo['colors'] = self.getColorDictFromTable()
+
+
+        return colorInfo
+
+    def saveColorMap(self):
+        """ Save the color map as a json file
+
+        Format of file is similar to colorInfo dictionary.
+
+        colorInfo ----- 'name'
+            |
+            └------ 'colors'
+                        |
+                        ├------ values -> color
+                        |
+                        ├------ values -> color
+                        |
+                        :
+                        └------ values -> color
+
+        """
+        # Get color information from table
+        colorInfo = self.getColorInformation()
+        if colorInfo is None:
+            return
+
+        # A dialog box will be displayed to select a file and path will be stored in the cell
+        file_choices = " json file (*.json);;All Files(*.*)"
+        path = QFileDialog.getSaveFileName(self, 'Select or Create File', '', file_choices, options=QFileDialog.DontConfirmOverwrite)
+        if path[0]:
+            outDir = os.path.dirname( path[0] )
+            baseName = os.path.basename( path[0] )
+            extension = os.path.splitext( baseName )[1]
+
+            if not (extension == '.json'):
+                outName = os.path.join(outDir, baseName+'.json')
+            else:
+                outName = path[0]
+
+            fout =  open( outName, "w" )
+            json.dump(colorInfo, fout, indent=4, separators=(',', ':'))
+            fout.close()
+
+    def loadColorMapFromJson(self):
+        """ Load color map from a json file
+        """
+        # A dialog box will be displayed to select a json file
+        file_choices = " json file (*.json);;All Files(*.*)"
+        path = QFileDialog.getOpenFileName(self, 'Load File', '', file_choices)
+        if not path[0]:
+            return
+
+        inputFile = path[0]
+
+        try:
+            fin = open( inputFile, "r" )
+        except:
+            return
+
+        try:
+            with open( inputFile, "r" ) as fin:
+                jsonColorInfo = json.load( fin )
+        except:
+            msgBox = QMessageBox(self)
+            msgBox.setWindowModality(Qt.WindowModal)
+            msgBox.setWindowTitle('Warning')
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText(' Not able to read from file.')
+            msgBox.setStandardButtons(QMessageBox.Cancel)
+            msgBox.exec_()
+            msgBox.close()
+            self.cmapNameLineEdit.setFocus(True)
+            return
+
+        # Changes value to float
+        colorInfo = dict()
+        try:
+            colorInfo['name'] = jsonColorInfo['name']
+            colorInfo['colors'] = dict()
+            for key in jsonColorInfo['colors']:
+
+                # Check if color is readable
+                color = jsonColorInfo['colors'][key]
+                if not mpl.colors.is_color_like(color):
+                    raise(ValueError)
+
+                colorInfo['colors'][float(key)] = color
+
+        except:
+            msgBox = QMessageBox(self)
+            msgBox.setWindowModality(Qt.WindowModal)
+            msgBox.setWindowTitle('Error')
+            msgBox.setIcon(QMessageBox.Information)
+            fmt = """File format is not compatible. See Below an example:
+
+                        {
+                            "colors":{
+                                "0.0":"#0000ff",
+                                "0.5":"#00ff00",
+                                "1.0":"#ff0000"
+                            },
+                            "name":"blue-green-red"
+                        """
+            msgBox.setText(fmt)
+            msgBox.setStandardButtons(QMessageBox.Cancel)
+            msgBox.exec_()
+            msgBox.close()
+            return
+
+        self.loadColorInfoToTable(colorInfo)
+
+    def loadColorInfoFromSpinbox(self):
+        """ Change colormap preview and load table freshly
+        """
+        name = self.cmapListCBox.currentText()
+        if name:
+            colorInfo = self.userColorMaps[name]
+            self.clearTable()  # Clear table
+            self.loadColorInfoToTable(colorInfo)  # Load new table
+
+    def loadColorInfoToTable(self, colorInfo):
+        """ Load color information from dictonary to table widget
+        """
+        # Set name
+        self.cmapNameLineEdit.setText(colorInfo['name'])
+
+        # Get and sort stop values
+        values = list( colorInfo['colors'].keys() )
+        values = np.sort(values)
+
+        # Add row in table and set QDoubleSpinBox and QPushButton
+        for i in range(len(values)):
+            r = self.tableWidget.rowCount()
+            if i > r-1 :
+                self.addRowToTable()
+
+            qsbox = self.tableWidget.cellWidget(i, 0)
+            qsbox.setValue( values[i] )
+
+            color = colorInfo['colors'][values[i]]
+            qButton = self.tableWidget.cellWidget(i, 1)
+            style = 'background-color: {0}; border: none;'.format(color)
+            qButton.setStyleSheet(style)
+
+            # Update colormap preview
+            self.previewColorMap()
+
+    def dialogAccepted(self):
+        """ When OK button is clicked
+        """
+        colorInfo = self.getColorInformation()
+        if colorInfo is not None:
+            self.resultColorInfo = colorInfo
+            self.accept()
+
 
 def add_colormaps_to_combobox(cbox):
     cmap_lists = [ 'afmhot_r', 'autumn_r', 'bone_r', 'cool_r', 'copper_r',
@@ -2019,6 +2488,116 @@ def add_colormaps_to_combobox(cbox):
     cbox.setCurrentIndex(6)
 
     return cmap
+
+def getSelectedRowColumnFromTable(table):
+    # Total number of row
+    r = table.rowCount()
+    c = table.columnCount()
+
+    # Determine which cell of row is selected
+    selectedRow = None
+    selectedCol = None
+    for i in range(r):
+        for j in range(c):
+            if table.item(i, j) is None:
+                table.setItem( i, j, QTableWidgetItem(0) )
+
+            if table.item(i, j).isSelected():
+                selectedRow = i
+                selectedCol = j
+                break
+
+    return selectedRow, selectedCol
+
+def segmentDataColorMapToColorInfo(colormap):
+    """ make a colormap information dictionary from
+    segmented Data colormap object.
+
+    Structure of ouput colorInfo dictionary
+
+    colorInfo ----- 'name'
+        |
+        └------ 'colors'
+                    |
+                    ├------ values -> color
+                    |
+                    ├------ values -> color
+                    |
+                    :
+                    └------ values -> color
+
+    """
+    colorInfo = dict()
+    colorInfo['name'] = colormap.name
+    colorInfo['colors'] = dict()
+    for i in range(len(colormap._segmentdata['blue'])):
+        value = colormap._segmentdata['blue'][i][0]
+        r = colormap._segmentdata['red'][i][1]
+        g = colormap._segmentdata['green'][i][1]
+        b = colormap._segmentdata['blue'][i][1]
+        a = colormap._segmentdata['alpha'][i][1]
+        colorInfo['colors'][value] = mpl.colors.to_hex((r, g, b, a))
+
+    return colorInfo
+
+def colorInfoToSegmentDataColorMap(colorInfo):
+    """ make a segmented Data colormap object from a colormap dictionary
+    """
+    cdict = colorInfo['colors']
+    keys = list( cdict.keys())
+    keys = np.sort(keys)
+    color_list = []
+    for i in range(len(keys)):
+        color_list.append( (keys[i], cdict[keys[i]]) )
+
+    colormap = mpl.colors.LinearSegmentedColormap.from_list(colorInfo['name'], color_list)
+    return colormap
+
+def add_external_colormap_to_combobox(cbox, colorMapList, colorInfo):
+    """ Add user defined colormap
+    """
+    # Generate new pixmap for icons
+    width = 146
+    height = 12
+    pixmap = QPixmap(width, height);
+    pixmap.fill(Qt.transparent);
+
+    # Generate gradient and fill it in pixmap
+    gradient = QLinearGradient(0, 0, width, height);
+    for v in colorInfo['colors']:
+        qtcolor = QColor(colorInfo['colors'][v])
+        gradient.setColorAt(v, qtcolor)
+    painter = QPainter(pixmap)
+    painter.fillRect(0, 0, width, height, gradient)
+    painter.end()
+
+    # Add gradient into combobox and cmap dictionary
+    qicon = QIcon(pixmap)
+    colorMapList[cbox.count()] = colorInfoToSegmentDataColorMap(colorInfo)
+    cbox.addItem(qicon, colorInfo['name'])
+
+
+def change_colormap_icon_to_combobox(cbox, index, colorInfo):
+    """ Add user defined colormap
+    """
+    # Generate new pixmap for icons
+    width = 146
+    height = 12
+    pixmap = QPixmap(width, height);
+    pixmap.fill(Qt.transparent);
+
+    # Generate gradient and fill it in pixmap
+    gradient = QLinearGradient(0, 0, width, height);
+    for v in colorInfo['colors']:
+        qtcolor = QColor(colorInfo['colors'][v])
+        gradient.setColorAt(v, qtcolor)
+    painter = QPainter(pixmap)
+    painter.fillRect(0, 0, width, height, gradient)
+    painter.end()
+
+    # Add gradient into combobox and cmap dictionary
+    qicon = QIcon(pixmap)
+    cbox.setItemIcon(index, qicon)
 
 def scaleMatrix(matrix, vmin, vmax):
     # Masked the matrix for zero values

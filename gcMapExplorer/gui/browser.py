@@ -49,6 +49,7 @@ from gcMapExplorer import genomicsDataHandler as gdh
 
 from . import browserHelpers
 from . import guiHelpers
+from . import h5Converter
 
 # Determine absolute path to UIs directory. Relative path from this directory does not work.
 DirToThisScript = os.path.dirname(os.path.abspath(__file__))
@@ -106,8 +107,11 @@ class GenomicDataSetSubPlotHelper:
         idx = hiCmapAxis.index
 
         # Open file selector dialog box
-        file_choices = "Genomic dataset file (*.h5 *.hdf *.txt *.dat);;Genomic dataset HDF5 file (*.h5 *.hdf)\
-                        ;;Genomic dataset text file (*.txt *.dat);;All files (*.*)"
+        file_choices = " Compaitable files (*.h5 *.hdf *.bigWig *.wig *.bed)"
+        file_choices += ";;HDF5 file (*.h5 *.hdf)"
+        file_choices += ";;IGB file  (*.bigWig *.wig *.bed)"
+        file_choices += ";;Text file (*.txt *.dat)"
+        file_choices += ";;All files (*.*)"
 
         path = QFileDialog.getOpenFileName(self, 'Load File', '/home', file_choices)
 
@@ -121,47 +125,58 @@ class GenomicDataSetSubPlotHelper:
             # Instantiate GenomicDataPlotAxis
             gpa = GenomicDataPlotAxis( len(self.hiCmapAxes[idx].genmoicPlotAxes),  self.hiCmapAxes[idx])
 
-            if file_extension == '.h5':
+            if file_extension in ['.h5', '.hdf5']:
                 # Open dialogbox so user can select a dataset
                 gpa.selectGenomicDataHdf5ByDialogBox(path[0], self.filesOpened)
+            if file_extension in ['.bigWig', '.wig', '.bed']:
+                # Open dialogbox for conversion
+                gpa.selectGenomicDataByH5Conversion(self, path[0], self.hiCmapAxes[idx].ccmap.xlabel, self.filesOpened)
             elif file_extension == '.txt' or file_extension == '.dat':
                 gpa.readDataFromTextFile(path[0])
 
-            # if a Dataset is selected by user, then process further
-            if gpa.dataArray is not None:
-                # Generate treeWidget item and add it as a child to ccmap axis treeWidget
-                gpa.set_tree_widget_item()
-                self.hiCmapAxes[idx].treeWidgetItem.addChild(gpa.treeWidgetItem)
+            # plot genomic dataset on the browser
+            self.loadDataToPlot(gpa)
 
-                # Append GenomicDataPlotAxis to list
-                self.hiCmapAxes[idx].genmoicPlotAxes.append(gpa)
+    def loadDataToPlot(self, gpa):
+        """ plot genomic dataset on the browser
+        """
+        idx = gpa.hiCmapAxis.index
 
-                # Gettin upper-most and lower-most plot
-                if gpa.plotLocation == 'top':
-                    self.hiCmapAxes[idx].upperMostGenmoicPlotAxes = gpa.index
-                if gpa.plotLocation == 'bottom':
-                    self.hiCmapAxes[idx].lowerMostGenmoicPlotAxes = gpa.index
+        # if a Dataset is selected by user, then process further
+        if gpa.dataArray is not None:
+            # Generate treeWidget item and add it as a child to ccmap axis treeWidget
+            gpa.set_tree_widget_item()
+            self.hiCmapAxes[idx].treeWidgetItem.addChild(gpa.treeWidgetItem)
 
-                # Tight layout at start and then turn off it
-                self.figure.set_tight_layout(True)
+            # Append GenomicDataPlotAxis to list
+            self.hiCmapAxes[idx].genmoicPlotAxes.append(gpa)
 
-                # Plot the dataset
-                self.hiCmapAxes[idx].updateGenmoicPlotAxes()
+            # Gettin upper-most and lower-most plot
+            if gpa.plotLocation == 'top':
+                self.hiCmapAxes[idx].upperMostGenmoicPlotAxes = gpa.index
+            if gpa.plotLocation == 'bottom':
+                self.hiCmapAxes[idx].lowerMostGenmoicPlotAxes = gpa.index
 
-                # set the treewidget to current widget
-                self.axisTreeWidget.setCurrentItem(gpa.treeWidgetItem)
+            # Tight layout at start and then turn off it
+            self.figure.set_tight_layout(True)
 
-                self.canvas.draw()
-                self.figure.set_tight_layout(False)
+            # Plot the dataset
+            self.hiCmapAxes[idx].updateGenmoicPlotAxes()
 
-                # make active the GUI options
-                self.makeGenomicSupPlotOptionsActive(idx, self.hiCmapAxes[idx].genmoicPlotAxes[-1].index)
+            # set the treewidget to current widget
+            self.axisTreeWidget.setCurrentItem(gpa.treeWidgetItem)
 
-                # Get horizontal and vertical space between subplots
-                self.get_horizontal_vertical_space_from_figure()
+            self.canvas.draw()
+            self.figure.set_tight_layout(False)
 
-                # Make list of common data name
-                self.hiCmapAxes[idx].tryEnableInterchangeCMapName()
+            # make active the GUI options
+            self.makeGenomicSupPlotOptionsActive(idx, self.hiCmapAxes[idx].genmoicPlotAxes[-1].index)
+
+            # Get horizontal and vertical space between subplots
+            self.get_horizontal_vertical_space_from_figure()
+
+            # Make list of common data name
+            self.hiCmapAxes[idx].tryEnableInterchangeCMapName()
 
     def makeGenomicSupPlotOptionsActive(self, hidx, gidx):
         """Set and Make genomic subplot y-sclaer active
@@ -507,6 +522,9 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         self.filesOpened = dict()
         """ Dictionary of all opened files to its file stream object """
 
+        self.colorMapsDictionary = None
+        """ List of color maps """
+
         self.press_on_plot = None
         self.figure = None
         self.canvas = None
@@ -573,6 +591,15 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
                 del hax.ccmap
                 if hax.genmoicPlotAxes is not None:
                     for gax in hax.genmoicPlotAxes:
+
+                        # Close coverter dialog
+                        if gax.converterDialog is not None:
+                            gax.converterDialog.hideMode = False
+                            try:
+                                gax.converterDialog.close()
+                            except:
+                                pass
+
                         if gax.txtFileHand is not None:
                             del gax.txtFileHand
                         del gax
@@ -616,9 +643,15 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         self.actionPlotOrientationPortrait.setActionGroup(self.actionGroupPageOrientation)
         self.actionGroupPageOrientation.triggered.connect(self.set_page_orientation)
 
+        # user defined color dialog
+        self.actionAddModifyColormap.triggered.connect( self.showUserDefinedColormapDialog )
 
         # Analysis menu
         self.actionCorrelationMaps.triggered.connect( self.analysisCorrelateMaps )
+
+        # Help menu
+        self.actionWhatIsThis.triggered.connect( QWhatsThis.enterWhatsThisMode )
+        self.actionAbout.triggered.connect( self.on_about )
 
     def connect_gui_to_options(self):
         ''' This function connects all options to respective methods.
@@ -663,7 +696,7 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         self.reset_color_range_button.clicked.connect(self.reset_color_range)
 
         # Connect color-map and interpolation options
-        self.colorMapTypes = browserHelpers.add_colormaps_to_combobox(self.cmapCBox)
+        self.colorMapsDictionary = browserHelpers.add_colormaps_to_combobox(self.cmapCBox)
         self.cmapCBox.currentIndexChanged.connect(self.change_color_map_types)
         self.interpolation = browserHelpers.get_interpolation_dict()
         self.interpolationCBox.currentIndexChanged.connect(self.change_interpolation_method)
@@ -1478,13 +1511,16 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         self.contactMapNameCBox.blockSignals(False)
 
     def changeMapNames(self, newMapName):
+        """ Changes chromosome in browser
+        It at first check that change is possible than it changes the maps
+        """
         aidx = self.ActiveHiCmapAxis
 
         # First check is all data is available in genomic subplot
         success = True
         if self.hiCmapAxes[aidx].genmoicPlotAxes is not None:
             for gax in self.hiCmapAxes[aidx].genmoicPlotAxes:
-                if not gax.changeDataByName(newMapName, change=False):
+                if not gax.changeDataByName(self, newMapName, change=False):
                     success = False
 
         # In case if same data name is not found in genomic plot. Do not change data name
@@ -1503,7 +1539,7 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         # Change genomic subplot data
         if self.hiCmapAxes[aidx].genmoicPlotAxes is not None:
             for gax in self.hiCmapAxes[aidx].genmoicPlotAxes:
-                gax.changeDataByName(newMapName, change=True)
+                gax.changeDataByName(self, newMapName, change=True)
                 self.resetGenomicDataYScaleLimits(hidx=aidx, gidx=gax.index)
 
         self.contactMapNameCBox.blockSignals(False)
@@ -1587,13 +1623,49 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
             self.canvas.draw()
 
     def change_color_map_types(self, index):
+        """ Change colormap from combo box
+        """
         aidx = self.ActiveHiCmapAxis
         if self.hiCmapAxes[aidx].image is None: return
 
-        self.hiCmapAxes[aidx].colormap =  self.colorMapTypes[int(index)]
+        self.hiCmapAxes[aidx].colormap =  self.colorMapsDictionary[int(index)]
         self.canvas.draw()
 
+    def showUserDefinedColormapDialog(self):
+        """ Open dialog to generate new user defined colormap
+        """
+        colormapDialog = browserHelpers.DialogUserColorMap()
+        colormapDialog.setColorMapList(self.colorMapsDictionary)
+        colormapDialog.accepted.connect( self.userDefinedColorMapDialogAccepted )
+        colormapDialog.exec_()
+
+    def userDefinedColorMapDialogAccepted(self):
+        """ Get user defined colormap from dialog
+        """
+        dialog = self.sender()
+        if dialog.resultColorInfo is None:
+            return
+
+        # Get color information
+        colorInfo = dialog.resultColorInfo
+        idx = self.cmapCBox.findText(colorInfo['name'], Qt.MatchExactly)
+        if idx == -1:
+            browserHelpers.add_external_colormap_to_combobox(self.cmapCBox, self.colorMapsDictionary, colorInfo)
+        else:
+            self.colorMapsDictionary[idx] = browserHelpers.colorInfoToSegmentDataColorMap(colorInfo)
+            browserHelpers.change_colormap_icon_to_combobox(self.cmapCBox, idx, colorInfo)
+            dialog.close()
+
+        # update plot in browser
+        idx = self.cmapCBox.findText(colorInfo['name'], Qt.MatchExactly)
+        if self.cmapCBox.currentIndex() == idx:
+            self.change_color_map_types(idx)
+        else:
+            self.cmapCBox.setCurrentIndex(idx)
+
     def change_interpolation_method(self, index):
+        """ Change interpolation of plot
+        """
         aidx = self.ActiveHiCmapAxis
         if self.hiCmapAxes[aidx].image is None: return
         self.hiCmapAxes[aidx].interpolation = self.interpolation[int(index)]
@@ -2509,16 +2581,10 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
             self.status_bar.showMessage('Saved to %s' % path[0], 2000)
 
     def on_about(self):
-        msg = """ A demo of using PyQt with matplotlib:
-
-         * Use the matplotlib navigation bar
-         * Add values to the text box and press Enter (or click "Draw")
-         * Show or hide the grid
-         * Drag the slider to modify the width of the bars
-         * Save the plot to a file using the File menu
-         * Click on a bar to receive an informative message
+        """ Show about dialog
         """
-        QMessageBox.about(self, "About the demo", msg.strip())
+        aboutDialog = browserHelpers.aboutBrowserDialog(self)
+        aboutDialog.show()
 
     def printPlot(self):
         self.canvas.figure.set_dpi(300)
@@ -2658,6 +2724,8 @@ class GenomicDataPlotAxis:
         self.hdf5Hand = None           # HDF5Handler instance
         self.shownDataset = None       # Dictionary keyword for chromosome, resolution and data coarsing methods -> can be used to access array from hdf5Hand
 
+        self.converterDialog = None    # dialog converter for bigwig, wig and bed file
+
         self.txtFileHand = None        # Genomic text file handler
 
         self.dataArray = None          # array presently plotted
@@ -2734,7 +2802,7 @@ class GenomicDataPlotAxis:
             self.ax.set_xlabel(value, fontsize=12)
 
 
-    def selectGenomicDataByH5Conversion(self, filename, chrom):
+    def selectGenomicDataByH5Conversion(self, browser, filename, chromosome, filesOpened):
         """ This can be used to load a dataset by converting any other format
         like bigwig, wig or bed format to H5 format.
 
@@ -2742,7 +2810,16 @@ class GenomicDataPlotAxis:
 
         """
 
-        pass
+        if self.converterDialog is None:
+            self.converterDialog = h5Converter.DialogOther1DFormatLoader(browser)
+            self.converterDialog.setModal(True)
+            self.converterDialog.connet2Hide()
+            self.converterDialog.connectToBrowserDataLoader(browser, self)
+            self.converterDialog.setInputFile(filename)
+            self.converterDialog.enableFileIndexing()
+            self.converterDialog.setChromName(chromosome)
+            self.converterDialog.setH5Name()
+            self.converterDialog.show()
 
     def selectGenomicDataHdf5ByDialogBox(self, filename, filesOpened):
         """DIalog box to select genomiec displayed_dataset
@@ -2762,12 +2839,12 @@ class GenomicDataPlotAxis:
         """
         if filename not in filesOpened:
             self.hdf5Hand = gdh.HDF5Handler(filename)
-            self.hdf5Hand.buildDataTree()
             filesOpened[filename] = self.hdf5Hand
         else:
             self.hdf5Hand = filesOpened[filename]
 
-        dialog = browserHelpers.DialogGenomicsDataSelector(self.hdf5Hand.data, self.hdf5Hand.title, requestedBinsize=self.hiCmapAxis.ccmap.binsize)
+        dialog = browserHelpers.DialogGenomicsDataSelector(self.hdf5Hand, requestedBinsize=self.hiCmapAxis.ccmap.binsize)
+        dialog.setChromosomeResolution(self.hiCmapAxis.ccmap.xlabel, cmp.binsizeToResolution(self.hiCmapAxis.ccmap.binsize))
         dialog.exec_()
 
         if dialog.selected_data is not None:
@@ -2801,7 +2878,7 @@ class GenomicDataPlotAxis:
             chrom = self.shownDataset[0]
             res = self.shownDataset[1]
             rdata = self.shownDataset[2]
-            self.dataArray = self.hdf5Hand.data[chrom][res][rdata]
+            self.dataArray = self.hdf5Hand.hdf5[chrom][res][rdata][:]
 
         if self.txtFileHand is not None:
             self.dataArray = self.txtFileHand.data
@@ -2847,17 +2924,16 @@ class GenomicDataPlotAxis:
             foundData = False
 
             # Search if new resolution is already inside the file, no need to downsample
-            if resolution in self.hdf5Hand.data[chrom]:
-                if rdata in self.hdf5Hand.data[chrom][resolution]:
-                    originalBinsize = cmp.resolutionToBinsize(self.shownDataset[1])
-                    # In case genomic dataset is loaded at coarser resolution, change original to new finer resolution
-                    if originalBinsize > newBinsize:
-                        self.shownDataset = (chrom, resolution, rdata)
-                    # Change the data array in case change is required
-                    if change:
-                        self.dataArray = self.hdf5Hand.data[chrom][resolution][rdata]
-                        foundData = True
-                    return True
+            if self.hdf5Hand.hasDataName(chrom, resolution, rdata):
+                originalBinsize = cmp.resolutionToBinsize(self.shownDataset[1])
+                # In case genomic dataset is loaded at coarser resolution, change original to new finer resolution
+                if originalBinsize > newBinsize:
+                    self.shownDataset = (chrom, resolution, rdata)
+                # Change the data array in case change is required
+                if change:
+                    self.dataArray = self.hdf5Hand[chrom][resolution][rdata][:]
+                    foundData = True
+                return True
 
             # In case of HDF5 file original resolution is retrieved
             if not foundData:
@@ -2895,7 +2971,7 @@ class GenomicDataPlotAxis:
             res = self.shownDataset[1]
             rdata = self.shownDataset[2]
             if change:
-                self.dataArray = cmp.downSample1D(self.hdf5Hand.data[chrom][res][rdata][:], level=level)
+                self.dataArray = cmp.downSample1D(self.hdf5Hand[chrom][res][rdata][:], level=level)
             success = True
 
         # When data is from a text file
@@ -2909,19 +2985,17 @@ class GenomicDataPlotAxis:
         else:
             return True
 
-    def genDataNameList(self):
+    def genChromNameList(self):
         """ Get the list of all possible datanames
         """
-        dataNameList = None
+        chromNameList = None
         if self.hdf5Hand is not None:
-            dataNameList = []
-            for name in self.hdf5Hand.data:
-                dataNameList.append(name)
-            dataNameList = cmh.sorted_nicely(dataNameList)
+            chromNameList = self.hdf5Hand.getChromList()
+            chromNameList = cmh.sorted_nicely(chromNameList)
 
-        return dataNameList
+        return chromNameList
 
-    def changeDataByName(self, name, change=False):
+    def changeDataByName(self, browser, name, change=False):
         success = False
 
         chrom = name
@@ -2929,17 +3003,22 @@ class GenomicDataPlotAxis:
         rdata = self.shownDataset[2]
 
         if self.hdf5Hand is not None:
-            if chrom in self.hdf5Hand.data:
-                if res in self.hdf5Hand.data[chrom]:
-                    if rdata in self.hdf5Hand.data[chrom][res]:
-                        success = True
-                        if change:
-                            self.shownDataset = (chrom, res, rdata)
-                            self.setDataArray()
-                            self.xlabel = self.hiCmapAxis.axes_props.xLabel['Text']
+            if self.hdf5Hand.hasDataName(chrom, res, rdata):
+                success = True
+                if change:
+                    self.shownDataset = (chrom, res, rdata)
+                    self.setDataArray()
+                    self.xlabel = self.hiCmapAxis.axes_props.xLabel['Text']
+
+        # In case if other formats are loaded
+        if self.converterDialog is not None and not success:
+            self.hdf5Hand.close()
+            self.converterDialog.connectoToBrowseMapChanger(browser, chrom)
+            self.converterDialog.setChromName(chrom)
+            self.converterDialog.show()
+            self.converterDialog.startProcess()
 
         return success
-
 
     def set_tree_widget_item(self):
         """Initialize tree widget item
@@ -3492,7 +3571,12 @@ class CCMAPAXIS:
         # Append list from genomic dataset also
         if self.genmoicPlotAxes is not None:
             for gax in self.genmoicPlotAxes:
-                dataNames = gax.genDataNameList()
+
+                # In case of converter dialog, do not generate common map
+                if gax.converterDialog is not None:
+                    continue
+
+                dataNames = gax.genChromNameList()
 
                 # In case only data names are possible
                 if dataNames is None:

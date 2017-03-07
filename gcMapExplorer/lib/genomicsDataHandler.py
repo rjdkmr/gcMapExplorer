@@ -474,6 +474,31 @@ class HDF5Handler:
 
         return chroms
 
+    def hasChromosome(self, chrom):
+        """To get list of all chromosomes present in hdf5 file
+
+        Parameters
+        ----------
+        chrom : str
+            Chromosome name to be look up in file.
+
+        Returns
+        -------
+        gotChromsome : bool
+            If queried chromosome present in file ``True`` otherwise ``False``.
+
+        """
+
+        if self.hdf5 is None:
+            self.open()
+
+        gotChromsome = False
+        if chrom in self.hdf5:
+            gotChromsome = True
+
+        return gotChromsome
+
+
     def getResolutionList(self, chrom):
         """ To get all resolutions for given chromosome from hdf5 file
 
@@ -503,6 +528,34 @@ class HDF5Handler:
             raise KeyError(' Chromosome [{0}] not found in [{1}] file...' .format(chrom, self.filename))
 
         return resolutionList
+
+    def hasResolution(self, chrom, resolution):
+        """To get list of all chromosomes present in hdf5 file
+
+        Parameters
+        ----------
+        chrom : str
+            Chromosome name to be look up in file.
+        resolution : str
+            Data Resolution for queried Chromosome
+
+        Returns
+        -------
+        gotResolution : bool
+            If queried resolution of given chromsome present in file ``True``
+            otherwise ``False``.
+
+        """
+
+        if self.hdf5 is None:
+            self.open()
+
+        gotResolution = False
+        if self.hasChromosome(chrom):
+            if resolution in self.hdf5[chrom]:
+                gotResolution = True
+
+        return gotResolution
 
     def getDataNameList(self, chrom, resolution):
         """ List of all available arrays by respecitve coarse method name for given chromosome and resolution
@@ -539,6 +592,36 @@ class HDF5Handler:
             raise KeyError(' Chromosome [{0}] not found in [{1}] file...' .format(chrom, self.filename))
 
         return nameList
+
+    def hasDataName(self, chrom, resolution, dataName):
+        """To get list of all chromosomes present in hdf5 file
+
+        Parameters
+        ----------
+        chrom : str
+            Chromosome name to be look up in file.
+        resolution : str
+            Data Resolution for queried Chromosome
+        dataName : str
+            Name of data to be queried in given Chromosome.
+
+        Returns
+        -------
+        gotDataName : bool
+            If queried data in given chromsome at given resolution is
+            present in file ``True`` otherwise ``False``.
+
+        """
+
+        if self.hdf5 is None:
+            self.open()
+
+        gotDataName = False
+        if self.hasResolution(chrom, resolution):
+            if dataName in self.hdf5[chrom][resolution]:
+                gotDataName = True
+
+        return gotDataName
 
     def buildDataTree(self):
         """ Build data dictionary from the input hdf5 file
@@ -1652,6 +1735,10 @@ class WigHandler:
                 # Store location of new chromosome
                 self._chromPointerInFile[ChromTitle] = pointer - len(PreviousLine)
 
+                # If index file is provided, update the index file
+                if self.indexFile is not None:
+                    self._saveChromSizeAndIndex()
+
                 # Logging the information
                 if PreviousChromTitle != 'dummy':
                     self.logger.info('         ... Got maximum size of {0} for {1}' .format(self.chromSizeInfo[PreviousChromTitle], PreviousChromTitle))
@@ -1666,6 +1753,7 @@ class WigHandler:
                     printed = True
 
                 self.logger.info(' Searching and Indexing for chromosome {0} ... ' .format(ChromTitle))
+
 
             pointer += len(line)
             PreviousChromTitle = ChromTitle
@@ -2044,12 +2132,14 @@ class BEDHandler:
         coarsening_methods : list of str
             Methods to coarse or downsample the data for converting from 1-base
             to coarser resolutions. Presently, five methods are implemented.
+
             * ``'min'``    -> Minimum value
             * ``'max'``    -> Maximum value
             * ``'amean'``  -> Arithmatic mean or average
             * ``'hmean'``  -> Harmonic mean
             * ``'gmean'``  -> Geometric mean
             * ``'median'`` -> Median
+
             In case of ``None``, all five methods will be considered. User may
             use only subset of these methods. For example:
             ``coarse_method=['max', 'amean']`` can be used for downsampling by
@@ -2156,6 +2246,11 @@ class BEDHandler:
             # In case if input chromosome is already read, break here
             # Also Logging the information
             if PreviousChromTitle != ChromTitle:
+
+                # If index file is provided, update the index file
+                if self.indexFile is not None:
+                    self._saveChromSizeAndIndex()
+
                 if PreviousChromTitle != 'dummy':
                     self.logger.info('         ... Finished reading and processing for {0} ' .format(PreviousChromTitle))
                     if PreviousChromTitle == self.chromName:
@@ -2177,6 +2272,11 @@ class BEDHandler:
         if self.chromName is None or self.chromName == ChromTitle:
             self._FillDataInNumpyArrayFile(ChromTitle, location_list, value_list)
             self.logger.info('         ... Finished reading and processing for {0} ' .format(ChromTitle))
+
+        # If index file is provided, update the index file
+        if self.indexFile is not None:
+            self._saveChromSizeAndIndex()
+
 
     def saveAsH5(self, hdf5Out, title=None, resolutions=None, coarsening_methods=None, compression='lzf', keep_original=False):
         """To convert bed files to hdf5 file
@@ -2200,12 +2300,14 @@ class BEDHandler:
         coarsening_methods : list of str
             Methods to coarse or downsample the data for converting from 1-base
             to coarser resolutions. Presently, five methods are implemented.
+
             * ``'min'``    -> Minimum value
             * ``'max'``    -> Maximum value
             * ``'amean'``  -> Arithmatic mean or average
             * ``'hmean'``  -> Harmonic mean
             * ``'gmean'``  -> Geometric mean
             * ``'median'`` -> Median
+
             In case of ``None``, all five methods will be considered. User may
             use only subset of these methods. For example:
             ``coarse_method=['max', 'amean']`` can be used for downsampling by

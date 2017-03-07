@@ -10,4 +10,4 @@ Documentation of Python Modules
     importer module <importer>
     normalizer module <normalizer>
     cmstats module <cmstats>
-    genomicsDataHandler module <genomicsDataHandler>
+    genomicsDataHandler module <genomicsDataHandler/index>

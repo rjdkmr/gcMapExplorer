@@ -25,7 +25,7 @@ import numpy as np
 import logging
 logging.basicConfig(level=logging.INFO)
 
-gui_tools =      ['browser', 'importer', 'normalizer']
+gui_tools =      ['browser', 'importer', 'normalizer', 'h5Converter']
 convert_tools =  ['coo2cmap', 'pairCoo2cmap', 'homer2cmap', 'bc2cmap', 'bigwig2h5', 'wig2h5', 'bed2h5']
 norm_tools =     ['normKR', 'normIC', 'normMCFS']
 analysis_tools = ['corrBWcmaps']
@@ -34,13 +34,14 @@ def main():
     options = {'browser':'Interactive Browser for genomic contact maps',
                'importer':'Interface to import contact maps and datasets',
                'normalizer' : 'Interface to normalize contact maps',
+               'h5Converter' : 'Convert bigWig/wig/bed file to browser compaitable h5 format',
                'coo2cmap':'Import COO sparse matrix format to ccmap or gcmap',
                'pairCoo2cmap': 'Import map from files similar to paired sparse matrix Coordinate (COO) format',
                'homer2cmap':'Import HOMER Hi-C interaction matrix to ccmap or gcmap',
                'bc2cmap': 'Import Bin-Contact format files to ccmap or gcmap',
-               'bigwig2h5': 'Import a bigWig file to HDF5 format h5 file',
-               'wig2h5': 'Import a wig file to HDF5 format h5 file',
-               'bed2h5' : 'Import a bed file to HDF5 format h5 file',
+               'bigwig2h5': 'Import a bigWig file to browser compaitable h5 format',
+               'wig2h5': 'Import a wig file to browser compaitable h5 format',
+               'bed2h5' : 'Import a bed file to browser compaitable h5 format',
                'normKR' : 'Normalization using Knight-Ruiz matrix balancing',
                'normIC' : 'Normalization using Iterative Correction',
                'normMCFS' : 'Normalization by Median Contact Frequency Scaling',
@@ -65,6 +66,10 @@ def main():
     if sys.argv[1] == 'normalizer':
         from .gui import normalizer_ui
         normalizer_ui.main()
+
+    if sys.argv[1] == 'h5Converter':
+        from .gui import h5Converter
+        h5Converter.main()
 
     if sys.argv[1] == 'coo2cmap':
         from .clui import coo2cmap
