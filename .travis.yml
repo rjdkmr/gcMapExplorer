@@ -1,0 +1,45 @@
+# After changing this file, check it on:
+#   http://lint.travis-ci.org/
+language: python
+
+os:
+  - linux
+  - osx
+
+# Run jobs on container-based infrastructure, can be overridden per job
+sudo: false
+
+cache:
+  directories:
+    - $HOME/.cache/pip'
+
+python:
+  - 3.4
+  - 3.5
+  - 3.6
+
+addons:
+  apt:
+    packages:
+      - python3
+      - python3-setuptools
+      - python3-pyqt5
+
+before_install:
+  - |
+    # Install into our own pristine virtualenv
+    if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
+      brew update
+      brew install python3
+      brew install pyqt5 --with-python3
+    fi
+
+install:
+  - |
+    pip install --upgrade pip
+    pip install --upgrade wheel
+    pip install --upgrade setuptools
+    pip install Cython
+
+    # Install gcMapExplorer
+    pip install -ve .

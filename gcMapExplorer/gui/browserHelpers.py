@@ -2224,6 +2224,12 @@ class DialogUserColorMap(DialogUserColorMapBase, Ui_DialogUserColorMap):
             color = button.palette().color(button.backgroundRole())
             colorDict[values[i]] = color.name()
 
+        if values[0] != 0.0:
+            colorDict[0.0] = colorDict[values[0]]
+
+        if values[-1] != 1.0:
+            colorDict[1.0] = colorDict[values[-1]]
+
         return colorDict
 
     def chooseColorByButton(self):
