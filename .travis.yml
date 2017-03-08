@@ -25,6 +25,14 @@ addons:
       - python3-setuptools
       - python3-pyqt5
 
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      sudo: required
+    - os: osx
+      osx_image: xcode7.2
+      
 before_install:
   - |
     # Install into our own pristine virtualenv
@@ -39,7 +47,7 @@ install:
     pip install --upgrade pip
     pip install --upgrade wheel
     pip install --upgrade setuptools
-    pip install Cython
+    pip install Cython --install-option="--no-cython-compile"
 
     # Install gcMapExplorer
     pip install -ve .
