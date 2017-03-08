@@ -2,9 +2,6 @@
 #   http://lint.travis-ci.org/
 language: python
 
-os:
-  - linux
-  - osx
 
 # Run jobs on container-based infrastructure, can be overridden per job
 sudo: required
