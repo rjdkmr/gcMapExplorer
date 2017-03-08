@@ -7,7 +7,7 @@ os:
   - osx
 
 # Run jobs on container-based infrastructure, can be overridden per job
-sudo: false
+sudo: required
 
 cache:
   directories:
