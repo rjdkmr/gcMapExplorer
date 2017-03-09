@@ -64,6 +64,7 @@ before_install:
       popd
       
     else
+      rvm get stable
       brew update
       brew install python3
       brew install pyqt5 --with-python3
@@ -81,7 +82,7 @@ install:
     pip install --upgrade h5py
 
     # Install gcMapExplorer
-    python3 setup.py install
+    pip install -ve .
 
 script:
   - python -c 'import PyQt5'
