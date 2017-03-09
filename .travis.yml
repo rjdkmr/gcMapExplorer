@@ -16,59 +16,59 @@ matrix:
     - os: osx
       python: 3.4
       language: generic
-      env: TOXENV=py34
     - os: osx
       python: 3.5
       language: generic
-      env: TOXENV=py35
     - os: osx
       python: 3.6
       language: generic
-      env: TOXENV=py36
   
 before_install:
   - |
     if [[ $TRAVIS_OS_NAME != 'osx' ]]; then
       sudo apt-get -y install python3 python3-setuptools
-      export DISPLAY=:99.0
-      sh -e /etc/init.d/xvfb start
+      
+      ## Install sip and pyqt5
+      #export DISPLAY=:99.0
+      #sh -e /etc/init.d/xvfb start
       
       # Cached Downloads
-      sudo mkdir -p /downloads
-      sudo chmod a+rw /downloads
-      curl -L -o /downloads/sip.tar.gz https://nchc.dl.sourceforge.net/project/pyqt/sip/sip-4.18/sip-4.18.tar.gz
-      curl -L -o /downloads/PyQt5_gpl-5.6.tar.gz https://superb-dca2.dl.sourceforge.net/project/pyqt/PyQt5/PyQt-5.6/PyQt5_gpl-5.6.tar.gz
+      #sudo mkdir -p /downloads
+      #sudo chmod a+rw /downloads
+      #curl -L -o /downloads/sip.tar.gz https://nchc.dl.sourceforge.net/project/pyqt/sip/sip-4.18/sip-4.18.tar.gz
+      #curl -L -o /downloads/PyQt5_gpl-5.6.tar.gz https://superb-dca2.dl.sourceforge.net/project/pyqt/PyQt5/PyQt-5.6/PyQt5_gpl-5.6.tar.gz
       
       # Builds
-      sudo mkdir -p /builds
-      sudo chmod a+rw /builds
+      #sudo mkdir -p /builds
+      #sudo chmod a+rw /builds
       
       # Qt5
-      sudo add-apt-repository -y ppa:beineri/opt-qt562
-      sudo apt-get update
-      sudo apt-get install -y qt56base
+      #sudo add-apt-repository -y ppa:beineri/opt-qt562
+      #sudo apt-get update
+      #sudo apt-get install -y qt56base
       
-      #Builds
-      pushd /builds
+      # Builds
+      #pushd /builds
+      
       # SIP
-      tar xzf /downloads/sip.tar.gz --keep-newer-files
-      pushd sip-4.18
-      python configure.py
-      make
-      sudo make install
-      popd
+      #tar xzf /downloads/sip.tar.gz --keep-newer-files
+      #pushd sip-4.18
+      #python configure.py
+      #make
+      #sudo make install
+      #popd
       
       # PyQt5
-      source /opt/qt56/bin/qt56-env.sh  # switch to Qt5
-      tar xzf /downloads/PyQt5_gpl-5.6.tar.gz --keep-newer-files
-      pushd PyQt5_gpl-5.6
-      python configure.py -c --confirm-license --verbose --no-designer-plugin -e QtWidgets -e QtCore -e QtGui -e QtPrintSupport
-      make
-      sudo make install
-      popd
+      #source /opt/qt56/bin/qt56-env.sh  # switch to Qt5
+      #tar xzf /downloads/PyQt5_gpl-5.6.tar.gz --keep-newer-files
+      #pushd PyQt5_gpl-5.6
+      #python configure.py -c --confirm-license --verbose --no-designer-plugin -e QtWidgets -e QtCore -e QtGui -e QtPrintSupport
+      #make
+      #sudo make install
+      #popd
       
       # Out from builds
-      popd
+      #popd
       
     else
       rvm get stable
@@ -79,6 +79,8 @@ before_install:
 
 install:
   - |
+    if [[ $TRAVIS_OS_NAME != 'osx' ]]; then
+    
     pip install --upgrade pip
     pip install --upgrade wheel
     pip install --upgrade setuptools
@@ -90,8 +92,26 @@ install:
 
     # Install gcMapExplorer
     pip install -ve .
+    
+    else
+    
+    pip3 install --upgrade pip
+    pip3 install --upgrade wheel
+    pip3 install --upgrade setuptools
+    pip3 install Cython --install-option="--no-cython-compile"
+    pip3 install --upgrade numpy
+    pip3 install --upgrade scipy
+    pip3 install --upgrade matplotlib
+    pip3 install --upgrade h5py
+
+    # Install gcMapExplorer
+    pip3 install -ve .
+    fi
+
 
 script:
-  - python -c 'import PyQt5'
-  - python -c 'import gcMapExplorer'
-  - python -c 'import gcMapExplorer.lib as gmlib'
+  - if [[ $TRAVIS_OS_NAME == 'linux' ]]; then python -c 'import gcMapExplorer' ; fi
+  - if [[ $TRAVIS_OS_NAME == 'linux' ]]; then python -c 'import gcMapExplorer.lib as gmlib' ; fi
+  - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then python3 -c 'import gcMapExplorer' ; fi
+  - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then python3 -c 'import gcMapExplorer.lib as gmlib' ; fi
+
