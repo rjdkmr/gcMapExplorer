@@ -47,7 +47,7 @@ before_install:
       
       # PyQt5
       /opt/qt56/bin/qt56-env.sh  # switch to Qt5
-      tar xzf /downloads/PyQt-gpl-5.6.tar.gz --keep-newer-files
+      tar xzf /downloads/PyQt5_gpl-5.6.tar.gz --keep-newer-files
       pushd PyQt5_gpl-5.6
       python configure.py -c --confirm-license --no-designer-plugin
       make
