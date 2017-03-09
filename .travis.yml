@@ -6,6 +6,11 @@ os:
   - linux
   - osx
 
+python:
+  - 3.4
+  - 3.5
+  - 3.6
+
 matrix:
   include:
     - os: linux
@@ -66,7 +71,7 @@ before_install:
       source /opt/qt56/bin/qt56-env.sh  # switch to Qt5
       tar xzf /downloads/PyQt5_gpl-5.6.tar.gz --keep-newer-files
       pushd PyQt5_gpl-5.6
-      python configure.py -c --confirm-license --no-designer-plugin
+      python configure.py -c --confirm-license --no-designer-plugin -e QtWidgets -e QtCore -e QtGui -e QtPrintSupport -e uic
       make
       sudo make install
       popd
