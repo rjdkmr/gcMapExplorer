@@ -22,6 +22,9 @@ matrix:
     - os: osx
       python: 3.6
       language: generic
+      
+    allow_failures:
+      - os: osx
   
 before_install:
   - |
@@ -115,3 +118,25 @@ script:
   - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then python3 -c 'import gcMapExplorer' ; fi
   - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then python3 -c 'import gcMapExplorer.lib as gmlib' ; fi
 
+
+deploy:
+  # test pypi
+  - provider: pypi
+    distributions: "sdist bdist_wheel"
+    server: https://testpypi.python.org/pypi
+    user: "rjdkmr"
+    password:
+      secure: G/ZcM1wmx8lhZ86SgjK6GYadl86Jbpsjh2Ri35ttUPDUABf/HKe5JjRqjthVvUc3k6tzN8i2hXx8SKICqmlgq0j7u8y2Emty4OF4q2dVWRr7/XuFL/YsUYGU4FGUsyeMvPNmr9ShUXnwMSoNeFNf414VtppHjP+Tc0jyNd800tgQSFALNG5B3SH1/cIYdiUtsitNOVA+gqPoYoHDItGiS8GrQiFGaYGtVejxAOqvzURjJE/Tr6YIxVn7ZIgF2nbGEcafo+yVt0leTYW9+pp5wUoVkurwKRToMBdalnkb2XvstwsYpOqlOtepVruWKGHOH9wYSP2oddD3IvtHKiOW33jNrRQRX5kye0UIu6MPzOwuigQ8vxZbbET84vMwOrwX9xLHrw09K0lTg0rpPZX7tdh+3bQ/WUKmLjMwleW7nl3oOSfub3CWBKvZ92gchnC12lDANN6vorfPWi9TuhUENqqCrlF/pRsuKTE7NOtWHiEBEds7t8QhJoOouHehPEbAiBQ4uMd5yxkGHGio6hfJ9MV69Z51SLRVUtPp4pwzlstgSS342gQ8DstsBUxmXiBqCwbUkquHs28tB9XLSEXhklT37xFZjvouOFI3I89NrS/jEV4jKMVlQL7EDhTvYSKf1VCia3oKzM89iDQtrzx9wzE9ziGV0z5jAxqbuMpig0g=
+    on:
+      branch: master
+      tags: false
+      
+  # production pypi
+  - provider: pypi
+    distributions: "sdist bdist_wheel"
+    user: "rjdkmr"
+    password:
+      secure: G/ZcM1wmx8lhZ86SgjK6GYadl86Jbpsjh2Ri35ttUPDUABf/HKe5JjRqjthVvUc3k6tzN8i2hXx8SKICqmlgq0j7u8y2Emty4OF4q2dVWRr7/XuFL/YsUYGU4FGUsyeMvPNmr9ShUXnwMSoNeFNf414VtppHjP+Tc0jyNd800tgQSFALNG5B3SH1/cIYdiUtsitNOVA+gqPoYoHDItGiS8GrQiFGaYGtVejxAOqvzURjJE/Tr6YIxVn7ZIgF2nbGEcafo+yVt0leTYW9+pp5wUoVkurwKRToMBdalnkb2XvstwsYpOqlOtepVruWKGHOH9wYSP2oddD3IvtHKiOW33jNrRQRX5kye0UIu6MPzOwuigQ8vxZbbET84vMwOrwX9xLHrw09K0lTg0rpPZX7tdh+3bQ/WUKmLjMwleW7nl3oOSfub3CWBKvZ92gchnC12lDANN6vorfPWi9TuhUENqqCrlF/pRsuKTE7NOtWHiEBEds7t8QhJoOouHehPEbAiBQ4uMd5yxkGHGio6hfJ9MV69Z51SLRVUtPp4pwzlstgSS342gQ8DstsBUxmXiBqCwbUkquHs28tB9XLSEXhklT37xFZjvouOFI3I89NrS/jEV4jKMVlQL7EDhTvYSKf1VCia3oKzM89iDQtrzx9wzE9ziGV0z5jAxqbuMpig0g=
+    on:
+      branch: master
+      tags: true
