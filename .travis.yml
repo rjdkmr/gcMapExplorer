@@ -24,7 +24,7 @@ before_install:
       sudo mkdir -p /downloads
       sudo chmod a+rw /downloads
       curl -L -o /downloads/sip.tar.gz https://netix.dl.sourceforge.net/project/pyqt/sip/sip-4.19.1/sip-4.19.1.tar.gz
-      curl -L -o /downloads/PyQt-gpl-5.6.tar.gz https://superb-dca2.dl.sourceforge.net/project/pyqt/PyQt5/PyQt-5.6/PyQt5_gpl-5.6.tar.gz
+      curl -L -o /downloads/PyQt5_gpl-5.6.tar.gz https://superb-dca2.dl.sourceforge.net/project/pyqt/PyQt5/PyQt-5.6/PyQt5_gpl-5.6.tar.gz
       
       # Builds
       sudo mkdir -p /builds
@@ -46,9 +46,9 @@ before_install:
       popd
       
       # PyQt5
-      source /opt/qt54/bin/qt54-env.sh  # switch to Qt5
+      /opt/qt56/bin/qt56-env.sh  # switch to Qt5
       tar xzf /downloads/PyQt-gpl-5.6.tar.gz --keep-newer-files
-      pushd PyQt-gpl-5.6
+      pushd PyQt5_gpl-5.6
       python configure.py -c --confirm-license --no-designer-plugin
       make
       sudo make install
