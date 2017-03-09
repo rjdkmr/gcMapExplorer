@@ -22,7 +22,6 @@ matrix:
     - os: osx
       python: 3.6
       language: generic
-      
     allow_failures:
       - os: osx
   
