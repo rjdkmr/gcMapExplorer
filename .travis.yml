@@ -2,17 +2,23 @@
 #   http://lint.travis-ci.org/
 language: python
 
-sudo: required
+os:
+  - linux
+  - osx
 
 python:
   - 3.4
   - 3.5
   - 3.6
 
-os:
-  - linux
-  - osx
 
+matrix:
+  include:
+    - os: linux
+      sudo: required
+    - os: osx
+    
+    
 before_install:
   - |
     if [[ $TRAVIS_OS_NAME != 'osx' ]]; then
@@ -78,6 +84,6 @@ install:
     python3 setup.py install
 
 script:
-  - python3 -c 'import PyQt5'
-  - python3 -c 'import gcMapExplorer'
-  - python3 -c 'import gcMapExplorer.lib as gmlib'
+  - python -c 'import PyQt5'
+  - python -c 'import gcMapExplorer'
+  - python -c 'import gcMapExplorer.lib as gmlib'
