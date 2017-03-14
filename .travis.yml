@@ -27,10 +27,11 @@ matrix:
       env: TOXENV=py36
   allow_failures:
     - os: osx
-  env:
-    global:
-      # PYPIPASSWORD=...
-      secure: "eAreGa6ZBtzasZrZp32Hac3oxO+dmC2noOM+kcJA39yla4sQqdXCF0kot1VWuUXnbQ22khyGa68Rm59+pmlpExdNKikMWwm2j+DiRMJh/BimuwcXSG5Fw0rfSYmyL88QDdklBk0kzeXNdicjoKC8Ka+aiPraQ+OKhyyyKvj4Q6EMRvtd/YFg5R2xVucySHWxdvZX7ryJQIxUUN4me0mcGYZ61/W0ErGrpwk0+FcJA0TYZtyBD4CUvNdXgl0D+Wl0mAsh2bN0forMpr4U9pqoN8AUx4+1YNuQ9njh0fn/9zvQsTSPIwYsiEBbbtefKl+z3ucbTuvj1Kkgxo5ahdEyr5GBLc7gYyh9HMK4bqqSWg3bnkkpfpqM1pLvr3pZWiw1DLSRYKpahUQLwRnXtLaMVN+J4IJeg/1KkxOhbLUi6ahls0sXXLbxRMnWyaPFWiUsS4dU+diiec1csW0mwMSOeXgODaszY+3ZOLUtOdKoGU/CTYmrzYZRaMuB45XVECBMy8QExSP64HGvtVi3LtypK2J/B//fTkKc30WVICrrsBalY0DjgedrSzgAriVOAwsSzxtXYbCPHOrJ4lzJwU4ikAUPJyLCRJ+gb2GLgC+unNfj5etfJGPG95a+AEyFFepFHEJNtnOQTmy7MIGCCHkp+JTo+qe9b/yjCpGoBvO6f2Y="
+    
+env:
+  global:
+    # PYPIPASSWORD=...
+    - secure: "eAreGa6ZBtzasZrZp32Hac3oxO+dmC2noOM+kcJA39yla4sQqdXCF0kot1VWuUXnbQ22khyGa68Rm59+pmlpExdNKikMWwm2j+DiRMJh/BimuwcXSG5Fw0rfSYmyL88QDdklBk0kzeXNdicjoKC8Ka+aiPraQ+OKhyyyKvj4Q6EMRvtd/YFg5R2xVucySHWxdvZX7ryJQIxUUN4me0mcGYZ61/W0ErGrpwk0+FcJA0TYZtyBD4CUvNdXgl0D+Wl0mAsh2bN0forMpr4U9pqoN8AUx4+1YNuQ9njh0fn/9zvQsTSPIwYsiEBbbtefKl+z3ucbTuvj1Kkgxo5ahdEyr5GBLc7gYyh9HMK4bqqSWg3bnkkpfpqM1pLvr3pZWiw1DLSRYKpahUQLwRnXtLaMVN+J4IJeg/1KkxOhbLUi6ahls0sXXLbxRMnWyaPFWiUsS4dU+diiec1csW0mwMSOeXgODaszY+3ZOLUtOdKoGU/CTYmrzYZRaMuB45XVECBMy8QExSP64HGvtVi3LtypK2J/B//fTkKc30WVICrrsBalY0DjgedrSzgAriVOAwsSzxtXYbCPHOrJ4lzJwU4ikAUPJyLCRJ+gb2GLgC+unNfj5etfJGPG95a+AEyFFepFHEJNtnOQTmy7MIGCCHkp+JTo+qe9b/yjCpGoBvO6f2Y="
   
 before_install:
   - |
@@ -82,9 +83,15 @@ before_install:
       #popd
       
     else
-      rvm get stable
       brew update
-      brew install pyenv
+      
+      # Install 'pyenv': a utility for downloading and switching between multiple
+      # Python interpreters on the same system.
+      git clone https://github.com/yyuu/pyenv.git ~/.pyenv
+      PYENV_ROOT="$HOME/.pyenv"
+      PATH="$PYENV_ROOT/bin:$PATH"
+      eval "$(pyenv init -)"
+      
       case "${TOXENV}" in
         py34)
           PYVER=3.4
