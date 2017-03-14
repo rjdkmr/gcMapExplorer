@@ -27,14 +27,16 @@ matrix:
       env: TOXENV=py36
   allow_failures:
     - os: osx
-  global:
-    # PYPIPASSWORD=...
-    secure: "eAreGa6ZBtzasZrZp32Hac3oxO+dmC2noOM+kcJA39yla4sQqdXCF0kot1VWuUXnbQ22khyGa68Rm59+pmlpExdNKikMWwm2j+DiRMJh/BimuwcXSG5Fw0rfSYmyL88QDdklBk0kzeXNdicjoKC8Ka+aiPraQ+OKhyyyKvj4Q6EMRvtd/YFg5R2xVucySHWxdvZX7ryJQIxUUN4me0mcGYZ61/W0ErGrpwk0+FcJA0TYZtyBD4CUvNdXgl0D+Wl0mAsh2bN0forMpr4U9pqoN8AUx4+1YNuQ9njh0fn/9zvQsTSPIwYsiEBbbtefKl+z3ucbTuvj1Kkgxo5ahdEyr5GBLc7gYyh9HMK4bqqSWg3bnkkpfpqM1pLvr3pZWiw1DLSRYKpahUQLwRnXtLaMVN+J4IJeg/1KkxOhbLUi6ahls0sXXLbxRMnWyaPFWiUsS4dU+diiec1csW0mwMSOeXgODaszY+3ZOLUtOdKoGU/CTYmrzYZRaMuB45XVECBMy8QExSP64HGvtVi3LtypK2J/B//fTkKc30WVICrrsBalY0DjgedrSzgAriVOAwsSzxtXYbCPHOrJ4lzJwU4ikAUPJyLCRJ+gb2GLgC+unNfj5etfJGPG95a+AEyFFepFHEJNtnOQTmy7MIGCCHkp+JTo+qe9b/yjCpGoBvO6f2Y="
+  env:
+    global:
+      # PYPIPASSWORD=...
+      secure: "eAreGa6ZBtzasZrZp32Hac3oxO+dmC2noOM+kcJA39yla4sQqdXCF0kot1VWuUXnbQ22khyGa68Rm59+pmlpExdNKikMWwm2j+DiRMJh/BimuwcXSG5Fw0rfSYmyL88QDdklBk0kzeXNdicjoKC8Ka+aiPraQ+OKhyyyKvj4Q6EMRvtd/YFg5R2xVucySHWxdvZX7ryJQIxUUN4me0mcGYZ61/W0ErGrpwk0+FcJA0TYZtyBD4CUvNdXgl0D+Wl0mAsh2bN0forMpr4U9pqoN8AUx4+1YNuQ9njh0fn/9zvQsTSPIwYsiEBbbtefKl+z3ucbTuvj1Kkgxo5ahdEyr5GBLc7gYyh9HMK4bqqSWg3bnkkpfpqM1pLvr3pZWiw1DLSRYKpahUQLwRnXtLaMVN+J4IJeg/1KkxOhbLUi6ahls0sXXLbxRMnWyaPFWiUsS4dU+diiec1csW0mwMSOeXgODaszY+3ZOLUtOdKoGU/CTYmrzYZRaMuB45XVECBMy8QExSP64HGvtVi3LtypK2J/B//fTkKc30WVICrrsBalY0DjgedrSzgAriVOAwsSzxtXYbCPHOrJ4lzJwU4ikAUPJyLCRJ+gb2GLgC+unNfj5etfJGPG95a+AEyFFepFHEJNtnOQTmy7MIGCCHkp+JTo+qe9b/yjCpGoBvO6f2Y="
   
 before_install:
   - |
     if [[ $TRAVIS_OS_NAME != 'osx' ]]; then
-      sudo apt-get -y install python3 python3-setuptools
+      
+      echo "No need to install PyQt5. It is required during execution only"
       
       ## Install sip and pyqt5
       #export DISPLAY=:99.0
@@ -84,19 +86,34 @@ before_install:
       brew install pyenv
       case "${TOXENV}" in
         py34)
-          pyenv install 3.4
-          pyenv global 3.4
+          PYVER=3.4
+          # Install the latest release of the specified Python version using pyenv.
+          PYVER="$(pyenv install --list | grep -E "^\\s*$PYVER" | sort -n -t. -k3 | tail -n1)"
+          pyenv install $PYVER
+          pyenv global $PYVER
+          echo "Selected Python $PYVER"
+          python --version
           ;;
         py35)
-          pyenv install 3.5
-          pyenv global 3.5
+          PYVER=3.5
+          # Install the latest release of the specified Python version using pyenv.
+          PYVER="$(pyenv install --list | grep -E "^\\s*$PYVER" | sort -n -t. -k3 | tail -n1)"
+          pyenv install $PYVER
+          pyenv global $PYVER
+          echo "Selected Python $PYVER"
+          python --version
           ;;
         py36)
-          pyenv install 3.6
-          pyenv global 3.6
+          PYVER=3.6
+          # Install the latest release of the specified Python version using pyenv.
+          PYVER="$(pyenv install --list | grep -E "^\\s*$PYVER" | sort -n -t. -k3 | tail -n1)"
+          pyenv install $PYVER
+          pyenv global $PYVER
+          echo "Selected Python $PYVER"
+          python --version
           ;;
       esac
-      brew install pyqt5 --with-python3
+      # brew install pyqt5 --with-python3
     fi
 
 install:
@@ -114,8 +131,8 @@ install:
     pip install -ve .
     
 script:
-  - if [[ $TRAVIS_OS_NAME == 'linux' ]]; then python -c 'import gcMapExplorer' ; fi
-  - if [[ $TRAVIS_OS_NAME == 'linux' ]]; then python -c 'import gcMapExplorer.lib as gmlib' ; fi
+  - python -c 'import gcMapExplorer'
+  - python -c 'import gcMapExplorer.lib as gmlib'
 
 after_success:
   # Specify account details for PyPI
@@ -127,8 +144,6 @@ after_success:
     echo "repository=https://pypi.python.org/pypi"     >> ~/.pypirc
     echo "username=rjdkmr"                             >> ~/.pypirc
     echo "password=$PYPIPASSWORD"                      >> ~/.pypirc
-    
-    cat ~/.pypirc
   
   # For OS X and tags only, build a Python source distribution and "binary
   # wheel" and upload these to PyPI. Note that the source upload will only
