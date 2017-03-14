@@ -16,12 +16,15 @@ matrix:
     - os: osx
       python: 3.4
       language: generic
+      env: TOXENV=py34
     - os: osx
       python: 3.5
       language: generic
+      env: TOXENV=py35
     - os: osx
       python: 3.6
       language: generic
+      env: TOXENV=py36
   allow_failures:
     - os: osx
   global:
@@ -78,12 +81,26 @@ before_install:
     else
       rvm get stable
       brew update
-      #brew install python3
-      brew install pyqt5
+      brew install pyenv
+      case "${TOXENV}" in
+        py34)
+          pyenv install 3.4
+          pyenv global 3.4
+          ;;
+        py35)
+          pyenv install 3.5
+          pyenv global 3.5
+          ;;
+        py36)
+          pyenv install 3.6
+          pyenv global 3.6
+          ;;
+      esac
+      brew install pyqt5 --with-python3
     fi
 
 install:
-  - |
+  - |  
     pip install --upgrade pip
     pip install --upgrade wheel
     pip install --upgrade setuptools
@@ -95,8 +112,7 @@ install:
 
     # Install gcMapExplorer
     pip install -ve .
-
-
+    
 script:
   - if [[ $TRAVIS_OS_NAME == 'linux' ]]; then python -c 'import gcMapExplorer' ; fi
   - if [[ $TRAVIS_OS_NAME == 'linux' ]]; then python -c 'import gcMapExplorer.lib as gmlib' ; fi
@@ -111,6 +127,8 @@ after_success:
     echo "repository=https://pypi.python.org/pypi"     >> ~/.pypirc
     echo "username=rjdkmr"                             >> ~/.pypirc
     echo "password=$PYPIPASSWORD"                      >> ~/.pypirc
+    
+    cat ~/.pypirc
   
   # For OS X and tags only, build a Python source distribution and "binary
   # wheel" and upload these to PyPI. Note that the source upload will only
@@ -119,4 +137,6 @@ after_success:
     pip install --upgrade twine
     python setup.py sdist bdist_wheel
     twine upload --skip-existing dist/*
+
+
 
