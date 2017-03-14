@@ -24,6 +24,9 @@ matrix:
       language: generic
   allow_failures:
     - os: osx
+  global:
+    # PYPIPASSWORD=...
+    secure: "eAreGa6ZBtzasZrZp32Hac3oxO+dmC2noOM+kcJA39yla4sQqdXCF0kot1VWuUXnbQ22khyGa68Rm59+pmlpExdNKikMWwm2j+DiRMJh/BimuwcXSG5Fw0rfSYmyL88QDdklBk0kzeXNdicjoKC8Ka+aiPraQ+OKhyyyKvj4Q6EMRvtd/YFg5R2xVucySHWxdvZX7ryJQIxUUN4me0mcGYZ61/W0ErGrpwk0+FcJA0TYZtyBD4CUvNdXgl0D+Wl0mAsh2bN0forMpr4U9pqoN8AUx4+1YNuQ9njh0fn/9zvQsTSPIwYsiEBbbtefKl+z3ucbTuvj1Kkgxo5ahdEyr5GBLc7gYyh9HMK4bqqSWg3bnkkpfpqM1pLvr3pZWiw1DLSRYKpahUQLwRnXtLaMVN+J4IJeg/1KkxOhbLUi6ahls0sXXLbxRMnWyaPFWiUsS4dU+diiec1csW0mwMSOeXgODaszY+3ZOLUtOdKoGU/CTYmrzYZRaMuB45XVECBMy8QExSP64HGvtVi3LtypK2J/B//fTkKc30WVICrrsBalY0DjgedrSzgAriVOAwsSzxtXYbCPHOrJ4lzJwU4ikAUPJyLCRJ+gb2GLgC+unNfj5etfJGPG95a+AEyFFepFHEJNtnOQTmy7MIGCCHkp+JTo+qe9b/yjCpGoBvO6f2Y="
   
 before_install:
   - |
@@ -75,14 +78,12 @@ before_install:
     else
       rvm get stable
       brew update
-      brew install python3
-      brew install pyqt5 --with-python3
+      #brew install python3
+      brew install pyqt5
     fi
 
 install:
   - |
-    if [[ $TRAVIS_OS_NAME != 'osx' ]]; then
-    
     pip install --upgrade pip
     pip install --upgrade wheel
     pip install --upgrade setuptools
@@ -94,48 +95,28 @@ install:
 
     # Install gcMapExplorer
     pip install -ve .
-    
-    else
-    
-    pip3 install --upgrade pip
-    pip3 install --upgrade wheel
-    pip3 install --upgrade setuptools
-    pip3 install Cython --install-option="--no-cython-compile"
-    pip3 install --upgrade numpy
-    pip3 install --upgrade scipy
-    pip3 install --upgrade matplotlib
-    pip3 install --upgrade h5py
-
-    # Install gcMapExplorer
-    pip3 install -ve .
-    fi
 
 
 script:
   - if [[ $TRAVIS_OS_NAME == 'linux' ]]; then python -c 'import gcMapExplorer' ; fi
   - if [[ $TRAVIS_OS_NAME == 'linux' ]]; then python -c 'import gcMapExplorer.lib as gmlib' ; fi
-  - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then python3 -c 'import gcMapExplorer' ; fi
-  - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then python3 -c 'import gcMapExplorer.lib as gmlib' ; fi
 
+after_success:
+  # Specify account details for PyPI
+  - |
+    echo "[distutils]"                                  > ~/.pypirc
+    echo "index-servers ="                             >> ~/.pypirc
+    echo "    pypi"                                    >> ~/.pypirc
+    echo "[pypi]"                                      >> ~/.pypirc
+    echo "repository=https://pypi.python.org/pypi"     >> ~/.pypirc
+    echo "username=rjdkmr"                             >> ~/.pypirc
+    echo "password=$PYPIPASSWORD"                      >> ~/.pypirc
+  
+  # For OS X and tags only, build a Python source distribution and "binary
+  # wheel" and upload these to PyPI. Note that the source upload will only
+  # succeed the first time and will be skipped by twine in subsiquent attempts.
+  - |
+    pip install --upgrade twine
+    python setup.py sdist bdist_wheel
+    twine upload --skip-existing dist/*
 
-deploy:
-  # test pypi
-  - provider: pypi
-    distributions: "sdist bdist_wheel"
-    server: https://testpypi.python.org/pypi
-    user: "rjdkmr"
-    password:
-      secure: G/ZcM1wmx8lhZ86SgjK6GYadl86Jbpsjh2Ri35ttUPDUABf/HKe5JjRqjthVvUc3k6tzN8i2hXx8SKICqmlgq0j7u8y2Emty4OF4q2dVWRr7/XuFL/YsUYGU4FGUsyeMvPNmr9ShUXnwMSoNeFNf414VtppHjP+Tc0jyNd800tgQSFALNG5B3SH1/cIYdiUtsitNOVA+gqPoYoHDItGiS8GrQiFGaYGtVejxAOqvzURjJE/Tr6YIxVn7ZIgF2nbGEcafo+yVt0leTYW9+pp5wUoVkurwKRToMBdalnkb2XvstwsYpOqlOtepVruWKGHOH9wYSP2oddD3IvtHKiOW33jNrRQRX5kye0UIu6MPzOwuigQ8vxZbbET84vMwOrwX9xLHrw09K0lTg0rpPZX7tdh+3bQ/WUKmLjMwleW7nl3oOSfub3CWBKvZ92gchnC12lDANN6vorfPWi9TuhUENqqCrlF/pRsuKTE7NOtWHiEBEds7t8QhJoOouHehPEbAiBQ4uMd5yxkGHGio6hfJ9MV69Z51SLRVUtPp4pwzlstgSS342gQ8DstsBUxmXiBqCwbUkquHs28tB9XLSEXhklT37xFZjvouOFI3I89NrS/jEV4jKMVlQL7EDhTvYSKf1VCia3oKzM89iDQtrzx9wzE9ziGV0z5jAxqbuMpig0g=
-    on:
-      branch: master
-      tags: false
-      
-  # production pypi
-  - provider: pypi
-    distributions: "sdist bdist_wheel"
-    user: "rjdkmr"
-    password:
-      secure: G/ZcM1wmx8lhZ86SgjK6GYadl86Jbpsjh2Ri35ttUPDUABf/HKe5JjRqjthVvUc3k6tzN8i2hXx8SKICqmlgq0j7u8y2Emty4OF4q2dVWRr7/XuFL/YsUYGU4FGUsyeMvPNmr9ShUXnwMSoNeFNf414VtppHjP+Tc0jyNd800tgQSFALNG5B3SH1/cIYdiUtsitNOVA+gqPoYoHDItGiS8GrQiFGaYGtVejxAOqvzURjJE/Tr6YIxVn7ZIgF2nbGEcafo+yVt0leTYW9+pp5wUoVkurwKRToMBdalnkb2XvstwsYpOqlOtepVruWKGHOH9wYSP2oddD3IvtHKiOW33jNrRQRX5kye0UIu6MPzOwuigQ8vxZbbET84vMwOrwX9xLHrw09K0lTg0rpPZX7tdh+3bQ/WUKmLjMwleW7nl3oOSfub3CWBKvZ92gchnC12lDANN6vorfPWi9TuhUENqqCrlF/pRsuKTE7NOtWHiEBEds7t8QhJoOouHehPEbAiBQ4uMd5yxkGHGio6hfJ9MV69Z51SLRVUtPp4pwzlstgSS342gQ8DstsBUxmXiBqCwbUkquHs28tB9XLSEXhklT37xFZjvouOFI3I89NrS/jEV4jKMVlQL7EDhTvYSKf1VCia3oKzM89iDQtrzx9wzE9ziGV0z5jAxqbuMpig0g=
-    on:
-      branch: master
-      tags: true
