@@ -32,7 +32,7 @@ Features:
 
 * Another file format for chormosomal contact map - much faster than above format to read/write but not compact
 * Easy import of Coordinate Sparse, HOMER Interaction matrix and Bin-Contact formats to the new formats.
-* Interface for data conversion
+  * Interface for file format conversions
 * Interface for Normalization
 * Publication ready images at one click.
 
@@ -57,6 +57,7 @@ Graphical User Interface
 * **browser** : Interactive Browser for genomic contact maps
 * **importer** : Interface to import contact maps and datasets
 * **normalizer** : Interface to normalize contact maps
+* **h5Converter**: Interface to convert bigWig/wig/bed file to h5 file
 
 Commands to convert or import data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -64,7 +65,9 @@ Commands to convert or import data
 * **pairCoo2cmap** : Import map from files similar to paired COO format
 * **homer2cmap** : Import HOMER Hi-C interaction matrix to ccmap or gcmap
 * **bc2cmap** : Import Bin-Contact format files to ccmap or gcmap
-* **bigwig2h5** : Import a bigWig file to HDF5 format h5 file
+* **bigwig2h5** : Convert a bigWig file to HDF5 format h5 file
+* **wig2h5** : Convert a wig file to HDF5 format h5 file
+* **bed2h5** : Convert a bed file to HDF5 format h5 file
 
 Commands to normalize contact map
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -75,3 +78,22 @@ Commands to normalize contact map
 Commands for Analysis
 ~~~~~~~~~~~~~~~~~~~~~
 * **corrBWcmaps** : Calculate correlation between contact maps
+
+To Launch Browser
+-----------------
+Run ``gcMapExplorer browser`` command.
+
+To Launch Normalizer
+--------------------
+Run ``gcMapExplorer normalizer`` command.
+
+To Launch Importer
+------------------
+Run ``gcMapExplorer importer`` command.
+
+To get help for a command
+-------------------------
+Run ``gcMapExplorer <sub-commands> -h`` command. For examples:
+
+* ``gcMapExplorer normKR -h``
+* ``gcMapExplorer coo2cmap -h``

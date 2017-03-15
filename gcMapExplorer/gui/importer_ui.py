@@ -298,7 +298,7 @@ class cooMatFormatTabWidgetbHelper:
             options['resolution'] = 'None'
 
         options['coordinate'] = str( self.cooMatCoordTypeCBox.currentText() )
-        options['workDir'] = self.cooMatScratchDirLineEdit.text()
+        options['workDir'] = '"{0}"'.format(self.cooMatScratchDirLineEdit.text())
 
         if not self.cooMatCCMapGroupBox.isChecked() \
                         and not self.cooMatGCMapBoxGroupBox.isChecked():
@@ -325,7 +325,7 @@ class cooMatFormatTabWidgetbHelper:
 
             options['ccmap'] = True
             options['ccmapSuffix'] = ccmapSuffix
-            options['outDir'] = outDir
+            options['outDir'] = '"{0}"'.format(outDir)
 
         options['gcmap'] = False
         if self.cooMatGCMapBoxGroupBox.isChecked():
@@ -338,7 +338,7 @@ class cooMatFormatTabWidgetbHelper:
                 return False
 
             options['gcmap'] = True
-            options['fileGCMap'] = fileGCMap
+            options['fileGCMap'] = '"{0}"'.format(fileGCMap)
             options['compression'] = str( self.cooMatGCMapCompressCBox.currentText() ).lower()
             options['coarsingMethod'] = str( self.cooMatGCMapDownsampleCBox.currentText() ).lower()
 
@@ -468,7 +468,7 @@ class homerFormatTabWidgetHelper:
 
         options['inputFile'] = inputFile
 
-        options['workDir'] = self.homerScratchDirLineEdit.text()
+        options['workDir'] = '"{0}"'.format(self.homerScratchDirLineEdit.text())
 
         if not self.homerCCMapGroupBox.isChecked() \
                         and not self.homerGCMapGroupBox.isChecked():
@@ -495,7 +495,7 @@ class homerFormatTabWidgetHelper:
 
             options['ccmap'] = True
             options['ccmapSuffix'] = ccmapSuffix
-            options['outDir'] = outDir
+            options['outDir'] = '"{0}"'.format(outDir)
 
         options['gcmap'] = False
         if self.homerGCMapGroupBox.isChecked():
@@ -508,7 +508,7 @@ class homerFormatTabWidgetHelper:
                 return False
 
             options['gcmap'] = True
-            options['fileGCMap'] = fileGCMap
+            options['fileGCMap'] = '"{0}"'.format(fileGCMap)
             options['compression'] = str( self.homerGCMapCompressCBox.currentText() ).lower()
             options['coarsingMethod'] = str( self.homerGCMapDownsampleCBox.currentText() ).lower()
 
@@ -633,7 +633,7 @@ class binContactFormatTabWidgetHelper:
             return False
         options['inputContactFile'] = inputFile
 
-        options['workDir'] = self.binContactScratchDirLineEdit.text()
+        options['workDir'] = '"{0}"'.format(self.binContactScratchDirLineEdit.text())
 
         if not self.binContactCCMapGroupBox.isChecked() \
                         and not self.binContactGCMapGroupBox.isChecked():
@@ -660,7 +660,7 @@ class binContactFormatTabWidgetHelper:
 
             options['ccmap'] = True
             options['ccmapSuffix'] = ccmapSuffix
-            options['outDir'] = outDir
+            options['outDir'] = '"{0}"'.format(outDir)
 
         options['gcmap'] = False
         if self.binContactGCMapGroupBox.isChecked():
@@ -673,7 +673,7 @@ class binContactFormatTabWidgetHelper:
                 return False
 
             options['gcmap'] = True
-            options['fileGCMap'] = fileGCMap
+            options['fileGCMap'] = '"{0}"'.format(fileGCMap)
             options['compression'] = str( self.binContactGCMapCompressCBox.currentText() ).lower()
             options['coarsingMethod'] = str( self.binContactGCMapDownsampleCBox.currentText() ).lower()
 

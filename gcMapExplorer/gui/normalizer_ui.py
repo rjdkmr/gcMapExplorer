@@ -358,7 +358,7 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
             guiHelpers.showWarningMessageBox(msg, self)
             self.genOptsScratchDirLineEdit.setFocus()
             return False
-        cmdDict['-wd'] = workDir
+        cmdDict['-wd'] = '"{0}"'.format(workDir)
 
         # Compression method for gcmap output file
         if self.outFormatCBox.currentText() == 'gcmap':

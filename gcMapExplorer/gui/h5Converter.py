@@ -565,7 +565,7 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
             return False
         else:
             if workDir != config['Dirs']['WorkingDirectory']:
-                command['-wd'] = workDir
+                command['-wd'] = '"{0}"'.format(workDir)
 
         # Output file
         command['-o'] = self.validateH5OutFile()
@@ -582,14 +582,14 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
                 return False
             else:
                 if bigWigInfo != config['Programs']['bigWigInfo']:
-                    command['-binfo'] = bigWigInfo
+                    command['-binfo'] = '"{0}"'.format(bigWigInfo)
 
             bigWigToWig = self.checkBigWigToWigProgram(fromButton=True)
             if bigWigToWig is None:
                 return False
             else:
                 if bigWigToWig != config['Programs']['bigWigToWig']:
-                    command['-b2w'] = bigWigToWig
+                    command['-b2w'] = '"{0}"'.format(bigWigToWig)
 
         # Data column in bed file
         if inFormat == 'bed':
@@ -604,7 +604,7 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
 
         # json Index file
         if self.indexFile is not None:
-            command['-idf'] = self.indexFile
+            command['-idf'] = '"{0}"'.format(self.indexFile)
 
         # Construct command
         commandText = ' '

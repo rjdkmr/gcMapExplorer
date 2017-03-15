@@ -36,7 +36,7 @@ description = \
 """Import a bed file to HDF5 format h5 file
 ============================================
 
-bed file can be converted into gcMapExplorer compaitable HDF5 file using
+bed file can be converted into gcMapExplorer compatible HDF5 file using
 this tool. This HDF5 file can be loaded into gcMapExplorer browser for
 interactive visualization.
 

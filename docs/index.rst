@@ -34,39 +34,47 @@ Features:
 
   * Another file format for chormosomal contact map - much faster than above format to read/write but not compact
   * Easy import of Coordinate Sparse, HOMER Interaction matrix and Bin-Contact formats to the new formats.
-  * Interface for data conversion
+  * Interface for file format conversions
   * Interface for Normalization
   * Publication ready images at one click.
 
 
 
-Genome Contact Map browser
---------------------------
+Screen-shots
+------------
 
 .. figure:: images/browser.png
-      :scale: 50%
+      :scale: 40%
       :alt: Screen snapshot of Genome Contact Map browser
 
-Axis Properties interface in Browser
-------------------------------------
+      Genome Contact Map browser
 
 .. figure:: images/axis.png
-      :scale: 70%
+      :scale: 35%
       :alt: Screen snapshot of Axis Properties interface in Browser
 
-Importer Interface
-------------------
+      Axis Properties interface in Browser
+
 
 .. figure:: images/importer.png
-      :scale: 70%
+      :scale: 35%
       :alt: Screen snapshot of Importer Interface
 
-Normalizer Interface
---------------------------
+      gcmap Importer Interface
+
+
+.. figure:: images/h5Converter.png
+      :scale: 35%
+      :alt: Screen snapshot of genomic track dataset converter
+
+      genomic track dataset converter Interface
+
 
 .. figure:: images/normalizer.png
-      :scale: 70%
+      :scale: 35%
       :alt: Screen snapshot of normalizer interface
+
+      Contact map normalization Interface
 
 ****
 
@@ -83,6 +91,7 @@ Contents
    How to use gcMapExplorer? <usage.rst>
    About gcmap file <about_gcmap_file>
    About ccmap and npbin files <about_ccmap_file>
+   About Genomic track h5 file <about_h5_file>
    Download example datasets <dLcmaps>
    Summary of Python Modules <apidoc/summary>
    Examples using Python Modules <modules_examples/index>

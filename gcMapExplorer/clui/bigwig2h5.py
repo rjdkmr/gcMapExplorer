@@ -36,7 +36,7 @@ description = \
 """Import a bigWig file to HDF5 format h5 file
 ============================================
 
-bigWig file can be converted into gcMapExplorer compaitable HDF5 file using
+bigWig file can be converted into gcMapExplorer compatible HDF5 file using
 this tool. This HDF5 file can be loaded into gcMapExplorer browser for
 interactive visualization.
 
