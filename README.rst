@@ -6,11 +6,8 @@ Genome Contact Map Explorer - gcMapExplorer
 
 It is a platform to visualize and analyze the contact maps that are generated from Hi-C experiments. This package is developed by considering the huge size of contact maps at very fine resolution. It contains
 
-* :ref:`gui-table` - Several windows like applications to perform tasks.
-* Command Line Interface - Several commands to perform tasks.
-    * :ref:`import-hic-command-table`
-    * :ref:`convert-to-h5-file-table`
-    * :ref:`normalize-maps-table`
+* Graphical user interface - Several windows like applications to perform tasks (See below tables).
+* Command Line Interface - Several commands to perform tasks (See below tables).
 * `Application Programming Interface <http://gcmapexplorer.readthedocs.io/en/latest/apidoc/summary.html>`_
   - It can be used to perform analysis by any mathematical operations through programming.
 
