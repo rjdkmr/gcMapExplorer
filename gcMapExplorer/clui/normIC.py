@@ -37,6 +37,9 @@ description = \
 ===============================================================
 
 This method normalize the raw contact map by removing biases from experimental procedure.
+This is an method of matrix balancing, however, in the normalized, sum of rows
+and columns are NOT equal to one.
+
 For more details, see this publication: http://dx.doi.org/10.1038/nmeth.2148
 
 

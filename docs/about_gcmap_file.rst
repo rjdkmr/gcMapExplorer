@@ -97,3 +97,34 @@ For R programming language, |h5| and |rhdf5| are available.
 
 Both GZIP and |lzf| compression reduces the file size significantly as compare to respective flat text file. Therefore, this file is also
 suitable for storage and transfer.
+
+Convert Hi-C data to gcmap
+--------------------------
+Hi-C data are available in several different formats. Presently, following
+formats can be converted to gcmap using implemented tools.
+
+* COO sparse matrix
+* Paired COO sparse matrix
+* Homer Hi-C interaction matrix
+* Bin-Contact pair files
+
+
+**Following tools are available for the conversion**
+
+.. toctree::    
+    coo2cmap : convert COO sparse matrix format <commands/coo2cmap>
+    pairCoo2cmap : convert pair COO sparse matrix format <commands/pairCoo2cmap>
+    homer2cmap : convert HOMER Hi-C matrix format <commands/homer2cmap>
+    bc2cmap : convert Bin-Contact pair files <commands/bc2cmap>
+    cmapImporter : An application to convert Hi-C formats to ccmap/gcmap <commands/cmapImporter>
+
+
+Convert using ``gcMapExplorer`` Python modules:
+	* COO sparse matrix : :class:`gcMapExplorer.lib.importer.CooMatrixHandler`
+	* Paired COO sparse matrix : :class:`gcMapExplorer.lib.importer.PairCooMatrixHandler`
+	* Homer Hi-C interaction matrix : :class:`gcMapExplorer.lib.importer.HomerInputHandler`
+	* Bin-Contact pair files : :class:`gcMapExplorer.lib.importer.BinsNContactFilesHandler`
+
+.. seealso::
+	A tutorial to convert external Hi-C maps into ccmap or gcmap using ``gcMapExplorer``
+	module are shown `here <modules_examples/import_ccmap.html>`_.

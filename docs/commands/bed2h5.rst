@@ -1,3 +1,6 @@
+bed2h5
+~~~~~~
+
 **Description:**
 
 .. code-block:: bash

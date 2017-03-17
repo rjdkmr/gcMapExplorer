@@ -25,15 +25,15 @@ import numpy as np
 import logging
 logging.basicConfig(level=logging.INFO)
 
-gui_tools =      ['browser', 'importer', 'normalizer', 'h5Converter']
+gui_tools =      ['browser', 'cmapImporter', 'cmapNormalizer', 'h5Converter']
 convert_tools =  ['coo2cmap', 'pairCoo2cmap', 'homer2cmap', 'bc2cmap', 'bigwig2h5', 'wig2h5', 'bed2h5']
 norm_tools =     ['normKR', 'normIC', 'normMCFS']
 analysis_tools = ['corrBWcmaps']
 
 def main():
     options = {'browser':'Interactive Browser for genomic contact maps',
-               'importer':'Interface to import contact maps and datasets',
-               'normalizer' : 'Interface to normalize contact maps',
+               'cmapImporter':'Interface to import contact maps and datasets',
+               'cmapNormalizer' : 'Interface to normalize contact maps',
                'h5Converter' : 'Convert bigWig/wig/bed file to browser compaitable h5 format',
                'coo2cmap':'Import COO sparse matrix format to ccmap or gcmap',
                'pairCoo2cmap': 'Import map from files similar to paired sparse matrix Coordinate (COO) format',
@@ -59,11 +59,11 @@ def main():
         from .gui import browser
         browser.main()
 
-    if sys.argv[1] == 'importer':
+    if sys.argv[1] == 'cmapImporter':
         from .gui import importer_ui as impui
         impui.main()
 
-    if sys.argv[1] == 'normalizer':
+    if sys.argv[1] == 'cmapNormalizer':
         from .gui import normalizer_ui
         normalizer_ui.main()
 
