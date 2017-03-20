@@ -147,8 +147,8 @@ class GenomicDataSetSubPlotHelper:
         # if a Dataset is selected by user, then process further
         if gpa.dataArray is not None:
             # Generate treeWidget item and add it as a child to ccmap axis treeWidget
-            gpa.set_tree_widget_item()
-            self.hiCmapAxes[idx].treeWidgetItem.addChild(gpa.treeWidgetItem)
+            gpa.set_tree_widget_item(self.axisTreeWidget)
+
 
             # Append GenomicDataPlotAxis to list
             self.hiCmapAxes[idx].genmoicPlotAxes.append(gpa)
@@ -1092,7 +1092,7 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         self.canvas.draw()
         self.get_horizontal_vertical_space_from_figure()
 
-    def add_new_ccmap_axes(self):
+    def add_new_ccmap_axes(self, pathToMapFile):
         ''' Add new ccmap axes
 
             This function add new hic-map on the canvas. To add new plots, previous plots are at first removed.
@@ -1112,10 +1112,10 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
 
             # Initialize and append new ccmap axis object into hic-map list
             self.hiCmapAxes.append(CCMAPAXIS(0, ax))
-            self.hiCmapAxes[0].title = 'Map 1'
+            self.hiCmapAxes[0].title = os.path.splitext(pathToMapFile)[0]
 
             # Add this ccmap axis to the tree widget
-            self.hiCmapAxes[0].set_tree_widget_item()
+            self.hiCmapAxes[0].set_tree_widget_item(self.axisTreeWidget)
             self.axisTreeWidget.addTopLevelItem(self.hiCmapAxes[0].treeWidgetItem)
             self.axisTreeWidget.setCurrentItem(self.hiCmapAxes[0].treeWidgetItem)
 
@@ -1176,13 +1176,13 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
             self.hiCmapAxes.append(CCMAPAXIS(i, ax))
 
             # generate title
-            self.hiCmapAxes[i].title = 'Map {0}' .format(i+1)
+            self.hiCmapAxes[i].title = os.path.splitext(pathToMapFile)[0]
 
             # set index of active ccmap
             self.ActiveHiCmapAxis = i
 
             # Add new map to tree widget
-            self.hiCmapAxes[i].set_tree_widget_item()
+            self.hiCmapAxes[i].set_tree_widget_item(self.axisTreeWidget)
             self.axisTreeWidget.addTopLevelItem(self.hiCmapAxes[i].treeWidgetItem)
             self.axisTreeWidget.setCurrentItem(self.hiCmapAxes[i].treeWidgetItem)
 
@@ -1389,7 +1389,7 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
                     return
 
             # Add new CCMAPAXIS instance and respective matplotlib axes instance
-            self.add_new_ccmap_axes()
+            self.add_new_ccmap_axes(path[0])
 
             # If first time, enable all options
             if self.hiCmapAxes is not None:
@@ -3022,14 +3022,22 @@ class GenomicDataPlotAxis:
 
         return success
 
-    def set_tree_widget_item(self):
+    def set_tree_widget_item(self, treeWidget):
         """Initialize tree widget item
         """
+        title = None
         if self.hdf5Hand is not None:
-            self.treeWidgetItem =  QTreeWidgetItem([self.hdf5Hand.title], 0)
+            title = self.hdf5Hand.title
 
         if self.txtFileHand is not None:
-            self.treeWidgetItem =  QTreeWidgetItem([self.txtFileHand.title], 0)
+            title = self.txtFileHand.title
+
+        if title is not None:
+            label = QLabel(title)
+            label.setWordWrap(True)
+            self.treeWidgetItem = QTreeWidgetItem()
+            self.hiCmapAxis.treeWidgetItem.addChild(self.treeWidgetItem)
+            treeWidget.setItemWidget(self.treeWidgetItem, 0, label)
 
     def updatePlot(self, ax=None):
         """Update plots
@@ -3465,8 +3473,13 @@ class CCMAPAXIS:
             # Make list of all contact maps
             self.tryEnableInterchangeCMapName()
 
-    def set_tree_widget_item(self):
-        self.treeWidgetItem =  QTreeWidgetItem([self.title], 0)
+    def set_tree_widget_item(self, treeWidget):
+        label = QLabel(self.title)
+        label.setWordWrap(True)
+        self.treeWidgetItem = QTreeWidgetItem()
+        treeWidget.addTopLevelItem(self.treeWidgetItem)
+        treeWidget.setItemWidget(self.treeWidgetItem, 0, label)
+        #self.treeWidgetItem =  QTreeWidgetItem([self.title], 0)
 
     def update_axes_props(self):
 

@@ -77,6 +77,20 @@ is gcmap, output file will be only in gcmap.
 
 """
 
+vminHelp = \
+""" Minimum thershold value for normalization.
+If contact frequency is less than or equal to this thershold value,
+this value is discarded during normalization.
+
+"""
+
+vmaxHelp = \
+""" Maximum thershold value for normalization.
+If contact frequency is greater than or equal to this thershold value,
+this value is discarded during normalization.
+
+"""
+
 tolHelp = \
 """ Tolerance for matrix balancing.
 Smaller tolreance increases accuracy in sums of rows and columns.
@@ -161,13 +175,14 @@ def main():
 
     if args.outputFileFormat == 'ccmap' and args.inputFileFormat == 'ccmap':
         gmlib.normalizer.normalizeCCMapByIC(args.inputFile, tol=args.tol, iteration=args.iteration,
-                                            outFile=args.outputFile,
+                                            outFile=args.outputFile, vmin=args.vmin, vmax=args.vmax,
                                             percentile_thershold_no_data=args.percentile_thershold_no_data,
                                             thershold_data_occup=args.thershold_data_occup,
                                             workDir=args.workDir)
 
     if args.outputFileFormat == 'gcmap' and args.inputFileFormat == 'ccmap':
         norm_ccmap = gmlib.normalizer.normalizeCCMapByIC(args.inputFile, tol=args.tol,  iteration=args.iteration,
+                                            vmin=args.vmin, vmax=args.vmax,
                                             percentile_thershold_no_data=args.percentile_thershold_no_data,
                                             thershold_data_occup=args.thershold_data_occup,
                                             workDir=args.workDir)
@@ -177,6 +192,7 @@ def main():
     if args.outputFileFormat == 'gcmap' and args.inputFileFormat == 'gcmap':
         gmlib.normalizer.normalizeGCMapByIC(args.inputFile, args.outputFile,
                                             tol=args.tol,  iteration=args.iteration,
+                                            vmin=args.vmin, vmax=args.vmax, 
                                             percentile_thershold_no_data=args.percentile_thershold_no_data,
                                             thershold_data_occup=args.thershold_data_occup,
                                             workDir=args.workDir)
@@ -211,6 +227,14 @@ def parseArguments():
                         dest='tol', metavar=1e-4,
                         type = float, default=1e-4,
                         help=tolHelp)
+
+    parser.add_argument('-vmax', '--maximum-value', action='store',
+                        dest='vmax', type=float, metavar=None,
+                        help=vminHelp)
+
+    parser.add_argument('-vmin', '--minimum-value', action='store',
+                        dest='vmin', metavar=None, type=float,
+                        help=vmaxHelp)
 
     parser.add_argument('-c', '--iteration', action='store',
                         dest='iteration', metavar=500,

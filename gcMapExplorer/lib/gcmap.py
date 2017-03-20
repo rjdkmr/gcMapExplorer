@@ -818,17 +818,19 @@ def addCCMap2GCMap(cmap, filename, compression='lzf', generateCoarse=True, coars
         else:
             logger.info(' Adding data to [{0}] for [{1} - {2}] ...'.format(filename, groupName, resolution))
 
-        if compression == 'lzf':
-            newCmap = group.create_dataset(resolution, cmap.shape, dtype=cmap.dtype, data=cmap.matrix, chunks=True, compression="lzf", shuffle=True)
-        else:
-            newCmap = group.create_dataset(resolution, cmap.shape, dtype=cmap.dtype, data=cmap.matrix, chunks=True, compression="gzip", shuffle=True, compression_opts=4)
+        # Remove old map
+        if resolution in group:
+            group.pop(resolution)
+
+
+        # Add new map
+        newCmap = group.create_dataset(resolution, cmap.shape, dtype=cmap.dtype, data=cmap.matrix, chunks=True, compression=compression, shuffle=True)
 
         # Save all other attributes
         if cmap.bNoData is not None:
-            if compression == 'lzf':
-                group.create_dataset(resolution+'-bNoData', cmap.bNoData.shape, dtype=cmap.bNoData.dtype, data=cmap.bNoData, chunks=True, compression="lzf", shuffle=True)
-            else:
-                group.create_dataset(resolution+'-bNoData', cmap.bNoData.shape, dtype=cmap.bNoData.dtype, data=cmap.bNoData, chunks=True, compression="gzip", shuffle=True, compression_opts=4)
+            if resolution+'-bNoData' in group:
+                group.pop(resolution+'-bNoData')
+            group.create_dataset(resolution+'-bNoData', cmap.bNoData.shape, dtype=cmap.bNoData.dtype, data=cmap.bNoData, chunks=True, compression=compression, shuffle=True)
 
         # Get minimum value othar than zero
         if cmap.minvalue == 0:

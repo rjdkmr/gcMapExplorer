@@ -6,6 +6,7 @@
 
 .. autosummary::
 		HDF5Handler
+		HDF5Handler.setTitle
 		HDF5Handler.getChromList
 		HDF5Handler.getResolutionList
 		HDF5Handler.getDataNameList

@@ -700,10 +700,152 @@ class binContactFormatTabWidgetHelper:
 
         self.binContactCommand = command
 
+class pairCooMatFormatTabWidgetHelper:
+    """ Helper class containing all member-functions related to paired-COO matrix file tab-widget
+    """
+
+    def initPairCooMatFormatTabWidget(self):
+        self.pairCooMatCommand = None
+
+        self.pairCooMatInputFileBrowsButton.setIcon( self.style().standardIcon(QStyle.SP_DirOpenIcon) )
+        self.pairCooMatOutDirBrowseButton.setIcon( self.style().standardIcon(QStyle.SP_DirOpenIcon) )
+        self.pairCooMatScratchDirBrowsButton.setIcon( self.style().standardIcon(QStyle.SP_DirOpenIcon) )
+        self.pairCooMatGCMapOutSelectButton.setIcon( self.style().standardIcon(QStyle.SP_DirOpenIcon) )
+
+        self.pairCooMatTabRunButton.setIcon( self.style().standardIcon(QStyle.SP_MediaPlay) )
+        self.pairCooMatTabStopButton.setIcon( self.style().standardIcon(QStyle.SP_MediaStop) )
+
+        self.connectPairCooMatTabWidgets()
+
+    def connectPairCooMatTabWidgets(self):
+        self.pairCooMatInputFileBrowsButton.clicked.connect( self.pairCooMatBrowseInputFile )
+        self.pairCooMatScratchDirBrowsButton.clicked.connect( self.pairCooMatBrowseScratchDir )
+        self.pairCooMatOutDirBrowseButton.clicked.connect( self.pairCooMatBrowseOutputDir )
+        self.pairCooMatGCMapOutSelectButton.clicked.connect( self.pairCooMatOpenGCMapFile )
+
+        self.pairCooMatTabRunButton.clicked.connect( self.runPairCooMatCommand )
+        self.pairCooMatTabStopButton.clicked.connect( self.terminateProcessing )
+
+        self.pairCooMatInputFileLineEdit.editingFinished.connect( lambda: checkFileExist(self.pairCooMatInputFileLineEdit, self) )
+        self.pairCooMatScratchDirLineEdit.editingFinished.connect( lambda: checkDirExist(self.pairCooMatScratchDirLineEdit, self) )
+        self.pairCooMatOutDIrLineEdit.editingFinished.connect( lambda: checkDirExist(self.pairCooMatOutDIrLineEdit, self) )
+
+
+    def pairCooMatBrowseInputFile(self):
+        """To get compressed file with full path
+        """
+        # A dialog box will be displayed to select a text file and path will be stored in the cell
+        file_choices = " Text file (*.txt *.dat);; All file (*.*)"
+        path = QFileDialog.getOpenFileName(self, 'Open File', '', file_choices)
+        if path[0]:
+            self.pairCooMatInputFileLineEdit.setText(path[0])
+
+    def pairCooMatBrowseOutputDir(self):
+        """Browse and choose output directory
+        """
+        path = QFileDialog.getExistingDirectory(self, 'Select Output Directory')
+        if path:
+            self.pairCooMatOutDIrLineEdit.setText(path)
+
+    def pairCooMatBrowseScratchDir(self):
+        """Browse and choose scratch directory
+        """
+        path = QFileDialog.getExistingDirectory(self, 'Select Scratch Directory')
+        if path:
+            self.pairCooMatScratchDirLineEdit.setText(path)
+
+    def pairCooMatOpenGCMapFile(self):
+        """To open gcmap file with full path
+        """
+        # A dialog box will be displayed to select a text file and path will be stored in the cell
+        file_choices = " gcmap file (*.gcmap);;All files(*.*)"
+        path = QFileDialog.getSaveFileName(self, 'Select or Create File', '', file_choices, options=QFileDialog.DontConfirmOverwrite)
+        if path[0]:
+            self.pairCooMatGCMapOutLineEdit.setText(path[0])
+
+    def readAndConstructPairCooMatCommand(self):
+        """Read and construct the command line
+        """
+        self.pairCooMatCommand = None
+        options = dict()
+
+        inputFile = None
+        if self.pairCooMatInputFileLineEdit.text():
+            inputFile = str( self.pairCooMatInputFileLineEdit.text() )
+        else:
+            self.pairCooMatInputFileLineEdit.setFocus()
+            showWarningMessageBox("No input file given !!!", self)
+            return False
+        options['-i'] = inputFile
+
+        options['-wd'] = '"{0}"'.format(self.pairCooMatScratchDirLineEdit.text())
+
+        if not self.pairCooMatCCMapGroupBox.isChecked() \
+                        and not self.pairCooMatGCMapGroupBox.isChecked():
+            showWarningMessageBox("No ccmap or gcmap output !!!", self)
+            return False
+
+        ccmapSuffix = None
+        if self.pairCooMatCCMapGroupBox.isChecked():
+            ccmapSuffix = str( self.pairCooMatOutSuffixLineEdit.text() )
+            if not ccmapSuffix:
+                msg = "No suffix provided for ccmap files. \n" \
+                        + "Please provide a suffix for proper name."
+                showWarningMessageBox(msg, self)
+                self.pairCooMatOutSuffixLineEdit.setFocus()
+                return False
+
+            outDir = str( self.pairCooMatOutDIrLineEdit.text() )
+            if not outDir:
+                msg = "No Output Directory provided for ccmap files \n" \
+                        + "Please select a directory to save ccmap files."
+                showWarningMessageBox(msg, self)
+                self.pairCooMatOutDIrLineEdit.setFocus()
+                return False
+
+            options['-ccm'] = ccmapSuffix
+            options['-od'] = '"{0}"'.format(outDir)
+
+        if self.pairCooMatGCMapGroupBox.isChecked():
+            fileGCMap = str( self.pairCooMatGCMapOutLineEdit.text() )
+            if not fileGCMap:
+                msg = "No Output gcmap file is created or selected \n" \
+                        + "Please select or create a gcmap file."
+                showWarningMessageBox(msg, self)
+                self.pairCooMatGCMapOutLineEdit.setFocus()
+                return False
+
+            options['-gcm'] = '"{0}"'.format(fileGCMap)
+            options['-cmeth'] = str( self.pairCooMatGCMapCompressCBox.currentText() ).lower()
+            options['-dmeth'] = str( self.pairCooMatGCMapDownsampleCBox.currentText() ).lower()
+
+        self.pairCooMatConstructCommand(options)
+
+    def pairCooMatConstructCommand(self, opts):
+        """Construct the command line
+        """
+        command = ' pairCoo2cmap '
+        command += ' -i ' +  opts['-i']
+
+        if '-ccm' in opts:
+            command += ' -ccm ' + opts['-ccm']
+            command += ' -od ' + opts['-od']
+
+        if '-gcm' in opts:
+            command += ' -gcm ' + opts['-gcm']
+            command += ' -cmeth ' + opts['-cmeth']
+            command += ' -dmeth ' + opts['-dmeth']
+
+        command += ' -wd ' + opts['-wd']
+
+        self.pairCooMatCommand = command
+
 # Main Window Of Importer
 pathToThisUI = os.path.join(PathToUIs, 'importer.ui')
 Ui_ImporterWindow, ImporterWindowBase = loadUiType(pathToThisUI)
-class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow, cooMatFormatTabWidgetbHelper, homerFormatTabWidgetHelper, binContactFormatTabWidgetHelper):
+class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow, cooMatFormatTabWidgetbHelper,
+                    homerFormatTabWidgetHelper, binContactFormatTabWidgetHelper,
+                    pairCooMatFormatTabWidgetHelper):
     def __init__(self):
         super(ImporterWindow, self).__init__()
         self.setupUi(self)
@@ -723,6 +865,7 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow, cooMatFormatTabWidge
         self.initCooMatFormatTabWidget()
         self.initHomerFormatTabWidget()
         self.initBinContactFormatTabWidget()
+        self.initPairCooMatFormatTabWidget()
 
         self.setDefaultScratchDirs()
         self.connectMainButtons()
@@ -751,7 +894,6 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow, cooMatFormatTabWidge
 
     def connectMainButtons(self):
         self.inputSelectorQCBox.currentIndexChanged.connect( self.InputsTabWidget.setCurrentIndex )
-        self.whatsThisButton.setIcon( self.style().standardIcon(QStyle.SP_TitleBarContextHelpButton) )
         self.whatsThisButton.clicked.connect( QWhatsThis.enterWhatsThisMode )
         self.logOutputClearButton.clicked.connect( self.logOutputPlainTextEdit.clear )
 
@@ -760,6 +902,7 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow, cooMatFormatTabWidge
         self.cooMatScratchDirLineEdit.setText(defaultDir)
         self.homerScratchDirLineEdit.setText(defaultDir)
         self.binContactScratchDirLineEdit.setText(defaultDir)
+        self.pairCooMatScratchDirLineEdit.setText(defaultDir)
 
     def runCooMatrixCommand(self):
         self.readAndConstructCooMatCommand()
@@ -775,6 +918,11 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow, cooMatFormatTabWidge
         self.readAndConstructBinContactCommand()
         if self.binContactCommand is None:  return
         self.startProcess(self.binContactCommand, self.binContactTabRunButton)
+
+    def runPairCooMatCommand(self):
+        self.readAndConstructPairCooMatCommand()
+        if self.pairCooMatCommand is None:  return
+        self.startProcess(self.pairCooMatCommand, self.pairCooMatTabRunButton)
 
     def startProcess(self, command, button):
         self.process = QProcess(self)

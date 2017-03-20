@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>900</width>
+    <width>699</width>
     <height>983</height>
    </rect>
   </property>
@@ -90,7 +90,28 @@ cbin1 cbin2 expected_count observed_count
 .
 .
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Both BIN and CONTACT files are neccessary for the conversion.</string>
+Both BIN and CONTACT files are neccessary for the conversion.
+
+
+4) Paired sparse matrix Coordinate (COO) format: This format is very similar to COO format with addiotional infromation of chromosome. Therefore, maps for all chromosome could be contained in a single
+file. This type of format appeared with following publication:
+	http://dx.doi.org/10.1016/j.cell.2015.10.026
+       	GEO: https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE72512
+
+Following file format can be read as a text file, where first and second column is location on chromosome and third column is the value:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    chr4     60000   75000   chr4    60000   75000   0.1163470887070292
+    chr4     60000   75000   chr4    105000  120000  0.01292745430078102
+    chr4     60000   75000   chr4    435000  450000  0.01292745430078102
+    chr4     75000   90000   chr4    75000   90000   0.05170981720312409
+    chr4     75000   90000   chr4    345000  360000  0.01292745430078102
+    chr4     90000   105000  chr4    90000   105000  0.01292745430078102
+    .
+    .
+    .
+    .
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+</string>
         </property>
         <item>
          <property name="text">
@@ -105,6 +126,11 @@ Both BIN and CONTACT files are neccessary for the conversion.</string>
         <item>
          <property name="text">
           <string>Bins-Contact List</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Pair COO Matrix</string>
          </property>
         </item>
        </widget>
@@ -124,8 +150,18 @@ Both BIN and CONTACT files are neccessary for the conversion.</string>
       </item>
       <item>
        <widget class="QToolButton" name="whatsThisButton">
+        <property name="font">
+         <font>
+          <pointsize>9</pointsize>
+          <weight>75</weight>
+          <italic>false</italic>
+          <bold>true</bold>
+          <underline>true</underline>
+          <kerning>true</kerning>
+         </font>
+        </property>
         <property name="text">
-         <string/>
+         <string>??</string>
         </property>
         <property name="checkable">
          <bool>false</bool>
@@ -157,7 +193,7 @@ Both BIN and CONTACT files are neccessary for the conversion.</string>
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>866</width>
+          <width>665</width>
           <height>553</height>
          </rect>
         </property>
@@ -604,7 +640,7 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                    <string>Output gcmap file.</string>
                   </property>
                   <property name="whatsThis">
-                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Output gcmap file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   <string>Name of output gcmap file. All maps will be saved in this file.</string>
                   </property>
                  </widget>
                 </item>
@@ -993,7 +1029,7 @@ Presently, only &quot;tar.gz&quot; and &quot;zip&quot; compressed files are supp
                    <string> To save all maps in a gcmap file</string>
                   </property>
                   <property name="whatsThis">
-                   <string> To save all maps in a gcmap file</string>
+                   <string>Name of output gcmap file. All maps will be saved in this file.</string>
                   </property>
                  </widget>
                 </item>
@@ -1429,7 +1465,7 @@ cbin1 cbin2 expected_count observed_count
                    <string> To save all maps in a gcmap file</string>
                   </property>
                   <property name="whatsThis">
-                   <string> To save all maps in a gcmap file</string>
+                   <string>Name of output gcmap file. All maps will be saved in this file.</string>
                   </property>
                  </widget>
                 </item>
@@ -1639,6 +1675,372 @@ cbin1 cbin2 expected_count observed_count
                </item>
                <item>
                 <spacer name="horizontalSpacer_10">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="pairCooMatTab">
+            <attribute name="title">
+             <string>4</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_3">
+             <item>
+              <layout class="QHBoxLayout" name="pairCooMatInputFileHLayout">
+               <item>
+                <widget class="QLabel" name="pairCooMatInputFileQLabel">
+                 <property name="text">
+                  <string>Input File:</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="pairCooMatInputFileLineEdit">
+                 <property name="toolTip">
+                  <string>Input BIN file</string>
+                 </property>
+                 <property name="whatsThis">
+                  <string>Name of input file.
+
+Piared COO matrix format is as follows:
+
+    chr4     60000   75000   chr4    60000   75000   0.1163470887070292
+    chr4     60000   75000   chr4    105000  120000  0.01292745430078102
+    chr4     60000   75000   chr4    435000  450000  0.01292745430078102
+    chr4     75000   90000   chr4    75000   90000   0.05170981720312409
+    chr4     75000   90000   chr4    345000  360000  0.01292745430078102
+    chr4     90000   105000  chr4    90000   105000  0.01292745430078102
+    .
+    .
+    .
+    .
+    .
+    .
+</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pairCooMatInputFileBrowsButton">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <widget class="QGroupBox" name="pairCooMatCCMapGroupBox">
+               <property name="toolTip">
+                <string>Save as ccmap file</string>
+               </property>
+               <property name="whatsThis">
+                <string>Save as ccmap file</string>
+               </property>
+               <property name="title">
+                <string>Save as CCMAP Files:</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <layout class="QHBoxLayout" name="horizontalLayout_8">
+                <item>
+                 <widget class="QLabel" name="pairCooMatOutSuffixQLabel">
+                  <property name="text">
+                   <string>Output File Suffix:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="pairCooMatOutSuffixLineEdit">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>100</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>100</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="toolTip">
+                   <string>Suffix of ccmap files</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use this to convert all contact maps to ccmap format files. Provide suffix of ccmap file names with this option and it will enable the conversion.&lt;/p&gt;&lt;p&gt;Ouput ccmap file name is generated outmatically as follows; if xlabel is not equal to ylabel: &amp;quot;&amp;lt;xlabel&amp;gt;_&amp;lt;ylabel&amp;gt;_&amp;lt;suffix&amp;gt;.ccmap&amp;quot; else: &amp;quot;&amp;lt;xlabel&amp;gt;_&amp;lt;suffix&amp;gt;.ccmap&amp;quot;&lt;/p&gt;&lt;p&gt;Note that &amp;quot;Ouput Directory&amp;quot; is also required because all ccmaps will be saved in this directory.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="Line" name="pairCooMatOutOptsVLine">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="pairCooMatOutDirQLabel">
+                  <property name="text">
+                   <string>Output Directory:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="pairCooMatOutDIrLineEdit">
+                  <property name="toolTip">
+                   <string>Directory to save all ccmap files.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>Directory to save all ccmap files. This options is neccessary.</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="pairCooMatOutDirBrowseButton">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QGroupBox" name="pairCooMatGCMapGroupBox">
+               <property name="title">
+                <string>Save as GCMAP File:</string>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <layout class="QHBoxLayout" name="horizontalLayout_9">
+                <item>
+                 <widget class="QLabel" name="pairCooMatGCMapOutQlabel">
+                  <property name="text">
+                   <string>Output File:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="pairCooMatGCMapOutLineEdit">
+                  <property name="toolTip">
+                   <string> To save all maps in a gcmap file</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>Name of output gcmap file. All maps will be saved in this file.</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="pairCooMatGCMapOutSelectButton">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="Line" name="line_10">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="pairCooMatGCMapCompressQLabel">
+                  <property name="text">
+                   <string>Compression:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="pairCooMatGCMapCompressCBox">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>60</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="toolTip">
+                   <string>Data compression method in gcmap file.Data compression method in gcmap file.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Data compression method in gcmap file.&lt;/p&gt;&lt;p&gt;LZF : This method is very fast, and allow the rapid contact map reading. However, the size reduction is moderate in comparison with GZIP compression method. &lt;/p&gt;&lt;p&gt;GZIP: Slow but high compression ratio. use this method, if file has to read from other external software.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                  <item>
+                   <property name="text">
+                    <string>LZF</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>GZIP</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="Line" name="line_11">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="pairCooMatGCMapDownsampleQLabel">
+                  <property name="text">
+                   <string>Downsample by:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="pairCooMatGCMapDownsampleCBox">
+                  <property name="toolTip">
+                   <string>Downsampling method to coarsen the resolution in gcmap file.</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Downsampling method to coarsen the resolution in gcmap file. Three implemented methods are&lt;/p&gt;&lt;p&gt;1) Sum : sum of values,&lt;/p&gt;&lt;p&gt;2) Average : Average of values and&lt;/p&gt;&lt;p&gt;3) Maximum : Maximum of values.&lt;/p&gt;&lt;p&gt;This option generates all coarser maps where resolutions will be coarsened by a factor of two, consequetively. e.g.: In case of 10 kb input resolution, downsampled maps of &amp;quot;20kb&amp;quot;, &amp;quot;40kb&amp;quot;, &amp;quot;80kb&amp;quot;, &amp;quot;160kb&amp;quot;, &amp;quot;320kb&amp;quot; etc. will be generated until, map size is less than 500.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                  <item>
+                   <property name="text">
+                    <string>Sum</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Maximum</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Average</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="pairCooMatDirsSelectLayout">
+               <item>
+                <widget class="QLabel" name="pairCooMatScratchDirQLabel">
+                 <property name="text">
+                  <string>Scratch Directory:        </string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="pairCooMatScratchDirLineEdit">
+                 <property name="toolTip">
+                  <string>Directory where temporary files will be stored.</string>
+                 </property>
+                 <property name="whatsThis">
+                  <string>Directory where temporary files will be stored.</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pairCooMatScratchDirBrowsButton">
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <spacer name="verticalSpacer_3">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="pairCooMatRunStopLayout">
+               <item>
+                <spacer name="horizontalSpacer_11">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pairCooMatTabStopButton">
+                 <property name="font">
+                  <font>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>Stop</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_12">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pairCooMatTabRunButton">
+                 <property name="font">
+                  <font>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>Run</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_13">
                  <property name="orientation">
                   <enum>Qt::Horizontal</enum>
                  </property>

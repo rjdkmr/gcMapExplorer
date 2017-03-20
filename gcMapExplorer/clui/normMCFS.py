@@ -79,6 +79,20 @@ It may be either “mean” or “median”. By default, it is “median”.
 
 """
 
+vminHelp = \
+""" Minimum thershold value for normalization.
+If contact frequency is less than or equal to this thershold value,
+this value is discarded during normalization.
+
+"""
+
+vmaxHelp = \
+""" Maximum thershold value for normalization.
+If contact frequency is greater than or equal to this thershold value,
+this value is discarded during normalization.
+
+"""
+
 percentile_thershold_no_data_help = \
 """ It can be used to filter the map, where rows/columns with largest numbers
 of missing data can be discarded. Its value should be between 1 and 100.
@@ -142,12 +156,14 @@ def main():
 
     if args.outputFileFormat == 'ccmap' and args.inputFileFormat == 'ccmap':
         gmlib.normalizer.normalizeCCMapByMCFS(args.inputFile, stats=args.stats, outFile=args.outputFile,
+                                            vmin=args.vmin, vmax=args.vmax,
                                             percentile_thershold_no_data=args.percentile_thershold_no_data,
                                             thershold_data_occup=args.thershold_data_occup,
                                             workDir=args.workDir)
 
     if args.outputFileFormat == 'gcmap' and args.inputFileFormat == 'ccmap':
         norm_ccmap = gmlib.normalizer.normalizeCCMapByMCFS(args.inputFile, stats=args.stats,
+                                            vmin=args.vmin, vmax=args.vmax,
                                             percentile_thershold_no_data=args.percentile_thershold_no_data,
                                             thershold_data_occup=args.thershold_data_occup,
                                             workDir=args.workDir)
@@ -156,7 +172,7 @@ def main():
 
     if args.outputFileFormat == 'gcmap' and args.inputFileFormat == 'gcmap':
         gmlib.normalizer.normalizeGCMapByMCFS(args.inputFile, args.outputFile,
-                                            stats=args.stats,
+                                            stats=args.stats, vmin=args.vmin, vmax=args.vmax, 
                                             percentile_thershold_no_data=args.percentile_thershold_no_data,
                                             thershold_data_occup=args.thershold_data_occup,
                                             compression=args.compression,
@@ -190,6 +206,13 @@ def parseArguments():
                         dest='stats', metavar='median',
                         choices=['median', 'mean'], default='median',
                         help=statsHelp)
+    parser.add_argument('-vmax', '--maximum-value', action='store',
+                        dest='vmax', type=float, metavar=None,
+                        help=vminHelp)
+
+    parser.add_argument('-vmin', '--minimum-value', action='store',
+                        dest='vmin', metavar=None, type=float,
+                        help=vmaxHelp)
 
     parser.add_argument('-ptnd', '--percentile-thershold-no-data', action='store',
                         dest='percentile_thershold_no_data', metavar=99,

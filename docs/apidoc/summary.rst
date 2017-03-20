@@ -105,6 +105,7 @@ genomicsDataHandler module
 
 .. autosummary::
 		genomicsDataHandler.HDF5Handler
+		genomicsDataHandler.HDF5Handler.setTitle
 		genomicsDataHandler.HDF5Handler.getChromList
 		genomicsDataHandler.HDF5Handler.getResolutionList
 		genomicsDataHandler.HDF5Handler.getDataNameList

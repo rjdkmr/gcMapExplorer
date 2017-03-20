@@ -446,8 +446,8 @@ class HDF5Handler:
         # Fail-safe mechanism for title in case of either new file or already opened file
         if 'title' not in self.hdf5.attrs:
             if self.title is None:
-                self.hdf5.attrs['title'] = "Genome Data"
-                self.title = "Genome Data"
+                self.hdf5.attrs['title'] = os.path.splitext(os.path.basename(self.filename))[0]
+                self.title = os.path.splitext(os.path.basename(self.filename))[0]
             else:
                 self.hdf5.attrs['title'] = self.title
         else:
@@ -455,6 +455,25 @@ class HDF5Handler:
                 self.title = self.hdf5.attrs['title']
 
         self.logger.info(' Opened {0} ...' .format(self.filename))
+
+    def setTitle(self, title):
+        """ Set title of the dataset
+
+        It can be used to set or replace the title of the dataset.
+        If file is not yet opened, title will be stored to file when file
+        will be opened.
+
+        Parameters
+        ----------
+        title : str
+            The title of dataset.
+
+        """
+        self.title = title
+        if self.hdf5 is not None:
+            self.hdf5.attrs['title'] = os.path.splitext(os.path.basename(self.filename))[0]
+        else:
+            self.logger.info(" File is not opened!!! Title will be stored to file on file opening.")
 
     def getChromList(self):
         """To get list of all chromosomes present in hdf5 file

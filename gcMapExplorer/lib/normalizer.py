@@ -253,7 +253,7 @@ def NormalizeKnightRuizOriginal(ccMapObj, tol=1e-12, x0=None, delta=0.1, Delta=3
 
 	return normCCMap
 
-def normalizeCCMapByKR(ccMap, memory='RAM', tol=1e-12, outFile=None, percentile_thershold_no_data=None, thershold_data_occup=None, workDir=None):
+def normalizeCCMapByKR(ccMap, memory='RAM', tol=1e-12, outFile=None, vmin=None, vmax=None, percentile_thershold_no_data=None, thershold_data_occup=None, workDir=None):
 	"""Normalize a ccmap using Knight-Ruiz matrix balancing method.
 
 	.. note::
@@ -276,6 +276,12 @@ def normalizeCCMapByKR(ccMap, memory='RAM', tol=1e-12, outFile=None, percentile_
 
 	outFile : str
 		Name of output ccmap file, to save directly the normalized map as a ccmap file. In case of this option, ``None`` will return.
+
+	vmin : float
+		Minimum thershold value for normalization. If contact frequency is less than or equal to this thershold value, this value is discarded during normalization.
+
+	vmax : float
+		Maximum thershold value for normalization. If contact frequency is greater than or equal to this thershold value, this value is discarded during normalization.
 
 	percentile_thershold_no_data : int
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
@@ -306,7 +312,26 @@ def normalizeCCMapByKR(ccMap, memory='RAM', tol=1e-12, outFile=None, percentile_
 	"""
 
 	# Check whether input is a file or a obejct
-	ccMapObj, ccmapType = _checkCCMAP(ccMap, workDir=workDir)
+	ccMapObjOrig, ccmapType = _checkCCMAP(ccMap, workDir=workDir)
+
+	# Make another copy here for maximum and minimum thershold value
+	if vmin is not None or vmax is not None:
+		ccMapObj = ccMapObjOrig.copy()
+		ccMapObj.make_editable()
+
+		if ccmapType == 'File':
+			del ccMapObjOrig
+
+		ccmapType = 'File' # This temporary file should be deleted when neccessary
+		if vmin is not None:
+			ccMapObj.matrix[ np.nonzero(ccMapObj.matrix <= vmin) ] = 0.0
+		if vmax is not None:
+			ccMapObj.matrix[ np.nonzero(ccMapObj.matrix >= vmax) ] = 0.0
+		ccMapObj.matrix.flush()
+		ccMapObj.make_unreadable()
+
+	else:
+		ccMapObj = ccMapObjOrig
 
 	normCCMap = ccMapObj.copy(fill=0.0)
 	normCCMap.make_editable()
@@ -397,7 +422,7 @@ def normalizeCCMapByKR(ccMap, memory='RAM', tol=1e-12, outFile=None, percentile_
 		logger.warning('Error in normalizing map!!!')
 		return None
 
-def normalizeGCMapByKR(gcMapInputFile, gcMapOutFile, mapSizeCeilingForMemory=20000, tol=1e-12, percentile_thershold_no_data=None, thershold_data_occup=None, compression='lzf', workDir=None, logHandler=None):
+def normalizeGCMapByKR(gcMapInputFile, gcMapOutFile, mapSizeCeilingForMemory=20000, vmin=None, vmax=None, tol=1e-12, percentile_thershold_no_data=None, thershold_data_occup=None, compression='lzf', workDir=None, logHandler=None):
 	"""Normalize a gcmap using Knight-Ruiz matrix balancing method.
 
 
@@ -412,6 +437,12 @@ def normalizeGCMapByKR(gcMapInputFile, gcMapOutFile, mapSizeCeilingForMemory=200
 	mapSizeCeilingForMemory : int
 		Maximum size of contact map allowed for calculation using RAM. If map size or shape is larger than this value,
 		normalization will be performed using disk (HDD).
+
+	vmin : float
+		Minimum thershold value for normalization. If contact frequency is less than or equal to this thershold value, this value is discarded during normalization.
+
+	vmax : float
+		Maximum thershold value for normalization. If contact frequency is greater than or equal to this thershold value, this value is discarded during normalization.
 
 	tol : float
 		Tolerance for matrix balancing. Smaller tolreance increases accuracy in sums of rows and columns.
@@ -459,6 +490,18 @@ def normalizeGCMapByKR(gcMapInputFile, gcMapOutFile, mapSizeCeilingForMemory=200
 	for mapName in mapList:
 		ccMap = gmp.loadGCMapAsCCMap(gcMapInputFile, mapName=mapName, workDir=workDir)
 
+		# Because ccMap is already loaded here, directly edit matrix here
+		# No need to pass vmin and vmx during normalization as
+		# it is already taken care here
+		if vmin is not None or vmax is not None:
+			ccMap.make_editable()
+			if vmin is not None:
+				ccMap.matrix[ np.nonzero(ccMap.matrix <= vmin) ] = 0.0
+			if vmax is not None:
+				ccMap.matrix[ np.nonzero(ccMap.matrix >= vmax) ] = 0.0
+			ccMap.matrix.flush()
+			ccMap.make_unreadable()
+
 		try:
 
 			if ccMap.shape[0] > mapSizeCeilingForMemory:
@@ -482,7 +525,7 @@ def normalizeGCMapByKR(gcMapInputFile, gcMapOutFile, mapSizeCeilingForMemory=200
 			if 'ccMap' in locals():	del ccMap
 			raise e
 
-def normalizeCCMapByIC(ccMap, tol=1e-4, outFile=None, iteration=500, percentile_thershold_no_data=None, thershold_data_occup=None, workDir=None):
+def normalizeCCMapByIC(ccMap, tol=1e-4, vmin=None, vmax=None, outFile=None, iteration=500, percentile_thershold_no_data=None, thershold_data_occup=None, workDir=None):
 	""" Normalize a ccmap by Iterative correction method
 
 	This method normalize the raw contact map by removing biases from experimental procedure.
@@ -496,11 +539,17 @@ def normalizeCCMapByIC(ccMap, tol=1e-4, outFile=None, iteration=500, percentile_
 	tol : float
 		Tolerance value. If variance of Delta-B is less than tolerance, stop the iterative process.
 
-	iteration : int
-		Number of iteration to stop the normalization.
+	vmin : float
+		Minimum thershold value for normalization. If contact frequency is less than or equal to this thershold value, this value is discarded during normalization.
+
+	vmax : float
+		Maximum thershold value for normalization. If contact frequency is greater than or equal to this thershold value, this value is discarded during normalization.
 
 	outFile : str
 		Name of output ccmap file, to save directly the normalized map as a ccmap file. In case of this option, ``None`` will return.
+
+	iteration : int
+		Number of iteration to stop the normalization.
 
 	percentile_thershold_no_data : int
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
@@ -533,6 +582,15 @@ def normalizeCCMapByIC(ccMap, tol=1e-4, outFile=None, iteration=500, percentile_
 	ccMapObj, ccmapType = _checkCCMAP(ccMap, workDir=workDir)
 
 	tmap = ccMapObj.copy()
+
+	# In case if vmin and vmax is given
+	if vmin is not None or vmax is not None:
+		tmap.make_editable()
+		if vmin is not None:
+			tmap.matrix[ np.nonzero(tmap.matrix <= vmin) ] = 0.0
+		if vmax is not None:
+			tmap.matrix[ np.nonzero(tmap.matrix >= vmax) ] = 0.0
+		tmap.make_unreadable()
 
 	if ccMapObj.xlabel is not None:
 		logger.info(' Iterative Correction is in process for {0} map...'.format(ccMapObj.xlabel))
@@ -611,7 +669,7 @@ def normalizeCCMapByIC(ccMap, tol=1e-4, outFile=None, iteration=500, percentile_
 		logger.warning('Error in Iterative Correction!!!')
 		return None
 
-def normalizeGCMapByIC(gcMapInputFile, gcMapOutFile, tol=1e-12, iteration=500, percentile_thershold_no_data=None, thershold_data_occup=None, compression='lzf', workDir=None, logHandler=None):
+def normalizeGCMapByIC(gcMapInputFile, gcMapOutFile, vmin=None, vmax=None, tol=1e-12, iteration=500, percentile_thershold_no_data=None, thershold_data_occup=None, compression='lzf', workDir=None, logHandler=None):
 	"""Normalize a gcmap using Iterative Correction.
 
 	This method normalize the raw contact map by removing biases from experimental procedure.
@@ -624,6 +682,12 @@ def normalizeGCMapByIC(gcMapInputFile, gcMapOutFile, tol=1e-12, iteration=500, p
 
 	gcMapOutFile : str
 		Name of output gcmap file.
+
+	vmin : float
+		Minimum thershold value for normalization. If contact frequency is less than or equal to this thershold value, this value is discarded during normalization.
+
+	vmax : float
+		Maximum thershold value for normalization. If contact frequency is greater than or equal to this thershold value, this value is discarded during normalization.
 
 	tol : float
 		Tolerance value. If variance of Delta-B is less than tolerance, stop the iterative process.
@@ -677,6 +741,7 @@ def normalizeGCMapByIC(gcMapInputFile, gcMapOutFile, tol=1e-12, iteration=500, p
 
 		try:
 			norm_ccmap = normalizeCCMapByIC(ccMap, tol=tol, iteration=iteration,
+						vmin=vmin, vmax=vmax,
 						percentile_thershold_no_data=percentile_thershold_no_data,
 						thershold_data_occup=thershold_data_occup,
 						workDir=workDir)
@@ -692,7 +757,7 @@ def normalizeGCMapByIC(gcMapInputFile, gcMapOutFile, tol=1e-12, iteration=500, p
 			if 'ccMap' in locals():	del ccMap
 			raise e
 
-def normalizeCCMapByMCFS(ccMap, stats='median', outFile=None, percentile_thershold_no_data=None, thershold_data_occup=None, workDir=None):
+def normalizeCCMapByMCFS(ccMap, stats='median', vmin=None, vmax=None, outFile=None, percentile_thershold_no_data=None, thershold_data_occup=None, workDir=None):
 	""" Scale ccmap using Median Contact Frequency
 
 	This method can be used to normalize contact map using Median contact values
@@ -711,6 +776,12 @@ def normalizeCCMapByMCFS(ccMap, stats='median', outFile=None, percentile_thersho
 
 	stats : str
 	    Statistics to be calculated along diagonals: It may be either "mean" or "median". By default, it is "median".
+
+	vmin : float
+		Minimum thershold value for normalization. If contact frequency is less than or equal to this thershold value, this value is discarded during normalization.
+
+	vmax : float
+		Maximum thershold value for normalization. If contact frequency is greater than or equal to this thershold value, this value is discarded during normalization.
 
 	outFile : str
 		Name of output ccmap file, to save directly the normalized map as a ccmap file. In case of this option, ``None`` will return.
@@ -743,7 +814,26 @@ def normalizeCCMapByMCFS(ccMap, stats='median', outFile=None, percentile_thersho
 	"""
 
 	# Check whether input is a file or a obejct
-	ccMapObj, ccmapType = _checkCCMAP(ccMap, workDir=workDir)
+	ccMapObjOrig, ccmapType = _checkCCMAP(ccMap, workDir=workDir)
+
+	# Make another copy here for maximum and minimum thershold value
+	if vmin is not None or vmax is not None:
+		ccMapObj = ccMapObjOrig.copy()
+		ccMapObj.make_editable()
+
+		if ccmapType == 'File':
+			del ccMapObjOrig
+
+		ccmapType = 'File' # This temporary file should be deleted when neccessary
+		if vmin is not None:
+			ccMapObj.matrix[ np.nonzero(ccMapObj.matrix <= vmin) ] = 0.0
+		if vmax is not None:
+			ccMapObj.matrix[ np.nonzero(ccMapObj.matrix >= vmax) ] = 0.0
+		ccMapObj.matrix.flush()
+		ccMapObj.make_unreadable()
+
+	else:
+		ccMapObj = ccMapObjOrig
 
 	normCCMap = ccMapObj.copy()
 
@@ -792,7 +882,7 @@ def normalizeCCMapByMCFS(ccMap, stats='median', outFile=None, percentile_thersho
 		logger.warning('Error in Median Contact Frequency Scaling!!!')
 		return None
 
-def normalizeGCMapByMCFS(gcMapInputFile, gcMapOutFile, stats='median', percentile_thershold_no_data=None, thershold_data_occup=None, compression='lzf', workDir=None, logHandler=None):
+def normalizeGCMapByMCFS(gcMapInputFile, gcMapOutFile, stats='median', vmin=None, vmax=None, percentile_thershold_no_data=None, thershold_data_occup=None, compression='lzf', workDir=None, logHandler=None):
 	""" Scale all maps in gcmap using Median Contact Frequency
 
 	This method can be used to normalize contact map using Median contact values
@@ -811,6 +901,12 @@ def normalizeGCMapByMCFS(gcMapInputFile, gcMapOutFile, stats='median', percentil
 
 	stats : str
 	    Statistics to be calculated along diagonals: It may be either "mean" or "median". By default, it is "median".
+
+	vmin : float
+		Minimum thershold value for normalization. If contact frequency is less than or equal to this thershold value, this value is discarded during normalization.
+
+	vmax : float
+		Maximum thershold value for normalization. If contact frequency is greater than or equal to this thershold value, this value is discarded during normalization.
 
 	percentile_thershold_no_data : int
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
@@ -860,6 +956,18 @@ def normalizeGCMapByMCFS(gcMapInputFile, gcMapOutFile, stats='median', percentil
 
 		while True:
 			ccMap = gmp.loadGCMapAsCCMap(gcmap.hdf5, mapName=mapName, resolution=gcmap.resolution, workDir=workDir)
+
+			# Because ccMap is already loaded here, directly edit matrix here
+			# No need to pass vmin and vmx during normalization as
+			# it is already taken care here
+			if vmin is not None or vmax is not None:
+				ccMap.make_editable()
+				if vmin is not None:
+					ccMap.matrix[ np.nonzero(ccMap.matrix <= vmin) ] = 0.0
+				if vmax is not None:
+					ccMap.matrix[ np.nonzero(ccMap.matrix >= vmax) ] = 0.0
+				ccMap.matrix.flush()
+				ccMap.make_unreadable()
 
 			try:
 				norm_ccmap = normalizeCCMapByMCFS(ccMap, stats=stats,

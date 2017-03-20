@@ -64,7 +64,7 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
 
         # Resize hight and reduce size of log text box
         self.resize(self.width(), 680)
-        self.splitter.setSizes([500, 180])
+        self.splitter.setSizes([520, 160])
 
         # Remove maximize window buttons
         self.setWindowFlags( (self.windowFlags() | Qt.CustomizeWindowHint) & ~Qt.WindowMaximizeButtonHint)
@@ -105,7 +105,6 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
 
     def connectButtons(self):
         self.methodCBox.currentIndexChanged.connect( self.specOptsTabWidget.setCurrentIndex )
-        self.whatsThisButton.setIcon( self.style().standardIcon(QStyle.SP_TitleBarContextHelpButton) )
         self.whatsThisButton.clicked.connect( QWhatsThis.enterWhatsThisMode )
 
         self.inputFileButton.setIcon( self.style().standardIcon(QStyle.SP_DirOpenIcon) )
@@ -140,6 +139,10 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
         # IC tolerance and Iteration -- only numbers
         self.specOptsIcTolLineEdit.setValidator(QDoubleValidator())
         self.specOptsIcIterLineEdit.setValidator(QIntValidator())
+
+        # vmin and vmax
+        self.vminLineEdit.setValidator(QDoubleValidator())
+        self.vmaxLineEdit.setValidator(QDoubleValidator())
 
         # Check for input file - file exist; determine file format
         self.inputFileLineEdit.editingFinished.connect( lambda: guiHelpers.checkFileExist(self.inputFileLineEdit, self) )
@@ -351,6 +354,12 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
         cmdDict['-fi'] = inputFormat
         cmdDict['-fo'] = outputFormat
 
+        # Vmin and vmax
+        if self.vminLineEdit.text():
+            cmdDict['-vmin'] = self.vminLineEdit.text()
+        if self.vmaxLineEdit.text():
+            cmdDict['-vmax'] = self.vmaxLineEdit.text()
+
         # Working or scratch directory
         workDir = self.genOptsScratchDirLineEdit.text()
         if not workDir:
@@ -439,6 +448,11 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
         command += ' -fo ' + cmdDict['-fo']
         command += ' -t ' + str(cmdDict['-t'])
         command += ' -m ' + cmdDict['-m']
+
+        if '-vmin' in cmdDict:
+            command += ' -vmin ' + str(cmdDict['-vmin'])
+        if '-vmax' in cmdDict:
+            command += ' -vmax ' + str(cmdDict['-vmax'])
         if '-mscm' in cmdDict:
             command += ' -mscm ' + str(cmdDict['-mscm'])
         if '-cmeth' in cmdDict:
@@ -461,6 +475,10 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
         command += ' -fo ' + cmdDict['-fo']
         command += ' -t ' + str(cmdDict['-t'])
         command += ' -c ' + str(cmdDict['-c'])
+        if '-vmin' in cmdDict:
+            command += ' -vmin ' + str(cmdDict['-vmin'])
+        if '-vmax' in cmdDict:
+            command += ' -vmax ' + str(cmdDict['-vmax'])
         if '-cmeth' in cmdDict:
             command += ' -cmeth ' + cmdDict['-cmeth']
         command += ' -wd ' + cmdDict['-wd']
@@ -480,6 +498,10 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
         command += ' -o ' + cmdDict['-o']
         command += ' -fo ' + cmdDict['-fo']
         command += ' -s ' + str(cmdDict['-s'])
+        if '-vmin' in cmdDict:
+            command += ' -vmin ' + str(cmdDict['-vmin'])
+        if '-vmax' in cmdDict:
+            command += ' -vmax ' + str(cmdDict['-vmax'])
         if '-cmeth' in cmdDict:
             command += ' -cmeth ' + cmdDict['-cmeth']
         command += ' -wd ' + cmdDict['-wd']

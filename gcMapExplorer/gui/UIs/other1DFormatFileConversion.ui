@@ -634,6 +634,13 @@
          <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
            <widget class="QToolButton" name="whatIsThisButton">
+            <property name="font">
+             <font>
+              <weight>75</weight>
+              <bold>true</bold>
+              <underline>true</underline>
+             </font>
+            </property>
             <property name="toolTip">
              <string>What is this??</string>
             </property>

@@ -84,7 +84,7 @@
           <x>0</x>
           <y>0</y>
           <width>604</width>
-          <height>498</height>
+          <height>504</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -137,8 +137,15 @@
            </item>
            <item>
             <widget class="QToolButton" name="whatsThisButton">
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+               <underline>true</underline>
+              </font>
+             </property>
              <property name="text">
-              <string/>
+              <string>??</string>
              </property>
             </widget>
            </item>
@@ -678,22 +685,90 @@
            <property name="title">
             <string>Options</string>
            </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_9">
-            <property name="leftMargin">
+           <layout class="QVBoxLayout" name="verticalLayout_3">
+            <property name="spacing">
              <number>4</number>
+            </property>
+            <property name="leftMargin">
+             <number>2</number>
             </property>
             <property name="topMargin">
-             <number>4</number>
+             <number>2</number>
             </property>
             <property name="rightMargin">
-             <number>4</number>
+             <number>2</number>
             </property>
             <property name="bottomMargin">
-             <number>4</number>
+             <number>2</number>
             </property>
             <item>
+             <layout class="QHBoxLayout" name="horizontalLayout">
+              <item>
+               <widget class="QLabel" name="vminQLabel">
+                <property name="text">
+                 <string>Minimum Thershold Value:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="vminLineEdit">
+                <property name="maximumSize">
+                 <size>
+                  <width>100</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="toolTip">
+                 <string>Minimum thershold value for normalization.</string>
+                </property>
+                <property name="whatsThis">
+                 <string>Minimum thershold value for normalization. If contact frequency is less than or equal to this thershold value, this value is discarded during normalization.
+</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QLabel" name="vmaxQLabel">
+                <property name="text">
+                 <string>Maximum Thershold Value:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="vmaxLineEdit">
+                <property name="maximumSize">
+                 <size>
+                  <width>100</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="toolTip">
+                 <string>Maximum thershold value for normalization.</string>
+                </property>
+                <property name="whatsThis">
+                 <string>Maximum thershold value for normalization. If contact frequency is greater than or equal to this thershold value,
+this value is discarded during normalization.</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
              <layout class="QGridLayout" name="genOptsLayout">
-              <item row="0" column="1">
+              <item row="2" column="1">
                <widget class="QLineEdit" name="genOptsPtndLineEdit">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -703,7 +778,7 @@
                 </property>
                 <property name="maximumSize">
                  <size>
-                  <width>100</width>
+                  <width>50</width>
                   <height>16777215</height>
                  </size>
                 </property>
@@ -715,7 +790,7 @@
                 </property>
                </widget>
               </item>
-              <item row="1" column="1">
+              <item row="3" column="1">
                <widget class="QLineEdit" name="genOptsTdoLineEdit">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -725,7 +800,7 @@
                 </property>
                 <property name="maximumSize">
                  <size>
-                  <width>100</width>
+                  <width>50</width>
                   <height>16777215</height>
                  </size>
                 </property>
@@ -737,35 +812,35 @@
                 </property>
                </widget>
               </item>
-              <item row="0" column="0">
+              <item row="2" column="0">
                <widget class="QLabel" name="genOptsPtndLabel">
                 <property name="text">
                  <string>Percentile Thershold for Missing Data:</string>
                 </property>
                </widget>
               </item>
-              <item row="1" column="0">
+              <item row="3" column="0">
                <widget class="QLabel" name="genOptsTdoLabel">
                 <property name="text">
                  <string>Fraction Thershold for Data Occupancy:</string>
                 </property>
                </widget>
               </item>
-              <item row="2" column="0">
+              <item row="4" column="0">
                <widget class="QLabel" name="genOptsScratchDirLabel">
                 <property name="text">
                  <string>Scratch Directory</string>
                 </property>
                </widget>
               </item>
-              <item row="2" column="1">
+              <item row="4" column="1">
                <widget class="QLineEdit" name="genOptsScratchDirLineEdit">
                 <property name="toolTip">
                  <string>Directory where temporary files will be stored.</string>
                 </property>
                </widget>
               </item>
-              <item row="2" column="2">
+              <item row="4" column="2">
                <widget class="QPushButton" name="genOptsScratchDirButton">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -806,16 +881,16 @@
              <number>4</number>
             </property>
             <property name="leftMargin">
-             <number>4</number>
+             <number>2</number>
             </property>
             <property name="topMargin">
-             <number>4</number>
+             <number>2</number>
             </property>
             <property name="rightMargin">
-             <number>4</number>
+             <number>2</number>
             </property>
             <property name="bottomMargin">
-             <number>4</number>
+             <number>2</number>
             </property>
             <item>
              <layout class="QHBoxLayout" name="outFileLayout">

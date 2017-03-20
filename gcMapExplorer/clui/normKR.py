@@ -87,6 +87,20 @@ This option is ONLY VALID when input file is in ccmap format.
 
 """
 
+vminHelp = \
+""" Minimum thershold value for normalization.
+If contact frequency is less than or equal to this thershold value,
+this value is discarded during normalization.
+
+"""
+
+vmaxHelp = \
+""" Maximum thershold value for normalization.
+If contact frequency is greater than or equal to this thershold value,
+this value is discarded during normalization.
+
+"""
+
 mapSizeCeilingForMemoryHelp = \
 """ Maximum size of contact map allowed for calculation using RAM.
 If map size or shape is larger than this value, normalization will be
@@ -177,13 +191,15 @@ def main():
         showErrorAndExit(parser, msg)
 
     if args.outputFileFormat == 'ccmap' and args.inputFileFormat == 'ccmap':
-        gmlib.normalizer.normalizeCCMapByKR(args.inputFile, memory=args.memory, tol=args.tol, outFile=args.outputFile,
+        gmlib.normalizer.normalizeCCMapByKR(args.inputFile, memory=args.memory, tol=args.tol,
+                                            vmin=args.vmin, vmax=args.vmax, outFile=args.outputFile,
                                             percentile_thershold_no_data=args.percentile_thershold_no_data,
                                             thershold_data_occup=args.thershold_data_occup,
                                             workDir=args.workDir)
 
     if args.outputFileFormat == 'gcmap' and args.inputFileFormat == 'ccmap':
         norm_ccmap = gmlib.normalizer.normalizeCCMapByKR(args.inputFile, memory=args.memory, tol=args.tol,
+                                            vmin=args.vmin, vmax=args.vmax,
                                             percentile_thershold_no_data=args.percentile_thershold_no_data,
                                             thershold_data_occup=args.thershold_data_occup,
                                             workDir=args.workDir)
@@ -193,7 +209,7 @@ def main():
     if args.outputFileFormat == 'gcmap' and args.inputFileFormat == 'gcmap':
         gmlib.normalizer.normalizeGCMapByKR(args.inputFile, args.outputFile,
                                             mapSizeCeilingForMemory=args.mapSizeCeilingForMemory,
-                                            tol=args.tol,
+                                            tol=args.tol, vmin=args.vmin, vmax=args.vmax,
                                             percentile_thershold_no_data=args.percentile_thershold_no_data,
                                             thershold_data_occup=args.thershold_data_occup,
                                             workDir=args.workDir)
@@ -233,6 +249,14 @@ def parseArguments():
                         dest='memory', metavar='RAM',
                         choices=['RAM', 'HDD'], default='RAM',
                         help=memoryHelp)
+
+    parser.add_argument('-vmax', '--maximum-value', action='store',
+                        dest='vmax', type=float, metavar=None,
+                        help=vminHelp)
+
+    parser.add_argument('-vmin', '--minimum-value', action='store',
+                        dest='vmin', metavar=None, type=float,
+                        help=vmaxHelp)
 
     parser.add_argument('-mscm', '--map-size-ceiling-for-memory', action='store',
                         dest='mapSizeCeilingForMemory', metavar='20000',
