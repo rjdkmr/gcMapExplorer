@@ -106,13 +106,17 @@ class GCMAP:
     hdf5 : str or h5py.File
         Either gcmap file name or h5py file object, which is an entry point to HDF5 file.
     mapName : str
-        Name of contact map. e.g.: ``chr1`` or ``chr2``.
+        Name of map. It could be chromosome name in case of intra-chromosomal map.
+        e.g.: ``chr1`` or ``chr2``.
     chromAtX : str
-        Name of chromosome at X-axis
-    chromAtY : str
-        Name of chromosome at Y-axis. If ``chromAtY = None``, both x-axis and y-axis contains same chromosome and map is of 'intra' of 'cis' type.
+        chromosome at X-axis. In case of intra-chromosomal map, this is not required because
+        both at X and Y axis same chromosome is present.
+    chromAtX : str
+        chromosome at Y-axis. In case of intra-chromosomal map, this is not required because
+        both at X and Y axis same chromosome is present. If ``chromAtY = None``, both x-axis
+        and y-axis contains same chromosome and map is of 'intra' of 'cis' type.
     resolution : str
-        Resolution of required map.
+        Input resolution to read from file.
 
     Attributes
     ==========
@@ -308,7 +312,7 @@ class GCMAP:
             if resolution in resolutionList:
                 self.resolution = resolution
             else:
-                raise ValueError (' "{0}" resolution not found for "{1}" in file: "{2}".'.format(resolution, self.groupName, self.hdf5.fileName ) )
+                raise cmp.ResolutionNotFoundError (' "{0}" resolution not found for "{1}" in file: "{2}".'.format(resolution, self.groupName, self.hdf5.filename ) )
         else:
             self.resolution = self.finestResolution
 
@@ -427,9 +431,25 @@ class GCMAP:
         self._readMap(resolution=resolution)
 
     def changeMap(self, mapName=None, chromAtX=None, chromAtY=None, resolution=None):
-        """ Change the map from
+        """ Change the map for another chromosome
 
         It can be used to change the map. For example, to access the map of 'chr20' instead of 'chr22', use this function.
+
+        Parameters
+        ----------
+        mapName : str
+            Name of map. It could be chromosome name in case of intra-chromosomal map.
+            e.g.: ``chr1`` or ``chr2``.
+        chromAtX : str
+            chromosome at X-axis. In case of intra-chromosomal map, this is not required because
+            both at X and Y axis same chromosome is present.
+        chromAtX : str
+            chromosome at Y-axis. In case of intra-chromosomal map, this is not required because
+            both at X and Y axis same chromosome is present. If ``chromAtY = None``, both x-axis
+            and y-axis contains same chromosome and map is of 'intra' of 'cis' type.
+        resolution : str
+            Input resolution to read from file.
+
 
         For example:
             >>> ccMapObj = gcMapExplorer.lib.ccmap.CCMAP(hdf5, 'chr22')    # To read chr22 vs chr22 map
@@ -443,6 +463,56 @@ class GCMAP:
         self._setLabels(mapName, chromAtX, chromAtY)
         self.matrix = None
         self._readMap(resolution=resolution)
+
+    def checkMapExist(self, mapName=None, chromAtX=None, chromAtY=None, resolution=None):
+        """ Check if a map is exist in the file
+
+        It can be used to check if a map is exist in the file.
+
+        Parameters
+        ----------
+        mapName : str
+            Name of map. It could be chromosome name in case of intra-chromosomal map.
+            e.g.: ``chr1`` or ``chr2``.
+        chromAtX : str
+            chromosome at X-axis. In case of intra-chromosomal map, this is not required because
+            both at X and Y axis same chromosome is present.
+        chromAtX : str
+            chromosome at Y-axis. In case of intra-chromosomal map, this is not required because
+            both at X and Y axis same chromosome is present. If ``chromAtY = None``, both x-axis
+            and y-axis contains same chromosome and map is of 'intra' of 'cis' type.
+        resolution : str
+            Input resolution to read from file.
+
+
+        Returns
+        -------
+        doExist : bool
+            If map is present then ``True`` otherwise ``False``.
+
+        """
+
+        oldMapName = self.groupName
+        oldChromAtX = self.xlabel
+        oldChromAtY = self.xlabel
+        oldResolution = self.resolution
+
+        doExist = True
+
+        # try to change the resolution, and catch the error
+        try:
+            self._setLabels(mapName, chromAtX, chromAtY)
+            self.matrix = None
+            self._readMap(resolution=resolution)
+        except(cmp.ResolutionNotFoundError, cmp.ResolutionNotFoundError) as e:
+            doExist = False
+        except Exception as e:
+            raise e
+
+        # Revert to old one
+        self.changeMap(mapName=oldMapName, chromAtX=oldChromAtX, chromAtY=oldChromAtY, resolution=oldResolution)
+
+        return doExist
 
     def get_ticks(self, binsize=None):
         """To get xticks and yticks for the matrix

@@ -1,5 +1,13 @@
+
+.. _browser: http://gcmapexplorer.readthedocs.io/en/latest/mapBrowser.html
+.. _genome contact map: http://gcmapexplorer.readthedocs.io/en/latest/about_gcmap_file.html
+.. _genomic track datasets: http://gcmapexplorer.readthedocs.io/en/latest/about_h5_file.html
+.. _Normalization of contact maps: http://gcmapexplorer.readthedocs.io/en/latest/cmapNormalization.html
+.. _convert bigWig/wig/bed file to genomic track dataset h5 file: http://gcmapexplorer.readthedocs.io/en/latest/about_h5_file.html#convert-bigwig-wig-bed-to-genomic-track-h5-file
+
 .. image:: https://travis-ci.org/rjdkmr/gcMapExplorer.svg?branch=master
     :target: https://travis-ci.org/rjdkmr/gcMapExplorer
+
 
 Genome Contact Map Explorer - gcMapExplorer
 ===========================================
@@ -21,21 +29,19 @@ Features
 
 * Support for **huge contact maps** - Use of Disk instead of RAM - Matrices/arrays are stored in Disks -
   mathematical operations by directly reading/writing from/to Disks, **without loading them into RAM**
-* A `browser <http://gcmapexplorer.readthedocs.io/en/latest/mapBrowser.html>`_ with rich interfaces
+* A browser_ with rich interfaces
   for **Comparative** and **Interactive** visualization of **two dimensional contact maps** along
   with **genomic datasets** such as produced by DNase-seq, ChIP-seq, RNA-seq etc.
 * Contact maps can be **zoomed in/out** from finest resolution to whole chromosome level.
 * Rich customizations of **color scale for contact maps** visualization
 * Rich customizations of **X- and Y- axis properties**.
 
-* `Normalization of contact maps <http://gcmapexplorer.readthedocs.io/en/latest/cmapNormalization.html>`_ by
+* `Normalization of contact maps`_ by
     * **Iterative Correction** (IC)
     * **Knight-Ruiz Matrix Balancing** (KR)
     * **Distance-Frequency**
 
-* A **new file format** based on HDF5 for `genome contact map <http://gcmapexplorer.readthedocs.io/en/latest/about_gcmap_file.html>`_
-  and `genomic track datasets <http://gcmapexplorer.readthedocs.io/en/latest/about_h5_file.html>`_.
-
+* A **new file format** based on HDF5 for `genome contact map`_ and `genomic track datasets`_.
     * **Portable**, **platform independent** and can be read through C/C++, JAVA, Python and R programming language.
     * **Very fast to read** - fast browsing of contact maps and genomic datasets
 
@@ -43,9 +49,8 @@ Features
   - much faster than above format to read/write but not compact. Suitable for performing calculations.
 * `A GUI interface and commands <http://gcmapexplorer.readthedocs.io/en/latest/about_gcmap_file.html#convert-hi-c-data-to-gcmap>`_
   to convert Coordinate Sparse, Pair Coordinate Sparse, HOMER Interaction matrix, Bin-Contact formats into the new gcmap and ccmap formats.
-* `Interface and commands to convert bigWig/wig/bed file to genomic track dataset h5 file
-  <http://gcmapexplorer.readthedocs.io/en/latest/about_h5_file.html#convert-bigwig-wig-bed-to-genomic-track-h5-file>`_.
-* `Interface and commands for contact map Normalizations <http://gcmapexplorer.readthedocs.io/en/latest/cmapNormalization.html>`_.
+* Interface and commands to `convert bigWig/wig/bed file to genomic track dataset h5 file`_.
+* Interface and commands for `Normalization of contact maps`_.
 * Publication ready images at one click.
 
 
@@ -70,7 +75,7 @@ Run ``gcMapExplorer`` command on terminal to get list of all sub-commands.
     * - Command
       - Function
 
-    * - `browser <http://gcmapexplorer.readthedocs.io/en/latest/mapBrowser.html>`_
+    * - browser_
       - Interactive Browser for genomic contact maps
 
     * - `cmapImporter <http://gcmapexplorer.readthedocs.io/en/latest/commands/cmapImporter.html>`_
@@ -123,33 +128,32 @@ Run ``gcMapExplorer`` command on terminal to get list of all sub-commands.
 
 
 .. list-table:: Commands to normalize Hi-C map
-	:widths: 1, 4
-	:header-rows: 1
-  :name: normalize-maps-table
+    :widths: 1, 4
+    :header-rows: 1
+    :name: normalize-maps-table
 
-	* - Command
-	  - Function
+    * - Command
+      - Function
 
-	* - `normKR <http://gcmapexplorer.readthedocs.io/en/latest/commands/normKR.html>`_
-	  - Normalization using Knight-Ruiz matrix balancing
+    * - `normKR <http://gcmapexplorer.readthedocs.io/en/latest/commands/normKR.html>`_
+      - Normalization using Knight-Ruiz matrix balancing
 
-	* - `normIC <http://gcmapexplorer.readthedocs.io/en/latest/commands/normIC.html>`_
-	  - Normalization using Iterative Correction
+    * - `normIC <http://gcmapexplorer.readthedocs.io/en/latest/commands/normIC.html>`_
+      - Normalization using Iterative Correction
 
-	* - `normMCFS <http://gcmapexplorer.readthedocs.io/en/latest/commands/normMCFS.html>`_
-	  - Scale maps using Median/Mean Contact Frequency
+    * - `normMCFS <http://gcmapexplorer.readthedocs.io/en/latest/commands/normMCFS.html>`_
+      - Scale maps using Median/Mean Contact Frequency
 
 
 .. list-table:: Commands for Analysis
-	:widths: 1, 4
-	:header-rows: 1
+    :widths: 1, 4
+    :header-rows: 1
 
-	* - Command
-  	  - Function
+    * - Command
+      - Function
 
-
-	* - corrBWcmaps
-	  - Calculate correlation between contact maps
+    * - corrBWcmaps
+      - Calculate correlation between contact maps
 
 
 Command help

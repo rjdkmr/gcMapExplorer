@@ -49,6 +49,7 @@ gcmap module
 ~~~~~~~~~~~~
 .. autosummary::
 	gcmap.GCMAP
+	gcmap.GCMAP.checkMapExist
 	gcmap.GCMAP.changeMap
 	gcmap.GCMAP.changeResolution
 	gcmap.GCMAP.toFinerResolution

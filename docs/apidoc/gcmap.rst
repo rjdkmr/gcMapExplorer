@@ -6,6 +6,7 @@ gcmap module
 
 .. autosummary::
 	gcmap.GCMAP
+	gcmap.GCMAP.checkMapExist
 	gcmap.GCMAP.changeMap
 	gcmap.GCMAP.changeResolution
 	gcmap.GCMAP.toFinerResolution
@@ -23,7 +24,7 @@ GCMAP class
 
 
 .. autoclass:: gcMapExplorer.lib.gcmap.GCMAP
-   :members: changeMap, genMapNameList, changeResolution, toCoarserResolution, toFinerResolution, get_ticks, loadSmallestMap, performDownSampling
+   :members: checkMapExist, changeMap, genMapNameList, changeResolution, toCoarserResolution, toFinerResolution, get_ticks, loadSmallestMap, performDownSampling
 
 
 

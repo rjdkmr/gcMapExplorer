@@ -1518,9 +1518,17 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         """
         aidx = self.ActiveHiCmapAxis
 
-        # First check is all data is available in genomic subplot
         success = True
-        if self.hiCmapAxes[aidx].genmoicPlotAxes is not None:
+
+        # Check if current resolution is present in the data
+        if self.hiCmapAxes[aidx].fileType == 'gcmap':
+            success = self.hiCmapAxes[aidx].ccmap.checkMapExist(mapName=newMapName, resolution=self.hiCmapAxes[aidx].resolution)
+            if not success:
+                msg = 'For {0}, {1} resolution map is not available.\nChange the resolution before changing map.'.format(newMapName, self.hiCmapAxes[aidx].resolution)
+                browserHelpers.showWarningMessageBox(msg, self)
+
+        # First check is all data is available in genomic subplot
+        if self.hiCmapAxes[aidx].genmoicPlotAxes is not None and success:
             for gax in self.hiCmapAxes[aidx].genmoicPlotAxes:
                 if not gax.changeDataByName(self, newMapName, change=False):
                     success = False

@@ -2646,3 +2646,8 @@ def get_interpolation_dict():
         interpolation[i] = method[i]
 
     return interpolation
+
+def showWarningMessageBox(msg, qwidget):
+    msgBox = QMessageBox(QMessageBox.Warning, 'Warning', msg, QMessageBox.Ok, qwidget)
+    msgBox.exec_()
+    msgBox.close()

@@ -50,6 +50,13 @@ class MapNotFoundError(Exception):
 	def __str__(self):
 		return repr(self.value)
 
+class ResolutionNotFoundError(Exception):
+	def __init__(self, value):
+		super(ResolutionNotFoundError, self).__init__()
+		self.value = value
+
+	def __str__(self):
+		return repr(self.value)
 
 def resolutionToBinsize(resolution):
 	"""Return the bin size from the resolution unit
