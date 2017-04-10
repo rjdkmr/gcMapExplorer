@@ -124,6 +124,8 @@ genomicsDataHandler module
 		genomicsDataHandler.BEDHandler.parseBed
 		genomicsDataHandler.BEDHandler.setChromosome
 		genomicsDataHandler.BEDHandler.saveAsH5
+		genomicsDataHandler.EncodeDatasetsConverter
+		genomicsDataHandler.EncodeDatasetsConverter.saveAsH5
 		genomicsDataHandler.TextFileHandler
 		genomicsDataHandler.TextFileHandler.readData
 		genomicsDataHandler.TempNumpyArrayFiles

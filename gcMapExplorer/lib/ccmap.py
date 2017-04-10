@@ -411,7 +411,11 @@ def jsonify(ccMapObj):
 	+-------------+----------------------------------+----------------------------+
 	| maxvalue    | float                            | string                     |
 	+-------------+----------------------------------+----------------------------+
+	| binsize     | integer                          | string                     |
+	+-------------+----------------------------------+----------------------------+
 	| shape       | tuple of integer                 | list of string             |
+	+-------------+----------------------------------+----------------------------+
+	| dtype       | Numpy dtype                      | string                     |
 	+-------------+----------------------------------+----------------------------+
 
 
@@ -445,6 +449,12 @@ def jsonify(ccMapObj):
 	ccMapObj.maxvalue = str(float(ccMapObj.maxvalue))
 	ccMapObj.shape = list(map(str, ccMapObj.shape))
 
+	if hasattr(ccMapObj, 'binsize'):
+		ccMapObj.binsize = str(ccMapObj.binsize)
+
+	if isinstance(ccMapObj.dtype, np.dtype):
+		ccMapObj.dtype = ccMapObj.dtype.name
+
 def dejsonify(ccMapObj, json_dict=None):
 	"""Change back the data type of attributes in CCMAP object.
 
@@ -477,6 +487,10 @@ def dejsonify(ccMapObj, json_dict=None):
 	ccMapObj.minvalue = float(ccMapObj.minvalue)
 	ccMapObj.maxvalue = float(ccMapObj.maxvalue)
 	ccMapObj.shape = tuple(map(int, ccMapObj.shape))
+
+	if hasattr(ccMapObj, 'binsize'):
+		ccMapObj.binsize = int(ccMapObj.binsize)
+
 
 def save_ccmap(ccMapObj, outfile,  compress=False, logHandler=None):
 	""" Save CCMAP object on file
@@ -607,13 +621,13 @@ def load_ccmap(infile, workDir=None):
 	if workDir is None:
 		workDir = config['Dirs']['WorkingDirectory']
 
-	# New object
-	ccMapObj = CCMAP()
-
 	# Open .ccmap file and load all keywords
 	fin = open( infile, "r" )
 	json_dict = json.load( fin )
 	fin.close()
+
+	# New object
+	ccMapObj = CCMAP(dtype=np.dtype(json_dict['dtype']))
 
 	# Generating the object from the json dictionary
 	dejsonify(ccMapObj, json_dict)

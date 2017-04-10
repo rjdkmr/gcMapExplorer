@@ -100,8 +100,28 @@ Installation Steps on Windows OS
 
 2. Open WinPython directory (Default is in C:/ drive) and click on **"WinPython Command Prompt"**. It will open a command prompt terminal.
 
-3. Run ``pip3 install gcMapExplorer`` in command prompt terminal to install **gcMapExplorer**
+3. Run ``pip install gcMapExplorer`` in command prompt terminal to install **gcMapExplorer**
 
 .. note::
   To execute gcMapExplorer command, simple command prompt terminal (from Start Menu) might not work.
   Use **"WinPython Command Prompt"** present in WinPython directory to launch or execute gcMapExplorer.
+
+
+Updating gcMapExplorer
+----------------------
+To update the gcMapExplorer package use following command:
+
+.. code-block:: bash
+
+    pip install --upgrade --no-deps gcMapExplorer
+
+
+**OR**
+
+.. code-block:: bash
+
+    pip3 install --upgrade --no-deps gcMapExplorer
+
+
+``--upgrade`` flag is used to update the package and ``--no-deps`` prevents
+update of dependent packages like numpy, scipy, matplotlib etc.

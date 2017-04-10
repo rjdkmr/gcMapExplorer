@@ -13,7 +13,8 @@ Usage:
 
     usage: gcMapExplorer normMCFS [-h] [-i input.gcmap] [-fi gcmap]
                                   [-o output.gcmap] [-fo gcmap] [-s median]
-                                  [-ptnd 99] [-tdo 0.8] [-cmeth lzf]
+                                  [-vmax VMAX] [-vmin VMIN] [-ptnd 99] [-tdo 0.8]
+                                  [-cmeth lzf]
                                   [-wd /home/rajendra/deskForWork/scratch]
 
 
@@ -45,6 +46,16 @@ Usage:
   -s median, --stats median
                          Statistics to be considered for scaling.
                         It may be either “mean” or “median”. By default, it is “median”.
+
+  -vmax VMAX, --maximum-value VMAX
+                         Minimum thershold value for normalization.
+                        If contact frequency is less than or equal to this thershold value,
+                        this value is discarded during normalization.
+
+  -vmin VMIN, --minimum-value VMIN
+                         Maximum thershold value for normalization.
+                        If contact frequency is greater than or equal to this thershold value,
+                        this value is discarded during normalization.
 
   -ptnd 99, --percentile-thershold-no-data 99
                          It can be used to filter the map, where rows/columns with largest numbers

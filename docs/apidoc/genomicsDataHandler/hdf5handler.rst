@@ -14,6 +14,7 @@
 		HDF5Handler.hasResolution
 		HDF5Handler.hasDataName
 		HDF5Handler.buildDataTree
+		HDF5Handler.addDataByArray
 
 .. autoclass:: gcMapExplorer.lib.genomicsDataHandler.HDF5Handler
 		:members:

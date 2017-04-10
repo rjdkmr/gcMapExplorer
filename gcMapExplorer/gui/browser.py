@@ -903,7 +903,6 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
 
         if self.hiCmapAxes is None:  return
 
-        self.canvas.figure.hold(True)
         mid_idx = len(self.hiCmapAxes)
         i = 0
         while i < len(self.hiCmapAxes):
@@ -920,7 +919,6 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         # Connect mouse interaction with canvas
         self.connect_mouse_events_to_canvas()
         self.ActiveHiCmapAxis = prev_ActiveHiCmapAxis
-        self.canvas.figure.hold(False)
 
         # Tight layout at start and then turn off it
         self.figure.set_tight_layout(True)
@@ -1325,7 +1323,11 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         self.color_scale_slider.setValue(100)
         self.hiCmapAxes[aidx].set_color_spinbox_slider_values(self.color_scale_spin_box.value(), self.color_scale_slider.value())
 
-        self.cmapCBox.setCurrentText(self.hiCmapAxes[aidx].colormap)
+        if isinstance(self.hiCmapAxes[aidx].colormap, mpl.colors.LinearSegmentedColormap):
+            self.cmapCBox.setCurrentText(self.hiCmapAxes[aidx].colormap.name)
+        else:
+            self.cmapCBox.setCurrentText(self.hiCmapAxes[aidx].colormap)
+
         self.interpolationCBox.setCurrentText(self.hiCmapAxes[aidx].interpolation)
         self.colorScaleTypeSelectorComboBox.setCurrentText(self.hiCmapAxes[aidx].colorScaleStatus)
 
@@ -1542,15 +1544,16 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         self.contactMapNameCBox.blockSignals(True)
 
         # Change contact map data
-        self.hiCmapAxes[aidx].colorScaleStatus = 'Change color linearly'
         self.InitMapImage(self.hiCmapAxes[aidx].ccmap.hdf5.filename, self.hiCmapAxes[aidx].fileType,
                         mapName=newMapName, resolution=self.hiCmapAxes[aidx].resolution)
+        self.reset_color_range() # Maintain color scaling type and reset scale
 
         # Change genomic subplot data
         if self.hiCmapAxes[aidx].genmoicPlotAxes is not None:
             for gax in self.hiCmapAxes[aidx].genmoicPlotAxes:
                 gax.changeDataByName(self, newMapName, change=True)
                 self.resetGenomicDataYScaleLimits(hidx=aidx, gidx=gax.index)
+                gax.updatePlot()
 
         self.contactMapNameCBox.blockSignals(False)
 
@@ -2433,7 +2436,12 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         if draw:
             # If resolution interchange is allowed
             if self.interchangeableResolutions is not None:
-                map_xrange, map_yrange = self.tryChangingResolutionsAll(map_xrange, map_yrange)
+                new_map_xrange, new_map_yrange = self.tryChangingResolutionsAll(map_xrange, map_yrange)
+
+                # In case when change in resolution not possible, continue with original zoom
+                if new_map_xrange is not None and new_map_xrange is not None:
+                    map_xrange = new_map_xrange
+                    map_yrange = new_map_xrange
 
             for i in range(len(self.hiCmapAxes)):
                 self.hiCmapAxes[i].rangeXY = (map_xrange, map_yrange)
@@ -2449,36 +2457,39 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         """
 
         newNumberBins = map_xrange[1] - map_xrange[0]
+        resolutionChanged = True
         # do fine -> coarse
         if newNumberBins > 1001:
             newResIndex = self.currentResolutionIndex + 1
-            changeResolution = False
+            resolutionChanged = False
 
             # Determine if new resolution is available for all maps
             if newResIndex < len(self.interchangeableResolutions):
-                changeResolution = True
+                resolutionChanged = True
                 for i in range(len(self.hiCmapAxes)):
                     if cmp.resolutionToBinsize(self.interchangeableResolutions[newResIndex]) > self.hiCmapAxes[i].ccmap.binsizes[-1]:
-                        changeResolution = False
+                        resolutionChanged = False
                         break
 
                     # Check if resolution changing is possible for genomic dataset
                     if self.hiCmapAxes[i].genmoicPlotAxes is not None:
                         for gax in self.hiCmapAxes[i].genmoicPlotAxes:
                             if not gax.changeResolution(self.interchangeableResolutions[newResIndex], change=False):
-                                changeResolution = False
-                                msgBox = QMessageBox(QMessageBox.Warning, 'Warning',
-                                                     'Not able to change resolution for {0} of {1}.'
-                                                     .format(gax.treeWidgetItem.text(0), self.hiCmapAxes[i].treeWidgetItem.text(0)),
-                                                      QMessageBox.Ok, self)
-                                msgBox.exec_()
-                                msgBox.close()
+                                resolutionChanged = False
+                                if gax.showWarningNoChangeResolution:
+                                    msgBox = QMessageBox(QMessageBox.Warning, 'Warning',
+                                                         'Not able to change resolution for {0} of {1}.\n\n Continuing without change in resolution...'
+                                                         .format(self.axisTreeWidget.itemWidget(gax.treeWidgetItem, 0).text(),
+                                                                 self.axisTreeWidget.itemWidget(self.hiCmapAxes[i].treeWidgetItem, 0).text()),
+                                                                 QMessageBox.Ok, self)
+                                    msgBox.exec_()
+                                    msgBox.close()
+                                    gax.showWarningNoChangeResolution = False
 
-                                gax.showWarningNoChangeResolution = False
                                 break
 
             # If new resolution is available for new maps, change the resolution and respective xrange and yrange
-            if changeResolution:
+            if resolutionChanged:
                 self.currentResolutionIndex = self.currentResolutionIndex + 1
                 for i in range(len(self.hiCmapAxes)):
                     self.hiCmapAxes[i].ccmap.changeResolution(self.interchangeableResolutions[self.currentResolutionIndex])
@@ -2499,32 +2510,34 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         # do coarse -> fine
         if newNumberBins < 500 :
             newResIndex = self.currentResolutionIndex - 1
-            changeResolution = False
+            resolutionChanged = False
 
             # Determine if new resolution is available for all maps
             if newResIndex >= 0:
-                changeResolution = True
+                resolutionChanged = True
                 for i in range(len(self.hiCmapAxes)):
                     if cmp.resolutionToBinsize(self.interchangeableResolutions[newResIndex]) < self.hiCmapAxes[i].ccmap.binsizes[0]:
-                        changeResolution = False
+                        resolutionChanged = False
                         break
 
                     # Check if resolution changing is possible for genomic dataset
                     if self.hiCmapAxes[i].genmoicPlotAxes is not None:
                         for gax in self.hiCmapAxes[i].genmoicPlotAxes:
                             if not gax.changeResolution(self.interchangeableResolutions[newResIndex], change=False):
-                                changeResolution = False
-                                msgBox = QMessageBox(QMessageBox.Warning, 'Warning',
-                                                     'Not able to change resolution for {0} of {1}.'
-                                                     .format(gax.treeWidgetItem.text(0), self.hiCmapAxes[i].treeWidgetItem.text(0)),
-                                                      QMessageBox.Ok, self)
-                                msgBox.exec_()
-                                msgBox.close()
-                                gax.showWarningNoChangeResolution = False
+                                resolutionChanged = False
+                                if gax.showWarningNoChangeResolution:
+                                    msgBox = QMessageBox(QMessageBox.Warning, 'Warning',
+                                                         'Not able to change resolution for {0} of {1}.\n\nContinuing without change in resolution...'
+                                                         .format(self.axisTreeWidget.itemWidget(gax.treeWidgetItem, 0).text(),
+                                                                 self.axisTreeWidget.itemWidget(self.hiCmapAxes[i].treeWidgetItem, 0).text()),
+                                                                 QMessageBox.Ok, self)
+                                    msgBox.exec_()
+                                    msgBox.close()
+                                    gax.showWarningNoChangeResolution = False
                                 break
 
             # If new resolution is available for new maps, change the resolution and respective xrange and yrange
-            if changeResolution:
+            if resolutionChanged:
                 self.currentResolutionIndex = self.currentResolutionIndex - 1
 
                 for i in range(len(self.hiCmapAxes)):
@@ -2544,7 +2557,10 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
                 map_yrange[0] = map_yrange[0] * 2
                 map_yrange[1] = map_yrange[1] * 2
 
-        return map_xrange, map_yrange
+        if resolutionChanged:
+            return map_xrange, map_yrange
+        else:
+            return None, None
 
     def get_ccmap_obj_axis_under_mouse_mpl(self, event):
         if self.hiCmapAxes is not None:
@@ -2925,7 +2941,7 @@ class GenomicDataPlotAxis:
         """
 
         newBinsize = cmp.resolutionToBinsize(resolution)
-        originalBinsize = None
+        minimumBinsize = None
 
         # When data is from a hdf5 file
         if self.hdf5Hand is not None:
@@ -2935,54 +2951,50 @@ class GenomicDataPlotAxis:
 
             # Search if new resolution is already inside the file, no need to downsample
             if self.hdf5Hand.hasDataName(chrom, resolution, rdata):
-                originalBinsize = cmp.resolutionToBinsize(self.shownDataset[1])
-                # In case genomic dataset is loaded at coarser resolution, change original to new finer resolution
-                if originalBinsize > newBinsize:
-                    self.shownDataset = (chrom, resolution, rdata)
                 # Change the data array in case change is required
                 if change:
-                    self.dataArray = self.hdf5Hand[chrom][resolution][rdata][:]
+                    self.shownDataset = (chrom, resolution, rdata)                # Change shownDataset
+                    self.dataArray = self.hdf5Hand.hdf5[chrom][resolution][rdata][:]
                     foundData = True
                 return True
 
-            # In case of HDF5 file original resolution is retrieved
+            # In case if not found, minimum resolution present for data is obtained for latter use
             if not foundData:
-                originalBinsize = cmp.resolutionToBinsize(self.shownDataset[1])
+                minimumBinsize = np.amin(list(map(cmp.resolutionToBinsize, self.hdf5Hand.getResolutionList(chrom, dataName=rdata))))
 
         # When data is from a text file
         if self.txtFileHand is not None:
-            originalBinsize = self.txtFileHand.binsize
+            minimumBinsize = self.txtFileHand.binsize
 
-        # If somehow newBinSize is still unknown. I hope that this condition will never be true.
-        if newBinsize is None:
+        # In this case downsampling is not possible. therefore no success
+        if newBinsize < minimumBinsize:
             return False
 
         # Try to determine the factor by which data will be downsampled
         # Note: factor should alyways be an integer, not a float.
         level = None
-        if newBinsize > originalBinsize:
-            if newBinsize % originalBinsize == 0:
-                level = newBinsize / originalBinsize
-
-        if newBinsize < originalBinsize:
-            if originalBinsize % newBinsize == 0:
-                level = originalBinsize / newBinsize
+        if newBinsize > minimumBinsize:
+            if newBinsize % minimumBinsize == 0:
+                level = newBinsize / minimumBinsize
 
         # If downsampling factor is not a whole number, in that case abort the downsampling.
         if level is None:
             return False
 
         # Perform downsampling in case of known level
-        sucess = False
+        success = False
 
         # When data is from a hdf5 file
         if self.hdf5Hand is not None:
             chrom = self.shownDataset[0]
-            res = self.shownDataset[1]
+            minResolution = cmp.binsizeToResolution(minimumBinsize)
             rdata = self.shownDataset[2]
-            if change:
-                self.dataArray = cmp.downSample1D(self.hdf5Hand[chrom][res][rdata][:], level=level)
+
             success = True
+            if change:
+                self.dataArray = cmp.downSample1D(self.hdf5Hand.hdf5[chrom][minResolution][rdata][:], level=level)
+                self.shownDataset = (chrom, resolution, rdata)                # Change shownDataset
+
 
         # When data is from a text file
         if self.txtFileHand is not None:

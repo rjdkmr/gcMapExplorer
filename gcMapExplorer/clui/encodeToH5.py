@@ -33,12 +33,42 @@ from gcMapExplorer.config import getConfig
 config = getConfig()
 
 description = \
-"""Import a bigWig file to HDF5 format h5 file
-============================================
+"""Download and Convert ENCODE datasets to h5 files
+=================================================
 
-bigWig file can be converted into gcMapExplorer compatible HDF5 file using
-this tool. This HDF5 file can be loaded into gcMapExplorer browser for
-interactive visualization.
+It can be used to download and convert multiple datasets from ENCODE Experiment
+matrix (https://www.encodeproject.org/matrix/?type=Experiment).
+Presently, only bigWig files are downloaded and then converted.
+
+At first search the datasets on https://www.encodeproject.org/matrix/?type=Experiment .
+Then click on download button on top of the page. A text file will be downloaded.
+This text file can be used as input in this program. All bigWig files will be
+downloaded and converted to gcMapExplorer compatible hdf5 format.
+
+NOTE: At first a metafile is automatically downloaded and then files
+      are filtered according to bigWig format and Assembly. Subsequently,
+      if several replicates are present, only datasets with combined
+      replicates are considered. In case if two replicates are present
+      and combined replicates are not present, first replicate will be
+      considered. Combining replicates are not yet implemented
+
+NOTE: Because downloading and conversion might take very long time, it also
+      generates a checkpoint file in the output directory. Therefore,
+      in case of crash or abrupt exit, the process can be continued from the
+      last file.
+
+Name of output files:
+
+    (1) signal p-value:
+        <Experiment target>-<Experiment accession>-<File accession>-signal.h5
+
+    (2) fold change over control
+        <Experiment target>-<Experiment accession>-<File accession>-fold.h5
+
+    Note that name of cell-line is not included here. Therefore, use the
+    directory name as a identfiers for cell-lines or species. The Experiment
+    and File accession can be used to back-track about the dataset on ENCODE
+    website.
 
 Requirements
 ============
@@ -83,7 +113,16 @@ data to reduce the file size. To keep the original data in h5 file, used
 """
 
 inputFileHelp = \
-"""Input bigWig file.
+"""Input text file.
+At first search the datasets on https://www.encodeproject.org/matrix/?type=Experiment.
+Then click on download button on top of the page. A text file will be downloaded.
+This text file can be used as input in this program.
+
+"""
+
+assemblyHelp = \
+""" Name of reference genome.
+Example: hg19, GRCh38 etc.
 
 """
 
@@ -134,24 +173,9 @@ two methods.
 
 """
 
-inputChromosomeHelp = \
-"""Input Chromosome Name.
-If this is provided, only this chromosome data is extracted and stored in h5
-file.
-
-"""
-
-outHelp = \
-"""Output h5 file.
-
-If file is already present, it will replace the data. Therefore, be careful
-if a file with same name is present.
-
-"""
-
-overwriteHelp = \
-"""If a output file is already present, overwrite the datasets in the output
-file.
+outDirHelp = \
+""" Directory to save all ccmap files. It should be provided when -ccma/--ccmap
+option is used.
 
 """
 
@@ -178,10 +202,10 @@ def main():
     checkFileExist(bigWigInfo, parser)
 
     # Check for input bigWig File
-    if args.inputBigWigFile is None:
-        showErrorAndExit(parser, '\nInput bigWig file is not given!!!\n')
-    inputBigWigFile = args.inputBigWigFile.name
-    args.inputBigWigFile.close()
+    if args.inputFile is None:
+        showErrorAndExit(parser, '\nInput file is not given!!!\n')
+    inputFile = args.inputFile.name
+    args.inputFile.close()
 
     # Check for additional resolutions
     resolutions = args.resolutions
@@ -193,27 +217,25 @@ def main():
     if coarsening_methods is not None:
         coarsening_methods = get_coarsening_methods_list( coarsening_methods, parser )
 
-    # Check for output file
-    outFile = args.h5Name
-    if outFile is not None:
-        check_overwrite_status(outFile, args.overwrite, parser)
+    # Check for output directory
+    outDir = args.outDir
+    if outDir is not None:
+        if not os.path.isdir(outDir):
+            showErrorAndExit(parser, '\nOutput directory not found/accessible.\n')
     else:
-        showErrorAndExit(parser, '\nNo output file!!!\n')
+        outDir = os.getcwd()
+        print(' WARNING: No directory is provided for output file.\n \
+        All files will be stored here: [{0}]'.format(outDir))
 
     # Check for scratch directory
-    if not os.path.isdir(args.workDir):
-        showErrorAndExit(parser, '\nScratch Dirctory "{0}" not found !!!\n'.format(args.workDir))
+    workDir = args.workDir
+    if not os.path.isdir(workDir):
+        showErrorAndExit(parser, '\nScratch Dirctory "{0}" not found !!!\n'.format(workDir))
 
-    # Main conversion start here
-    bigwig = gmlib.genomicsDataHandler.BigWigHandler(inputBigWigFile,
-                            bigWigToWig, bigWigInfo,
-                            chromName=args.chromName, workDir=args.workDir)
+    endodeDatasets = gmlib.genomicsDataHandler.EncodeDatasetsConverter(inputFile, args.assembly, pathTobigWigToWig=bigWigToWig, pathTobigWigInfo=bigWigInfo, workDir=workDir)
+    endodeDatasets.saveAsH5(outDir, resolutions=resolutions, coarsening_methods=coarsening_methods, compression=args.compression, keep_original=args.keep_original)
+    del endodeDatasets
 
-    bigwig.saveAsH5(outFile, title=args.title, resolutions=resolutions,
-                    coarsening_methods=coarsening_methods,
-                    compression=args.compression,
-                    keep_original=args.keep_original)
-    del bigwig
 
 def get_resolution_list(resolution, parser):
     rlist = []
@@ -242,46 +264,18 @@ def get_coarsening_methods_list(coarsening_methods, parser):
 
     return cmlist
 
-def check_overwrite_status(outFile, overwrite, parser):
-
-    # Nothing to do if overwrite
-    if overwrite:
-        return
-
-    # Else do check other stuffs
-    if os.path.isfile(outFile):
-        print('\n WARNING: Output File "{0}" already exist.!!!'.format(outFile))
-
-        s = input('\n Are you sure to overwrite datasets [y/n] (default: n): ')
-        while(True):
-            if not s:
-                s = 'n'
-                break
-
-            s = s.lstrip().rstrip()
-
-            if s != 'n' and s != 'y':
-                s = input('\n Are you sure to overwrite datasets [y/n] (default: n): ')
-            else:
-                break
-
-        if str(s) == 'n':
-            showErrorAndExit(parser, '\nPlease provide another output file name.\n')
-
 def parseArguments():
     parser = argparse.ArgumentParser(
-                prog='gcMapExplorer bigwig2h5',
+                prog='gcMapExplorer encodeToH5',
                 description=description,
                 formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument('-i', '--input', action='store',
-                        type=argparse.FileType('rb'), metavar='input.bigWig',
-                        dest='inputBigWigFile', help=inputFileHelp)
-
-    parser.add_argument('-t', '--title', action='store',
-                        dest='title', metavar='"Genomic Dataset"',
-                        default='"Genomic Dataset"',
-                        help='Title of the dataset.\n')
+                        type=argparse.FileType('r'), metavar='input.txt',
+                        dest='inputFile', help=inputFileHelp)
+    parser.add_argument('-a', '--assembly', action='store',
+                        metavar = 'hg19', default='hg19',
+                        dest='assembly',help=assemblyHelp)
 
     parser.add_argument('-b2w', '--bigWigToWig', action='store',
                         type=str, metavar='bigWigToWig',
@@ -295,9 +289,7 @@ def parseArguments():
     parser.add_argument('-r', '--resolutions', action='store', type=str,
                         metavar='"List of Resolutions"', dest='resolutions',
                         help=resolutionHelp)
-    parser.add_argument('-icn', '--input-chromosome', action='store',
-                        dest='chromName',
-                        help=inputChromosomeHelp)
+
     parser.add_argument('-dm', '--downsample-method', action='store', type=str,
                         metavar='"List of downsampling method"',
                         dest='coarsening_methods',
@@ -307,12 +299,8 @@ def parseArguments():
                         choices=['lzf', 'gzip'], default='lzf',
                         help='Data compression method in h5 file.\n')
 
-    parser.add_argument('-o', '--out', action='store', dest='h5Name',
-                        metavar='out.h5', help=outHelp)
-
-    parser.add_argument('-ow', '--overwrite', action='store_true',
-                        default = False,
-                        dest='overwrite', help=overwriteHelp)
+    parser.add_argument('-od', '--outDir', action='store', dest='outDir',
+                        metavar='outDir', help=outDirHelp)
 
     parser.add_argument('-ko', '--keep-original', action='store_true',
                         default = False,
@@ -323,7 +311,7 @@ def parseArguments():
                         metavar=config['Dirs']['WorkingDirectory'],
                         help='Directory where temporary files will be stored.')
 
-    idx = sys.argv.index("bigwig2h5")+1
+    idx = sys.argv.index("encodeToH5")+1
     args = parser.parse_args(args=sys.argv[idx:])
 
     return parser, args

@@ -53,6 +53,7 @@ def defaultConfiguration():
     return config
 
 def updateConfig(section, option, value):
+    config = getConfig()
     if section not in config:
         return
     if option not in config[section]:

@@ -10,8 +10,9 @@ Usage:
   .. code-block:: bash
 
     usage: gcMapExplorer normIC [-h] [-i input.gcmap] [-fi gcmap]
-                                [-o output.gcmap] [-fo gcmap] [-t 0.0001] [-c 500]
-                                [-ptnd 99] [-tdo 0.8] [-cmeth lzf]
+                                [-o output.gcmap] [-fo gcmap] [-t 0.0001]
+                                [-vmax VMAX] [-vmin VMIN] [-c 500] [-ptnd 99]
+                                [-tdo 0.8] [-cmeth lzf]
                                 [-wd /home/rajendra/deskForWork/scratch]
 
 
@@ -42,6 +43,16 @@ Usage:
   -t 0.0001, --tolerance 0.0001
                          Tolerance for matrix balancing.
                         Smaller tolreance increases accuracy in sums of rows and columns.
+
+  -vmax VMAX, --maximum-value VMAX
+                         Minimum thershold value for normalization.
+                        If contact frequency is less than or equal to this thershold value,
+                        this value is discarded during normalization.
+
+  -vmin VMIN, --minimum-value VMIN
+                         Maximum thershold value for normalization.
+                        If contact frequency is greater than or equal to this thershold value,
+                        this value is discarded during normalization.
 
   -c 500, --iteration 500
                          Number of iteration to stop the normalization.

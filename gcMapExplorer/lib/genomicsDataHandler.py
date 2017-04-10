@@ -26,18 +26,44 @@ import re
 import os
 import copy
 import shlex
+import shutil
 import subprocess
 import tempfile
 import logging
 import h5py
 import json
+import csv
+from urllib.request import urlopen
+from urllib.error import URLError
 
-from gcMapExplorer.config import getConfig
+from gcMapExplorer.config import getConfig, updateConfig
 
 from . import ccmap as cmp
 
 # get configuration
 config = getConfig()
+
+def downloadFile(url, output):
+    """ Download a file from url and save to a file
+
+    Parameters
+    ----------
+    ouput : str
+        Output file name.
+
+    Returns
+    -------
+    sucess : bool
+        If downloaded successfully ``True`` otherwise ``False``
+    """
+    try:
+        response = urlopen(url)
+    except (ValueError, URLError):
+        return False
+
+    fout = open(output, 'wb')
+    shutil.copyfileobj(response, fout)
+    return True
 
 
 def check_resolution_list(resolutions):
@@ -59,7 +85,9 @@ def check_coarsening_method(methods):
                 raise ValueError( ' Coarsening method {0} is not implemented..\
                 \n Use these: {1}'.format(method, acepted_methods) )
 
-    return methods
+        return methods
+    else:
+        return acepted_methods
 
 class TempNumpyArrayFiles:
     """To handle temporary numpy array files
@@ -90,6 +118,7 @@ class TempNumpyArrayFiles:
         self.chromSizeInfo = None
         self.files = None
         self.arrays = None
+        self.printInfo = dict()
 
         # Working and output directory
         if workDir is None:
@@ -158,7 +187,6 @@ class TempNumpyArrayFiles:
         else:
             self.chromSizeInfo[chrom] = size
             self.generateTempNumpyFile(chrom)
-
 
     def addChromSizeInfo(self, bigWigFileName):
         """ Update chromosome sizes using new bigWig file
@@ -263,6 +291,11 @@ class TempNumpyArrayFiles:
 
         """
 
+        # Initialize print information
+        for chrom in self.chromSizeInfo:
+            if chrom not in self.printInfo:
+                self.printInfo[chrom] = True
+
         try:
             self._generateTempNumpyFile(key, regenerate=regenerate)
         except (SystemExit, KeyboardInterrupt) as e:
@@ -292,7 +325,9 @@ class TempNumpyArrayFiles:
             self.arrays = dict()
 
         if (key in self.files) and not regenerate:
-            self.logger.info('{0} is already present in temporary numpy file list, skipping ...' .format(key))
+            if self.printInfo[key]:
+                self.logger.info(' {0} is already present in temporary numpy file list, skipping ...' .format(key))
+                self.printInfo[key] = False
         else:
             if regenerate:
                 self._removeTempNumpyFile(key)
@@ -309,6 +344,7 @@ class TempNumpyArrayFiles:
             self.files[key] = fname
 
             # print(npy.shape)
+            self.printInfo[key] = True
             self.logger.info(' \t... Finished generating temporary numpy array file.')
 
     def fillAllArraysWithZeros(self):
@@ -518,13 +554,15 @@ class HDF5Handler:
         return gotChromsome
 
 
-    def getResolutionList(self, chrom):
+    def getResolutionList(self, chrom, dataName=None):
         """ To get all resolutions for given chromosome from hdf5 file
 
         Parameters
         ----------
         chrom : str
             chromosome name
+        dataName : str
+            Options to get list of all resolution list for given data name
 
         Returns
         -------
@@ -542,14 +580,17 @@ class HDF5Handler:
         resolutionList = []
         if chrom in chromList:
             for r in self.hdf5[chrom].keys():
-                resolutionList.append(r)
+                if dataName is not None and self.hasDataName(chrom, r, dataName):
+                    resolutionList.append(r)
+                else:
+                    resolutionList.append(r)
         else:
             raise KeyError(' Chromosome [{0}] not found in [{1}] file...' .format(chrom, self.filename))
 
         return resolutionList
 
-    def hasResolution(self, chrom, resolution):
-        """To get list of all chromosomes present in hdf5 file
+    def hasResolution(self, chrom, resolution, dataName=None):
+        """To check if given resolution for given chromosome is present
 
         Parameters
         ----------
@@ -557,6 +598,8 @@ class HDF5Handler:
             Chromosome name to be look up in file.
         resolution : str
             Data Resolution for queried Chromosome
+        dataName : str
+            Options to check if resolution for given data name is present
 
         Returns
         -------
@@ -571,7 +614,7 @@ class HDF5Handler:
 
         gotResolution = False
         if self.hasChromosome(chrom):
-            if resolution in self.hdf5[chrom]:
+            if resolution in self.getResolutionList(chrom, dataName=dataName):
                 gotResolution = True
 
         return gotResolution
@@ -613,7 +656,7 @@ class HDF5Handler:
         return nameList
 
     def hasDataName(self, chrom, resolution, dataName):
-        """To get list of all chromosomes present in hdf5 file
+        """To check if given data for given resolution for given chromosome is present
 
         Parameters
         ----------
@@ -721,9 +764,19 @@ class BigWigHandler:
     pathTobigWigToWig : str
         Path to ``bigWigToWig`` program. It can be downloaded from
         http://hgdownload.cse.ucsc.edu/admin/exe/ for MacOSX and Linux.
+        If path to program is already present in configuration file, it will be
+        taken from the configuration.
+
+        If it is not present in configuration file, the input path **should**
+        be provided. It will be stored in configuration file for later use.
     pathTobigWigInfo : str
         Path to ``bigWigInfo`` program. It can be downloaded from
         http://hgdownload.cse.ucsc.edu/admin/exe/ for MacOSX and Linux.
+        If path to program is already present in configuration file, it will be
+        taken from the configuration.
+
+        If it is not present in configuration file, the input path **should**
+        be provided. It will be stored in configuration file for later use.
     WigFileNames : str
         List of Wig file names, either autmoatically generated or given by user
     chromName : str
@@ -745,9 +798,19 @@ class BigWigHandler:
     pathTobigWigToWig: str
         Path to ``bigWigToWig`` program. It can be downloaded from
         http://hgdownload.cse.ucsc.edu/admin/exe/ for MacOSX and Linux.
+        If path to program is already present in configuration file, it will be
+        taken from the configuration.
+
+        If it is not present in configuration file, the input path **should**
+        be provided. It will be stored in configuration file for later use.
     pathTobigWigInfo : str
         Path to ``bigWigInfo`` program. It can be downloaded from
         http://hgdownload.cse.ucsc.edu/admin/exe/ for MacOSX and Linux.
+        If path to program is already present in configuration file, it will be
+        taken from the configuration.
+
+        If it is not present in configuration file, the input path **should**
+        be provided. It will be stored in configuration file for later use.
     chromName : str
         Name of input target chromosome. If this is provided, only this chromosome
         data is extracted and stored in h5 file.
@@ -759,7 +822,7 @@ class BigWigHandler:
 
     """
 
-    def __init__(self, filenames, pathTobigWigToWig, pathTobigWigInfo, chromName=None, methodToCombine='mean', workDir=None, maxEntryWrite=10000000):
+    def __init__(self, filenames, pathTobigWigToWig=None, pathTobigWigInfo=None, chromName=None, methodToCombine='mean', workDir=None, maxEntryWrite=10000000):
         self.bigWigFileNames = filenames
         self.pathTobigWigToWig = pathTobigWigToWig
         self.pathTobigWigInfo = pathTobigWigInfo
@@ -782,6 +845,10 @@ class BigWigHandler:
 
         self.maxEntryWrite = maxEntryWrite # maximum count before writing to output file will be attempted
 
+        # Check for programs
+        self._checkBigWigInfoProgram(pathTobigWigInfo)
+        self._checkBigWigToWigProgram(pathTobigWigToWig)
+
         # Convert to list
         if not isinstance(filenames, list):
             self.bigWigFileNames = [ filenames ]
@@ -792,6 +859,72 @@ class BigWigHandler:
 
     def __del__(self):
         self._removeTempWigFiles()
+
+    def _checkBigWigInfoProgram(self, pathTobigWigInfo):
+        """ Check if bigWigInfo program is available or accessible.
+
+        If program is not available in configuration file, the given
+        path will be stored in the file after checking its accessibility.
+
+        The path is stored in :attr:`gcMapExplorer.lib.genomicsDataHandler.BigWigHandler.pathTobigWigInfo`
+
+        Parameters
+        ----------
+        pathTobigWigInfo : str
+            Path to bigWigInfo program
+
+        """
+        if pathTobigWigInfo is None or pathTobigWigInfo == config['Programs']['bigWigInfo']:
+            self.pathTobigWigInfo = config['Programs']['bigWigInfo']
+            if self.pathTobigWigInfo == 'None':
+                raise ValueError('Path to bigwiginfo is not set/provided...')
+
+            if not os.path.isfile(self.pathTobigWigInfo):
+                raise IOError('bigwiginfo is not found at {0} . Set or provide different path.'.format(self.pathTobigWigInfo))
+        else:
+            if not os.path.isfile(pathTobigWigInfo):
+                raise IOError('bigwiginfo is not found at {0} . Set or provide different path.'.format(pathTobigWigInfo))
+
+            # Add to config file
+            if pathTobigWigInfo != config['Programs']['bigWigInfo']:
+                self.logger.info('Adding bigwiginfo path in configuration...')
+                updateConfig('Programs', 'bigWigInfo', self.pathTobigWigInfo)
+                config['Programs']['bigWigInfo'] = self.pathTobigWigInfo
+
+            self.pathTobigWigInfo = pathTobigWigInfo
+
+    def _checkBigWigToWigProgram(self, pathTobigWigToWig):
+        """ Check if bigWigToWig program is available or accessible.
+
+        If program is not available in configuration file, the given
+        path will be stored in the file after checking its accessibility.
+
+        The path is stored in :attr:`gcMapExplorer.lib.genomicsDataHandler.BigWigHandler.pathTobigWigToWig`
+
+        Parameters
+        ----------
+        pathTobigWigToWig : str
+            Path to bigWigToWig program
+
+        """
+        if pathTobigWigToWig is None or pathTobigWigToWig == config['Programs']['bigWigToWig']:
+            self.pathTobigWigToWig = config['Programs']['bigWigToWig']
+            if self.pathTobigWigToWig == 'None':
+                raise ValueError('Path to bigWigToWig is not set/provided...')
+
+            if not os.path.isfile(self.pathTobigWigToWig):
+                raise IOError('bigWigToWig is not found at {0} . Set or provide different path.'.format(self.pathTobigWigToWig))
+        else:
+            if not os.path.isfile(pathTobigWigToWig):
+                raise IOError('bigWigToWig is not found at {0} . Set or provide different path.'.format(pathTobigWigToWig))
+
+            # Add to config file
+            if pathTobigWigToWig != config['Programs']['bigWigToWig']:
+                self.logger.info('Adding bigWigToWig path in configuration...')
+                updateConfig('Programs', 'bigWigToWig', self.pathTobigWigToWig)
+                config['Programs']['bigWigToWig'] = self.pathTobigWigToWig
+
+            self.pathTobigWigToWig = pathTobigWigToWig
 
     def _removeTempWigFiles(self):
         if self.wigToDel:
@@ -1501,6 +1634,8 @@ class WigHandler:
                 if not printed:
                     self.logger.info(' #### Identified \'{0}\' format in WIG file... ##### ' .format(ftype))
                     printed = True
+
+                self.logger.info(' Started reading and processing for {0} ' .format(ChromTitle))
 
             PreviousChromTitle = ChromTitle
             line = line.rstrip().lstrip()
@@ -2249,6 +2384,11 @@ class BEDHandler:
         for line in fin:
 
             temp = re.split('\s+', line.rstrip().lstrip())
+
+            # Skip lines that start with track or browser, but count the words
+            if re.search('track', line) != None or re.search('browser', line) != None:
+                continue
+
             ChromTitle = temp[0]
 
             # To store data in temporary numpy array
@@ -2465,6 +2605,11 @@ class BEDHandler:
             if len(temp) < self.column:
                 raise AssertionError(' Number of columns [{0}] is less than the requested column [{1}] .'.format(len(temp), self.column))
 
+            # Skip lines that start with track or browser, but count the words
+            if re.search('track', line) != None or re.search('browser', line) != None:
+                pointer += len(line)
+                continue
+
             ChromTitle = temp[0]
 
             if (ChromTitle != PreviousChromTitle) and currentLocation is not None :
@@ -2537,6 +2682,438 @@ class BEDHandler:
         if 'index' in data:
             self._chromPointerInFile = data['index']
 
+
+class EncodeDatasetsConverter:
+    """ Download and convert datasets from ENCODE Experiments matrix
+
+    It can be used to download and convert multiple datasets from ENCODE Experiment
+    matrix (https://www.encodeproject.org/matrix/?type=Experiment).
+    Presently, only bigWig files are downloaded and then converted.
+
+    At first search the datasets on https://www.encodeproject.org/matrix/?type=Experiment .
+    Then click on download button on top of the page. A text file will be downloaded.
+    This text file can be used as input in this program. All bigWig files will be
+    downloaded and converted to gcMapExplorer compatible hdf5 format.
+
+    .. note:: At first a metafile is automatically downloaded and then files
+              are filtered according to bigWig format and Assembly. Subsequently,
+              if several replicates are present, only datasets with combined
+              replicates are considered. In case if two replicates are present
+              and combined replicates are not present, first replicate will be
+              considered. Combining replicates are not yet implemented
+
+    .. warning:: Presently ``bigWigToWig`` and ``bigWigInfo`` is not available
+                 for Windows OS. Therefore, this class will fail in this OS.
+
+    Attributes
+    ----------
+    inputFile : str
+        Name of input file downloaded from ENCODE Experiments matrix website.
+    assembly : str
+        Name of reference genome. Example: hg19, GRCh38 etc.
+    pathTobigWigToWig : str
+        Path to ``bigWigToWig`` program. It can be downloaded from
+        http://hgdownload.cse.ucsc.edu/admin/exe/ for MacOSX and Linux.
+        If path to program is already present in configuration file, it will be
+        taken from the configuration.
+
+        If it is not present in configuration file, the input path **should**
+        be provided. It will be stored in configuration file for later use.
+    pathTobigWigInfo : str
+        Path to ``bigWigInfo`` program. It can be downloaded from
+        http://hgdownload.cse.ucsc.edu/admin/exe/ for MacOSX and Linux.
+        If path to program is already present in configuration file, it will be
+        taken from the configuration.
+
+        If it is not present in configuration file, the input path **should**
+        be provided. It will be stored in configuration file for later use.
+    metafile : str
+        Name of metafile downloaded from ENCODE website. It is automatically
+        downlaoded from input file. It contains all the meta-data required
+        for processing.
+
+    metaData = list of dictionary
+        A list of dictionary read from metafile. It is already filtered
+        according to the different criteria such as file-format, assembly,
+        replicates.
+
+    Parameters
+    ----------
+    inputFile : str
+        Name of input file downloaded from ENCODE Experiments matrix website.
+    assembly : str
+        Name of reference genome. Example: hg19, GRCh38 etc.
+    pathTobigWigToWig : str
+        Path to ``bigWigToWig`` program. It can be downloaded from
+        http://hgdownload.cse.ucsc.edu/admin/exe/ for MacOSX and Linux.
+        If path to program is already present in configuration file, it will be
+        taken from the configuration.
+
+        If it is not present in configuration file, the input path **should**
+        be provided. It will be stored in configuration file for later use.
+    pathTobigWigInfo : str
+        Path to ``bigWigInfo`` program. It can be downloaded from
+        http://hgdownload.cse.ucsc.edu/admin/exe/ for MacOSX and Linux.
+        If path to program is already present in configuration file, it will be
+        taken from the configuration.
+
+        If it is not present in configuration file, the input path **should**
+        be provided. It will be stored in configuration file for later use.
+
+    """
+
+    def __init__(self, inputFile, assembly, pathTobigWigToWig=None, pathTobigWigInfo=None, workDir=None):
+        self.inputFile = inputFile
+        self.assembely = assembly
+        self.metafile = None
+        self.metaData = None
+        self.indexes = None
+        self._bigWigFile = None
+        self._checkPointFile = 'checkpoint.txt'
+        self._checkPoint = []
+
+        # Working and output directory
+        if workDir is None:
+            self.workDir = config['Dirs']['WorkingDirectory']
+        else:
+            self.workDir = workDir
+
+        self.logger = logging.getLogger(__name__+'.DownloadEncodeDatasets')
+        self.logger.setLevel(logging.INFO)
+
+        self._checkBigWigInfoProgram(pathTobigWigInfo)
+        self._checkBigWigToWigProgram(pathTobigWigToWig)
+        self.downloadMetaData()
+
+    def __del__(self):
+        try:
+            os.remove(self.metafile)
+        except:
+            pass
+
+        if self._bigWigFile is not None:
+            self._removeBigWigFile()
+
+    def _checkBigWigInfoProgram(self, pathTobigWigInfo):
+        """ Check if bigWigInfo program is available or accessible.
+
+        If program is not available in configuration file, the given
+        path will be stored in the file after checking its accessibility.
+
+        The path is stored in :attr:`gcMapExplorer.lib.genomicsDataHandler.EncodeDatasetsConverter.pathTobigWigInfo`
+
+        Parameters
+        ----------
+        pathTobigWigInfo : str
+            Path to bigWigInfo program
+
+        """
+        if pathTobigWigInfo is None or pathTobigWigInfo == config['Programs']['bigWigInfo']:
+            self.pathTobigWigInfo = config['Programs']['bigWigInfo']
+            if self.pathTobigWigInfo == 'None':
+                raise ValueError('Path to bigwiginfo is not set/provided...')
+
+            if not os.path.isfile(self.pathTobigWigInfo):
+                raise IOError('bigwiginfo is not found at {0} . Set or provide different path.'.format(self.pathTobigWigInfo))
+        else:
+            if not os.path.isfile(pathTobigWigInfo):
+                raise IOError('bigwiginfo is not found at {0} . Set or provide different path.'.format(pathTobigWigInfo))
+
+            # Add to config file
+            if pathTobigWigInfo != config['Programs']['bigWigInfo']:
+                self.logger.info('Adding bigwiginfo path in configuration...')
+                updateConfig('Programs', 'bigWigInfo', self.pathTobigWigInfo)
+                config['Programs']['bigWigInfo'] = self.pathTobigWigInfo
+
+            self.pathTobigWigInfo = pathTobigWigInfo
+
+
+    def _checkBigWigToWigProgram(self, pathTobigWigToWig):
+        """ Check if bigWigToWig program is available or accessible.
+
+        If program is not available in configuration file, the given
+        path will be stored in the file after checking its accessibility.
+
+        The path is stored in :attr:`gcMapExplorer.lib.genomicsDataHandler.EncodeDatasetsConverter.pathTobigWigToWig`
+
+        Parameters
+        ----------
+        pathTobigWigToWig : str
+            Path to bigWigToWig program
+
+        """
+        if pathTobigWigToWig is None or pathTobigWigToWig == config['Programs']['bigWigToWig']:
+            self.pathTobigWigToWig = config['Programs']['bigWigToWig']
+            if self.pathTobigWigToWig == 'None':
+                raise ValueError('Path to bigWigToWig is not set/provided...')
+
+            if not os.path.isfile(self.pathTobigWigToWig):
+                raise IOError('bigWigToWig is not found at {0} . Set or provide different path.'.format(self.pathTobigWigToWig))
+        else:
+            if not os.path.isfile(pathTobigWigToWig):
+                raise IOError('bigWigToWig is not found at {0} . Set or provide different path.'.format(pathTobigWigToWig))
+
+            # Add to config file
+            if pathTobigWigToWig != config['Programs']['bigWigToWig']:
+                self.logger.info('Adding bigWigToWig path in configuration...')
+                updateConfig('Programs', 'bigWigToWig', self.pathTobigWigToWig)
+                config['Programs']['bigWigToWig'] = self.pathTobigWigToWig
+
+            self.pathTobigWigToWig = pathTobigWigToWig
+
+    def downloadMetaData(self):
+        """ Download the metadata file
+
+        It downloads the metadata file and stored at
+        :attr:`gcMapExplorer.lib.genomicsDataHandler.EncodeDatasetsConverter.metafile`
+
+        """
+        # Read metadata file url
+        fin = open(self.inputFile, 'r')
+        url = fin.readline()
+        url = url.rstrip()
+        fin.close()
+
+        # Generate metadata file name
+        name = cmp.name_generator()+'.tsv'
+        self.metafile = os.path.join(self.workDir, name)
+
+        # Download the file
+        self.logger.info(' Downloading metadata...')
+        downloadFile(url, self.metafile)
+        self.logger.info('                        ... Finished.')
+
+    def readMetaData(self):
+        """ Read the metafile and extract the information
+
+        It reads the metafile, filter the datasets according to assembly
+        and file-format and make a list as dictionary.
+
+        Each dictionary contains following field:
+            * title : ``Experiment target``-``Experiment accession``-``File accession``-[``fold``/``signal``]
+            * type : ``fold`` for fold change over control or ``signal`` for signal p-value.
+            * url : URL to file
+            * ``Experiment accession``
+            * ``File accession``
+            * ``Biological replicate(s)``
+
+        """
+
+        metaData = []
+
+        with open(self.metafile) as csvfile:
+            reader = csv.DictReader(csvfile, delimiter='\t')
+            for row in reader:
+                if row['File format'] == 'bigWig' and row['Assembly'] == self.assembely:
+                    data = dict()
+                    name = re.split('-', row['Experiment target'])[0]
+                    data['title'] = name + '-' + row['Experiment accession']  + '-' +  row['File accession']
+
+                    if 'signal p-value' in row['Output type']:
+                        data['title'] += '-' + 'signal'
+                        data['type'] = 'signal'
+                    elif 'fold change' in row['Output type']:
+                        data['title'] += '-' + 'fold'
+                        data['type'] = 'fold'
+                    else:
+                        continue
+
+                    data['url'] = row['File download URL']
+                    data['Experiment accession'] = row['Experiment accession']
+                    data['File accession'] = row['File accession']
+                    data['Biological replicate(s)'] = row['Biological replicate(s)']
+
+                    metaData.append(data)
+
+        self.metaData = metaData
+
+    def filterReplicates(self):
+        """ It filters the metaData according to the replicates.
+        If several replicates for a dataset are present, it only reads the
+        dataset with combined replicates.
+
+        In case if two replicates are present and combined replicates are not
+        present, first replicate will be considered. Combining replicates are
+        not yet implemented
+        """
+        experiments = dict()
+        for i in range(len(self.metaData)):
+            accession = self.metaData[i]['Experiment accession']
+            etype = self.metaData[i]['type']
+            if accession not in experiments:
+                experiments[accession] = {etype : [i]}
+            else:
+                if etype not in experiments[accession]:
+                    experiments[accession][etype] =  [i]
+                else:
+                    experiments[accession][etype] += [i]
+
+        index = []
+        for expID in experiments:
+            for etype in experiments[expID]:
+                if len(experiments[expID][etype]) == 1:
+                    index.append(experiments[expID][etype][0])
+                    continue
+
+                maxIdx = None
+                length = 0
+                for idx in experiments[expID][etype]:
+                    temp = re.split(',\s+', self.metaData[idx]['Biological replicate(s)'])
+                    if length < len(temp):
+                        length = len(temp)
+                        maxIdx = idx
+
+                #print(maxIdx, self.metaData[maxIdx]['Biological replicate(s)'], self.metaData[maxIdx]['title'])
+                index.append(maxIdx)
+
+        self.indexes = index
+
+    def _readFromCheckPoint(self):
+        """ Read the titles from checkpoint file.
+        """
+        try:
+            fin = open(self._checkPointFile, 'r')
+        except:
+            return
+
+        json_dict = json.load( fin )
+        if json_dict is not None:
+            if 'titles' in json_dict:
+                self._checkPoint = json_dict['titles']
+        fin.close()
+
+        return
+
+    def _writeToCheckPoint(self, idx):
+        """ Write to done titles to checkpoint file
+        """
+        try:
+            fin = open(self._checkPointFile, 'w')
+        except:
+            return
+
+        if self.metaData[idx]['title'] not in self._checkPoint:
+            self._checkPoint.append(self.metaData[idx]['title'])
+
+        json.dump({'titles' :  self._checkPoint }, fin, indent=4, separators=(',', ':') )
+        fin.close()
+
+        return
+
+    def saveAsH5(self, outDir, resolutions=None, coarsening_methods=None, compression='lzf', keep_original=False):
+        """Download the files and convert to gcMapExplorer compatible hdf5 file.
+
+        **Name of output files:**
+
+        * signal p-value:
+            ``Experiment target``-``Experiment accession``-``File accession``-``signal``.h5
+        * fold change over control:
+            ``Experiment target``-``Experiment accession``-``File accession``-``fold``.h5
+
+        .. note:: Because downloading and conversion might take very long time,
+                  it also generates a checkpoint file in the output directory.
+                  Therefore, in case of crash or abrupt exit, the process can
+                  be continued from the last file.
+
+        Parameters
+        ----------
+        outDir : str
+            Output directory where all files will be saved. Checkpoint file
+            will be stored in same directory.
+        resolutions : list of str
+            Additional input resolutions other than these default resolutions:
+            1kb', '2kb', '4kb', '5kb', '8kb', '10kb', '20kb', '40kb', '80kb',
+            '100kb', '160kb','200kb', '320kb', '500kb', '640kb',  and '1mb'.
+
+            For Example: use ``resolutions=['25kb', '50kb', '75kb']`` to add
+            additional 25kb, 50kb and 75kb resolution data.
+        coarsening_methods : list of str
+            Methods to coarse or downsample the data for converting from 1-base
+            to coarser resolutions. Presently, five methods are implemented.
+
+            * ``'min'``    -> Minimum value
+            * ``'max'``    -> Maximum value
+            * ``'amean'``  -> Arithmatic mean or average
+            * ``'hmean'``  -> Harmonic mean
+            * ``'gmean'``  -> Geometric mean
+            * ``'median'`` -> Median
+
+            In case of ``None``, all five methods will be considered. User may
+            use only subset of these methods. For example:
+            ``coarse_method=['max', 'amean']`` can be used for downsampling by
+            only these two methods.
+        compression : str
+            data compression method in HDF5 file : ``lzf`` or ``gzip`` method.
+        keep_original : bool
+            Whether original data present in bigwig file should be incorporated in HDF5 file. This will significantly increase size of HDF5 file.
+
+        """
+        self.readMetaData()
+        self.filterReplicates()
+
+        # get working directory
+        if self.workDir is None or self.workDir == config['Dirs']['workingdirectory']:
+            tmpNumpArrayFiles = TempNumpyArrayFiles()
+        else:
+            tmpNumpArrayFiles = TempNumpyArrayFiles(workDir=workDir)
+
+        self._checkPointFile = os.path.join(outDir, self._checkPointFile)
+        self._readFromCheckPoint()
+
+        for idx in self.indexes:
+
+            # Skip those that are already converted
+            if self.metaData[idx]['title'] in self._checkPoint:
+                self.logger.info(' {0} is already converted... Skipping...'.format(self.metaData[idx]['title']))
+                continue
+
+            output = '{0}.bigWig' .format(self.metaData[idx]['title'])
+            self._bigWigFile = os.path.join(self.workDir, output)
+
+            # Download the file
+            self.logger.info(' Downloading file from  {0}...'.format(self.metaData[idx]['url']))
+            if not downloadFile(self.metaData[idx]['url'], self._bigWigFile):
+                self.logger.warning('Not able to download: {0} '.format(self.metaData[idx]['url']))
+                continue
+            self.logger.info('                ... Finished Downloading.')
+
+            # Convert the file
+            bigwigHandle = BigWigHandler(self._bigWigFile,
+                                pathTobigWigToWig=self.pathTobigWigToWig,
+                                pathTobigWigInfo=self.pathTobigWigInfo,
+                                workDir=self.workDir, maxEntryWrite=10000000)
+
+            outputH5 = os.path.join(outDir, self.metaData[idx]['title']+'.h5')
+            try:
+                bigwigHandle.saveAsH5(outputH5, tmpNumpyArrayFiles=tmpNumpArrayFiles,
+                                title=self.metaData[idx]['title'],
+                                resolutions=resolutions,
+                                coarsening_methods=coarsening_methods,
+                                compression=compression,
+                                keep_original=keep_original)
+
+
+            except (SystemExit, KeyboardInterrupt) as e:
+                del tmpNumpArrayFiles
+                raise e
+            except Exception as e:
+                self.logger.info(' Not able to convert {0} file.'.format(self._bigWigFile))
+            finally:
+                del bigwigHandle
+                self._removeBigWigFile()
+                self._writeToCheckPoint(idx)
+
+        del tmpNumpArrayFiles
+
+    def _removeBigWigFile(self):
+        """ Remove downloaded bigwig file
+        """
+        # Remove bigwig file
+        try:
+            self.logger.info(' Removing temporary bigwig file [{0}] '.format(self._bigWigFile))
+            os.remove(self._bigWigFile)
+        except:
+            pass
 
 class TextFileHandler:
     """To import a genomic data from column text file format

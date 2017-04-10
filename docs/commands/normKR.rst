@@ -11,7 +11,8 @@ Usage:
 
       usage: gcMapExplorer normKR [-h] [-i input.gcmap] [-fi gcmap]
                                   [-o output.gcmap] [-fo gcmap] [-t 1e-12] [-m RAM]
-                                  [-mscm 20000] [-ptnd 99] [-tdo 0.8] [-cmeth lzf]
+                                  [-vmax VMAX] [-vmin VMIN] [-mscm 20000] [-ptnd 99]
+                                  [-tdo 0.8] [-cmeth lzf]
                                   [-wd /home/rajendra/deskForWork/scratch]
 
 **Optional arguments:**
@@ -47,6 +48,16 @@ Usage:
                         intermediate steps will use DIsk Drive to store intermediate data.
 
                         This option is ONLY VALID when input file is in ccmap format.
+
+  -vmax VMAX, --maximum-value VMAX
+                         Minimum thershold value for normalization.
+                        If contact frequency is less than or equal to this thershold value,
+                        this value is discarded during normalization.
+
+  -vmin VMIN, --minimum-value VMIN
+                         Maximum thershold value for normalization.
+                        If contact frequency is greater than or equal to this thershold value,
+                        this value is discarded during normalization.
 
   -mscm 20000, --map-size-ceiling-for-memory 20000
                          Maximum size of contact map allowed for calculation using RAM.

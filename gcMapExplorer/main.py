@@ -26,7 +26,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 gui_tools =      ['browser', 'cmapImporter', 'cmapNormalizer', 'h5Converter']
-convert_tools =  ['coo2cmap', 'pairCoo2cmap', 'homer2cmap', 'bc2cmap', 'bigwig2h5', 'wig2h5', 'bed2h5']
+convert_tools =  ['coo2cmap', 'pairCoo2cmap', 'homer2cmap', 'bc2cmap', 'bigwig2h5', 'wig2h5', 'bed2h5', 'encodeToH5']
 norm_tools =     ['normKR', 'normIC', 'normMCFS']
 analysis_tools = ['corrBWcmaps']
 
@@ -42,6 +42,7 @@ def main():
                'bigwig2h5': 'Import a bigWig file to browser compaitable h5 format',
                'wig2h5': 'Import a wig file to browser compaitable h5 format',
                'bed2h5' : 'Import a bed file to browser compaitable h5 format',
+               'encodeToH5' : 'Download and convert datasets from ENCODE project',
                'normKR' : 'Normalization using Knight-Ruiz matrix balancing',
                'normIC' : 'Normalization using Iterative Correction',
                'normMCFS' : 'Normalization by Median Contact Frequency Scaling',
@@ -98,6 +99,10 @@ def main():
     if sys.argv[1] == 'bed2h5':
         from .clui import bed2h5
         bed2h5.main()
+
+    if sys.argv[1] == 'encodeToH5':
+        from .clui import encodeToH5
+        encodeToH5.main()
 
     if sys.argv[1] == 'normKR':
         from .clui import normKR

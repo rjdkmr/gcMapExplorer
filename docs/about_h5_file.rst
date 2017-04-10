@@ -3,7 +3,7 @@
     <a href="https://www.hdfgroup.org/HDF5/" target="_blank"> HDF5 </a>
 
 .. |lzf| raw:: html
-    
+
     <a href="http://www.h5py.org/lzf/" target="_blank"> LZF </a>
 
 
@@ -83,21 +83,21 @@ Format: ``/<Chromosome>/<Resolution>/<1D Numpy Array>``
 
 Compression
 -----------
-In h5 file, dataset is stored as an 1D array. Presently, two compression methods 
+In h5 file, dataset is stored as an 1D array. Presently, two compression methods
 are allowed in the h5 file:
 
 * |lzf|
 * GZIP
 
-By default, |lzf| is used to compress arrays. This method is very fast, and allow 
+By default, |lzf| is used to compress arrays. This method is very fast, and allow
 the reading.
 
 .. Warning::
     |lzf| method is only avaiable through **Python h5py** module, and
     therefore, this file cannot be read by another programming language through
     standard library.
-    
-    For portablity, use GZIP compression method, which is available in standard 
+
+    For portablity, use GZIP compression method, which is available in standard
     HDF5 library.
 
 
@@ -111,11 +111,11 @@ several commands are available.
     bigwig2h5 : convert bigWig to h5 <commands/bigWig2h5>
     wig2h5 : convert wig to h5 <commands/wig2h5>
     bed2h5 : convert bed to h5 <commands/bed2h5>
+    encodeToH5 : download and convert ENCODE datasets to h5 <commands/encodeToH5>
 
 
 Convert using ``gcMapExplorer`` Python modules:
     * bigWig file: :class:`gcMapExplorer.lib.genomicsDataHandler.BigWigHandler`
     * wig file: :class:`gcMapExplorer.lib.genomicsDataHandler.WigHandler`
     * bed file: :class:`gcMapExplorer.lib.genomicsDataHandler.BEDHandler`
-
-
+    * ENCODE datasets : :class:`gcMapExplorer.lib.genomicsDataHandler.EncodeDatasetsConverter`

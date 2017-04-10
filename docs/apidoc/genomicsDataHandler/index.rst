@@ -19,5 +19,6 @@ List of class
    BigWigHandler <bigwighandler>
    WigHandler <wighandler>
    BEDHandler <bedhandler>
+   EncodeDatasetsConverter <EncodeDatasetsConverter>
    TextFileHandler <textHandler>
    TempNumpyArrayFiles <tempnumpyarrayfiles>
