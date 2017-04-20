@@ -49,8 +49,8 @@ NOTE: At first a metafile is automatically downloaded and then files
       are filtered according to bigWig format and Assembly. Subsequently,
       if several replicates are present, only datasets with combined
       replicates are considered. In case if two replicates are present
-      and combined replicates are not present, first replicate will be
-      considered. Combining replicates are not yet implemented
+      and combined replicates are not present, replicates will be combined with
+      '-mtc/--method-to-combine' option.
 
 NOTE: Because downloading and conversion might take very long time, it also
       generates a checkpoint file in the output directory. Therefore,
@@ -59,11 +59,24 @@ NOTE: Because downloading and conversion might take very long time, it also
 
 Name of output files:
 
-    (1) signal p-value:
-        <Experiment target>-<Experiment accession>-<File accession>-signal.h5
+    (1) For ChIP-seq assay:
+        a. signal-<Experiment target>-<Experiment accession>-<File accessions.h
+        b. fold-<Experiment target>-<Experiment accession>-<File accessions>.h5
 
-    (2) fold change over control
-        <Experiment target>-<Experiment accession>-<File accession>-fold.h5
+    (2) For RNA-seq:
+        a. uniq-reads-<date>-<Experiment accession>-<File accessions>.h
+        b. plus-uniq-reads-<date>-<Experiment accession>-<File accessions>.h
+        c. minus-uniq-reads-<date>-<Experiment accession>-<File accessions>.h
+        d. all-reads-<date>-<Experiment accession>-<File accessions>.h5
+        e. plus-all-reads-<date>-<Experiment accession>-<File accessions>.h5
+        f. minus-all-reads-<date>-<Experiment accession>-<File accessions>.h5
+        g. signal-<date>-<Experiment accession>-<File accession>.h5
+
+    (2) For DNase-seq:
+        a. uniq-reads-signal-<date>-<Experiment accession>-<File accessions>.h
+        b. raw-signal-<date>-<Experiment accession>-<File accessions>.h
+        c. all-reads-signal-<date>-<Experiment accession>-<File accessions>.h
+        d. signal-<date>-<Experiment accession>-<File accessions>.h5
 
     Note that name of cell-line is not included here. Therefore, use the
     directory name as a identfiers for cell-lines or species. The Experiment
@@ -126,6 +139,13 @@ Example: hg19, GRCh38 etc.
 
 """
 
+assayHelp = \
+""" Name of assay.
+Presently, four assays are implemented:
+'ChIP-seq', 'RNA-seq', 'DNase-seq' and 'FAIRE-seq'.
+
+"""
+
 bigWigToWigHelp = \
 """Path to bigWigToWig tool.
 
@@ -173,9 +193,14 @@ two methods.
 
 """
 
+methodToCombineHelp = \
+"""Methods to combine data from more than two input file. Presently, three
+methods can be used: 'mean', 'max' and 'min' for average, maximum and minimum
+value, respectively.
+
+"""
 outDirHelp = \
-""" Directory to save all ccmap files. It should be provided when -ccma/--ccmap
-option is used.
+""" Directory to save all h5 files. It is an essential input.
 
 """
 
@@ -232,7 +257,8 @@ def main():
     if not os.path.isdir(workDir):
         showErrorAndExit(parser, '\nScratch Dirctory "{0}" not found !!!\n'.format(workDir))
 
-    endodeDatasets = gmlib.genomicsDataHandler.EncodeDatasetsConverter(inputFile, args.assembly, pathTobigWigToWig=bigWigToWig, pathTobigWigInfo=bigWigInfo, workDir=workDir)
+    endodeDatasets = gmlib.genomicsDataHandler.EncodeDatasetsConverter(inputFile, args.assembly, assay=args.assay, pathTobigWigToWig=bigWigToWig,
+                                                            methodToCombine=args.methodToCombine, pathTobigWigInfo=bigWigInfo, workDir=workDir)
     endodeDatasets.saveAsH5(outDir, resolutions=resolutions, coarsening_methods=coarsening_methods, compression=args.compression, keep_original=args.keep_original)
     del endodeDatasets
 
@@ -266,16 +292,21 @@ def get_coarsening_methods_list(coarsening_methods, parser):
 
 def parseArguments():
     parser = argparse.ArgumentParser(
-                prog='gcMapExplorer encodeToH5',
+                prog='gcMapExplorer encode2h5',
                 description=description,
                 formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument('-i', '--input', action='store',
                         type=argparse.FileType('r'), metavar='input.txt',
                         dest='inputFile', help=inputFileHelp)
-    parser.add_argument('-a', '--assembly', action='store',
+    parser.add_argument('-amb', '--assembly', action='store',
                         metavar = 'hg19', default='hg19',
                         dest='assembly',help=assemblyHelp)
+
+    parser.add_argument('-asy', '--assay', action='store',
+                        metavar = 'ChIP-seq', default='ChIP-seq',
+                        choices=['ChIP-seq', 'RNA-seq', 'DNase-seq', 'FAIRE-seq'],
+                        dest='assay',help=assayHelp)
 
     parser.add_argument('-b2w', '--bigWigToWig', action='store',
                         type=str, metavar='bigWigToWig',
@@ -294,10 +325,16 @@ def parseArguments():
                         metavar='"List of downsampling method"',
                         dest='coarsening_methods',
                         help=coarseningMethodHelp)
+
     parser.add_argument('-cmeth', '--compression-method', action='store',
                         dest='compression', metavar='lzf',
                         choices=['lzf', 'gzip'], default='lzf',
                         help='Data compression method in h5 file.\n')
+
+    parser.add_argument('-mtc', '--method-to-combine', action='store',
+                        dest='methodToCombine', metavar='mean',
+                        choices=['mean', 'max', 'min'], default='mean',
+                        help=methodToCombineHelp)
 
     parser.add_argument('-od', '--outDir', action='store', dest='outDir',
                         metavar='outDir', help=outDirHelp)
@@ -311,7 +348,7 @@ def parseArguments():
                         metavar=config['Dirs']['WorkingDirectory'],
                         help='Directory where temporary files will be stored.')
 
-    idx = sys.argv.index("encodeToH5")+1
+    idx = sys.argv.index("encode2h5")+1
     args = parser.parse_args(args=sys.argv[idx:])
 
     return parser, args

@@ -126,7 +126,7 @@ Run ``gcMapExplorer`` command on terminal to get list of all sub-commands.
     * - `bed2h5 <http://gcmapexplorer.readthedocs.io/en/latest/commands/bed2h5.html>`_
       - Convert a bed file to HDF5 format h5 file
 
-    * - `encodeToH5 <http://gcmapexplorer.readthedocs.io/en/latest/commands/encodeToH5.html>`_
+    * - `encode2h5 <http://gcmapexplorer.readthedocs.io/en/latest/commands/encode2h5.html>`_
       - Download and convert ENCODE datasets to HDF5 format h5 files
 
 

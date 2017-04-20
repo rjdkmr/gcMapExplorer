@@ -33,7 +33,7 @@ import logging
 import h5py
 import json
 import csv
-from urllib.request import urlopen
+from urllib.request import urlopen, Request
 from urllib.error import URLError
 
 from gcMapExplorer.config import getConfig, updateConfig
@@ -853,7 +853,7 @@ class BigWigHandler:
         if not isinstance(filenames, list):
             self.bigWigFileNames = [ filenames ]
 
-        if not (methodToCombine == 'mean' or methodToCombine == 'max' or methodToCombine == 'min'):
+        if methodToCombine not in ['mean', 'max', 'min']:
             raise NotImplementedError(' Method [{0}] to combine bigwig file not implemented. Use: \'mean\', \'max\' or \'min\' ' .format(methodToCombine))
         self.methodToCombine = methodToCombine
 
@@ -1277,9 +1277,8 @@ class WigHandler:
         if not isinstance(filenames, list):
             self.WigFileNames = [ filenames ]
 
-        if not (methodToCombine == 'mean' or methodToCombine == 'max' or methodToCombine == 'min'):
-            raise NotImplementedError(' Method [{0}] to combine wig file not implemented. Use: \'mean\', \
-                                      \'max\' or \'min\' ' .format(methodToCombine))
+        if methodToCombine not in ['mean', 'max', 'min']:
+            raise NotImplementedError(' Method [{0}] to combine bigwig file not implemented. Use: \'mean\', \'max\' or \'min\' ' .format(methodToCombine))
         self.methodToCombine = methodToCombine
 
         if self.chromSizeInfo is None:
@@ -2128,14 +2127,13 @@ class BEDHandler:
         if not isinstance(filenames, list):
             self.bedFileNames = [ filenames ]
 
-        if not (methodToCombine == 'mean' or methodToCombine == 'max' or methodToCombine == 'min'):
-            raise NotImplementedError(' Method [{0}] to combine wig file not implemented. Use: \'mean\', \
-                                      \'max\' or \'min\' ' .format(methodToCombine))
+        if methodToCombine not in ['mean', 'max', 'min']:
+            raise NotImplementedError(' Method [{0}] to combine bed file not implemented. Use: \'mean\', \'max\' or \'min\' ' .format(methodToCombine))
         self.methodToCombine = methodToCombine
 
         if self.chromSizeInfo is None:
             if len(self.bedFileNames) > 1:
-                raise NotImplementedError('Presently only coversion for single wig file is implemented!!')
+                raise NotImplementedError('Presently only coversion for single bed file is implemented!!')
 
             if self.indexFile is not None:
                 self._loadChromSizeAndIndex()
@@ -2711,6 +2709,10 @@ class EncodeDatasetsConverter:
         Name of input file downloaded from ENCODE Experiments matrix website.
     assembly : str
         Name of reference genome. Example: hg19, GRCh38 etc.
+    assay : str
+        Name of assay. Example: ChIP-seq, RNA-seq, DNase-seq etc. Presently,
+        four assays are implemented: ``ChIP-seq``, ``RNA-seq``, ``DNase-seq``
+        and ``FAIRE-seq``.
     pathTobigWigToWig : str
         Path to ``bigWigToWig`` program. It can be downloaded from
         http://hgdownload.cse.ucsc.edu/admin/exe/ for MacOSX and Linux.
@@ -2743,6 +2745,10 @@ class EncodeDatasetsConverter:
         Name of input file downloaded from ENCODE Experiments matrix website.
     assembly : str
         Name of reference genome. Example: hg19, GRCh38 etc.
+    assay : str
+        Name of assay. Example: ChIP-seq, RNA-seq, DNase-seq etc. Presently,
+        four assays are implemented: ``ChIP-seq``, ``RNA-seq``, ``DNase-seq``
+        and ``FAIRE-seq``.
     pathTobigWigToWig : str
         Path to ``bigWigToWig`` program. It can be downloaded from
         http://hgdownload.cse.ucsc.edu/admin/exe/ for MacOSX and Linux.
@@ -2762,15 +2768,24 @@ class EncodeDatasetsConverter:
 
     """
 
-    def __init__(self, inputFile, assembly, pathTobigWigToWig=None, pathTobigWigInfo=None, workDir=None):
+    def __init__(self, inputFile, assembly, assay='ChIP-seq', methodToCombine='mean', pathTobigWigToWig=None, pathTobigWigInfo=None, workDir=None):
         self.inputFile = inputFile
         self.assembely = assembly
         self.metafile = None
         self.metaData = None
         self.indexes = None
-        self._bigWigFile = None
+        self._bigWigFiles = None
         self._checkPointFile = 'checkpoint.txt'
         self._checkPoint = []
+
+        implementedAssays = ['ChIP-seq', 'RNA-seq', 'DNase-seq', 'FAIRE-seq']
+        if assay not in implementedAssays:
+            raise NotImplementedError(' {0} is not implemented. Use one of the followings: {1}'.format(assay, implementedAssays))
+        self.assay = assay
+
+        if methodToCombine not in ['mean', 'max', 'min']:
+            raise NotImplementedError(' Method [{0}] to combine bigwig file not implemented. Use: \'mean\', \'max\' or \'min\' ' .format(methodToCombine))
+        self.methodToCombine = methodToCombine
 
         # Working and output directory
         if workDir is None:
@@ -2791,8 +2806,8 @@ class EncodeDatasetsConverter:
         except:
             pass
 
-        if self._bigWigFile is not None:
-            self._removeBigWigFile()
+        if self._bigWigFiles is not None:
+            self._removeBigWigFiles()
 
     def _checkBigWigInfoProgram(self, pathTobigWigInfo):
         """ Check if bigWigInfo program is available or accessible.
@@ -2827,7 +2842,6 @@ class EncodeDatasetsConverter:
 
             self.pathTobigWigInfo = pathTobigWigInfo
 
-
     def _checkBigWigToWigProgram(self, pathTobigWigToWig):
         """ Check if bigWigToWig program is available or accessible.
 
@@ -2860,6 +2874,89 @@ class EncodeDatasetsConverter:
                 config['Programs']['bigWigToWig'] = self.pathTobigWigToWig
 
             self.pathTobigWigToWig = pathTobigWigToWig
+
+    def _getCreationDateOfFile(self, fileId):
+        # This URL locates the ENCODE biosample with accession number ENCBS000AAA
+        URL = r'https://www.encodeproject.org/file/{0}/?format=json'.format(fileId)
+
+        # GET the object
+        response = urlopen(URL)
+
+        # Decode to string and save as json
+        readableResponse = response.read().decode('utf8')
+        response_json_dict = json.loads(readableResponse)
+
+        return re.split('T', response_json_dict['date_created'])[0]
+
+    def _readMetaDataChIPseq(self, row):
+        data = dict()
+        name = re.split('-', row['Experiment target'])[0]
+
+        if 'signal p-value' in row['Output type']:
+            data['type'] = 'signal'
+        elif 'fold change' in row['Output type']:
+            data['type'] = 'fold'
+        else:
+            return
+
+        return data
+
+    def _readMetaDataRNAseq(self, row):
+        data = dict()
+
+        if re.search('signal', row['Output type']) is not None:
+
+            date = self._getCreationDateOfFile(row['File accession'])
+            self.logger.info(' Fetching creation date for file {0} : {1} '.format(row['File accession'], date))
+            data['date'] = date
+
+            if re.search('unique reads', row['Output type']) is not None:
+                if re.search('plus strand', row['Output type']) is not None:
+                    data['type'] = 'plus-uniq-reads' + '-' + date
+                elif re.search('minus strand', row['Output type']) is not None:
+                    data['type'] = 'minus-uniq-reads' + '-' + date
+                else:
+                    data['type'] = 'uniq-reads' + '-' + date
+
+            if re.search('all reads', row['Output type']) is not None:
+                if re.search('plus strand', row['Output type']) is not None:
+                    data['type'] = 'plus-all-reads' + '-' + date
+                elif re.search('minus strand', row['Output type']) is not None:
+                    data['type'] = 'minus-all-reads' + '-' + date
+                else:
+                    data['type'] = 'all-reads' + '-' + date
+
+            if 'type' not in data:
+                data['type'] = 'signal' + '-' + date
+
+        else:
+            return
+
+        return data
+
+    def _readMetaDataDNaseSeq(self, row):
+        data = dict()
+
+        if re.search('signal', row['Output type']) is not None:
+
+            date = self._getCreationDateOfFile(row['File accession'])
+            self.logger.info(' Fetching creation date for file {0} : {1} '.format(row['File accession'], date))
+            data['date'] = date
+
+            if re.search('unique reads', row['Output type']) is not None:
+                data['type'] = 'uniq-reads-signal' + '-' + date
+            if re.search('raw', row['Output type']) is not None:
+                data['type'] = 'raw-signal' + '-' + date
+            if re.search('all reads', row['Output type']) is not None:
+                data['type'] = 'all-reads-signal' + '-' + date
+
+            if 'type' not in data:
+                data['type'] = 'signal' + '-' + date
+
+        else:
+            return
+
+        return data
 
     def downloadMetaData(self):
         """ Download the metadata file
@@ -2905,25 +3002,27 @@ class EncodeDatasetsConverter:
             reader = csv.DictReader(csvfile, delimiter='\t')
             for row in reader:
                 if row['File format'] == 'bigWig' and row['Assembly'] == self.assembely:
-                    data = dict()
-                    name = re.split('-', row['Experiment target'])[0]
-                    data['title'] = name + '-' + row['Experiment accession']  + '-' +  row['File accession']
+                    data = None
+                    if self.assay == 'ChIP-seq':
+                        data = self._readMetaDataChIPseq(row)
+                    if self.assay == 'RNA-seq':
+                        data = self._readMetaDataRNAseq(row)
+                    if self.assay in ['DNase-seq', 'FAIRE-seq'] :
+                        data = self._readMetaDataDNaseSeq(row)
 
-                    if 'signal p-value' in row['Output type']:
-                        data['title'] += '-' + 'signal'
-                        data['type'] = 'signal'
-                    elif 'fold change' in row['Output type']:
-                        data['title'] += '-' + 'fold'
-                        data['type'] = 'fold'
-                    else:
-                        continue
+                    if data is not None:
+                        data['title'] = data['type'] + '-' + row['Experiment accession']  + '-' +  row['File accession']
+                        data['url'] = row['File download URL']
+                        data['Experiment accession'] = row['Experiment accession']
+                        data['File accession'] = row['File accession']
 
-                    data['url'] = row['File download URL']
-                    data['Experiment accession'] = row['Experiment accession']
-                    data['File accession'] = row['File accession']
-                    data['Biological replicate(s)'] = row['Biological replicate(s)']
+                        # Sometime biological replicates are not provided
+                        if not row['Biological replicate(s)']:
+                            data['Biological replicate(s)'] = '1'
+                        else:
+                            data['Biological replicate(s)'] = row['Biological replicate(s)']
 
-                    metaData.append(data)
+                        metaData.append(data)
 
         self.metaData = metaData
 
@@ -2951,17 +3050,22 @@ class EncodeDatasetsConverter:
         index = []
         for expID in experiments:
             for etype in experiments[expID]:
-                if len(experiments[expID][etype]) == 1:
-                    index.append(experiments[expID][etype][0])
-                    continue
-
+                count = 0
+                currIdxes = []
                 maxIdx = None
                 length = 0
                 for idx in experiments[expID][etype]:
+                    currIdxes.append(idx)
+                    count += 1
                     temp = re.split(',\s+', self.metaData[idx]['Biological replicate(s)'])
+                    # In case if combined data is already present
                     if length < len(temp):
                         length = len(temp)
-                        maxIdx = idx
+                        maxIdx = [ idx ]
+
+                # In case if combined data is not present
+                if length == 1 and count > 1:
+                    maxIdx = currIdxes
 
                 #print(maxIdx, self.metaData[maxIdx]['Biological replicate(s)'], self.metaData[maxIdx]['title'])
                 index.append(maxIdx)
@@ -2987,33 +3091,54 @@ class EncodeDatasetsConverter:
     def _writeToCheckPoint(self, idx):
         """ Write to done titles to checkpoint file
         """
-        try:
-            fin = open(self._checkPointFile, 'w')
-        except:
-            return
 
-        if self.metaData[idx]['title'] not in self._checkPoint:
-            self._checkPoint.append(self.metaData[idx]['title'])
+        haveInCP = False
+        for midx in idx:
+            if self.metaData[midx]['title'] in self._checkPoint:
+                haveInCP = True
 
-        json.dump({'titles' :  self._checkPoint }, fin, indent=4, separators=(',', ':') )
-        fin.close()
-
+        if not haveInCP:
+            self._checkPoint.append(self.metaData[idx[0]]['title'])
+            try:
+                fin = open(self._checkPointFile, 'w')
+                json.dump({'titles' :  self._checkPoint }, fin, indent=4, separators=(',', ':') )
+                fin.close()
+            except:
+                pass
         return
 
     def saveAsH5(self, outDir, resolutions=None, coarsening_methods=None, compression='lzf', keep_original=False):
         """Download the files and convert to gcMapExplorer compatible hdf5 file.
 
-        **Name of output files:**
+        Name of output files:
 
-        * signal p-value:
-            ``Experiment target``-``Experiment accession``-``File accession``-``signal``.h5
-        * fold change over control:
-            ``Experiment target``-``Experiment accession``-``File accession``-``fold``.h5
+            (1) For ChIP-seq assay:
+                a. signal-<Experiment target>-<Experiment accession>-<File accessions.h
+                b. fold-<Experiment target>-<Experiment accession>-<File accessions>.h5
+
+
+            (2) For RNA-seq:
+                a. uniq-reads-<date>-<Experiment accession>-<File accessions>.h
+                b. plus-uniq-reads-<date>-<Experiment accession>-<File accessions>.h
+                c. minus-uniq-reads-<date>-<Experiment accession>-<File accessions>.h
+                d. all-reads-<date>-<Experiment accession>-<File accessions>.h5
+                e. plus-all-reads-<date>-<Experiment accession>-<File accessions>.h5
+                f. minus-all-reads-<date>-<Experiment accession>-<File accessions>.h5
+                g. signal-<date>-<Experiment accession>-<File accession>.h5
+
+
+            (2) For DNase-seq:
+                a. uniq-reads-signal-<date>-<Experiment accession>-<File accessions>.h
+                b. raw-signal-<date>-<Experiment accession>-<File accessions>.h
+                c. all-reads-signal-<date>-<Experiment accession>-<File accessions>.h
+                d. signal-<date>-<Experiment accession>-<File accessions>.h5
+
 
         .. note:: Because downloading and conversion might take very long time,
                   it also generates a checkpoint file in the output directory.
                   Therefore, in case of crash or abrupt exit, the process can
                   be continued from the last file.
+
 
         Parameters
         ----------
@@ -3060,33 +3185,52 @@ class EncodeDatasetsConverter:
         self._checkPointFile = os.path.join(outDir, self._checkPointFile)
         self._readFromCheckPoint()
 
+
         for idx in self.indexes:
 
             # Skip those that are already converted
-            if self.metaData[idx]['title'] in self._checkPoint:
-                self.logger.info(' {0} is already converted... Skipping...'.format(self.metaData[idx]['title']))
+            haveInCP = False
+            for midx in idx:
+                if self.metaData[midx]['title'] in self._checkPoint:
+                    haveInCP = True
+            if haveInCP:
+                self.logger.info(' {0} is already converted... Skipping...'.format(self.metaData[idx[0]]['title']))
                 continue
 
-            output = '{0}.bigWig' .format(self.metaData[idx]['title'])
-            self._bigWigFile = os.path.join(self.workDir, output)
+            self._removeBigWigFiles()
+            self._bigWigFiles = dict()
+            for midx in idx:
+                output = '{0}.bigWig' .format(self.metaData[midx]['File accession'])
+                self._bigWigFiles[midx] = os.path.join(self.workDir, output)
 
             # Download the file
-            self.logger.info(' Downloading file from  {0}...'.format(self.metaData[idx]['url']))
-            if not downloadFile(self.metaData[idx]['url'], self._bigWigFile):
-                self.logger.warning('Not able to download: {0} '.format(self.metaData[idx]['url']))
+            downloadSuccess = True
+            for midx in idx:
+                self.logger.info(' Downloading file from  {0}...'.format(self.metaData[midx]['url']))
+                if not downloadFile(self.metaData[midx]['url'], self._bigWigFiles[midx]):
+                    self.logger.warning('Not able to download: {0} '.format(self.metaData[midx]['url']))
+                    downloadSuccess = False
+                    break
+            if not downloadSuccess:
                 continue
             self.logger.info('                ... Finished Downloading.')
 
             # Convert the file
-            bigwigHandle = BigWigHandler(self._bigWigFile,
+            bigwigHandle = BigWigHandler(list(self._bigWigFiles.values()),
                                 pathTobigWigToWig=self.pathTobigWigToWig,
                                 pathTobigWigInfo=self.pathTobigWigInfo,
+                                methodToCombine=self.methodToCombine,
                                 workDir=self.workDir, maxEntryWrite=10000000)
 
-            outputH5 = os.path.join(outDir, self.metaData[idx]['title']+'.h5')
+            # Name of output file
+            name = self.metaData[idx[0]]['type'] + '-' + self.metaData[idx[0]]['Experiment accession']
+            for midx in idx:
+                name += '-' +  self.metaData[midx]['File accession']
+            outputH5 = os.path.join(outDir, name +'.h5')
+
             try:
                 bigwigHandle.saveAsH5(outputH5, tmpNumpyArrayFiles=tmpNumpArrayFiles,
-                                title=self.metaData[idx]['title'],
+                                title=name,
                                 resolutions=resolutions,
                                 coarsening_methods=coarsening_methods,
                                 compression=compression,
@@ -3097,23 +3241,29 @@ class EncodeDatasetsConverter:
                 del tmpNumpArrayFiles
                 raise e
             except Exception as e:
-                self.logger.info(' Not able to convert {0} file.'.format(self._bigWigFile))
+                self.logger.info(' Not able to convert {0} files.'.format(self._bigWigFiles.values()))
             finally:
                 del bigwigHandle
-                self._removeBigWigFile()
+                self._removeBigWigFiles()
                 self._writeToCheckPoint(idx)
 
         del tmpNumpArrayFiles
 
-    def _removeBigWigFile(self):
+    def _removeBigWigFiles(self):
         """ Remove downloaded bigwig file
         """
         # Remove bigwig file
-        try:
-            self.logger.info(' Removing temporary bigwig file [{0}] '.format(self._bigWigFile))
-            os.remove(self._bigWigFile)
-        except:
-            pass
+        if self._bigWigFiles is None:
+            return
+
+        for key in self._bigWigFiles:
+            try:
+                self.logger.info(' Removing temporary bigwig file [{0}] '.format(self._bigWigFiles[key]))
+                os.remove(self._bigWigFiles[key])
+            except:
+                pass
+
+        self._bigWigFiles = None
 
 class TextFileHandler:
     """To import a genomic data from column text file format
