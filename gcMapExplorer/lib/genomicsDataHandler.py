@@ -2709,10 +2709,6 @@ class EncodeDatasetsConverter:
         Name of input file downloaded from ENCODE Experiments matrix website.
     assembly : str
         Name of reference genome. Example: hg19, GRCh38 etc.
-    assay : str
-        Name of assay. Example: ChIP-seq, RNA-seq, DNase-seq etc. Presently,
-        four assays are implemented: ``ChIP-seq``, ``RNA-seq``, ``DNase-seq``
-        and ``FAIRE-seq``.
     pathTobigWigToWig : str
         Path to ``bigWigToWig`` program. It can be downloaded from
         http://hgdownload.cse.ucsc.edu/admin/exe/ for MacOSX and Linux.
@@ -2745,10 +2741,6 @@ class EncodeDatasetsConverter:
         Name of input file downloaded from ENCODE Experiments matrix website.
     assembly : str
         Name of reference genome. Example: hg19, GRCh38 etc.
-    assay : str
-        Name of assay. Example: ChIP-seq, RNA-seq, DNase-seq etc. Presently,
-        four assays are implemented: ``ChIP-seq``, ``RNA-seq``, ``DNase-seq``
-        and ``FAIRE-seq``.
     pathTobigWigToWig : str
         Path to ``bigWigToWig`` program. It can be downloaded from
         http://hgdownload.cse.ucsc.edu/admin/exe/ for MacOSX and Linux.
@@ -2768,7 +2760,7 @@ class EncodeDatasetsConverter:
 
     """
 
-    def __init__(self, inputFile, assembly, assay='ChIP-seq', methodToCombine='mean', pathTobigWigToWig=None, pathTobigWigInfo=None, workDir=None):
+    def __init__(self, inputFile, assembly, methodToCombine='mean', pathTobigWigToWig=None, pathTobigWigInfo=None, workDir=None):
         self.inputFile = inputFile
         self.assembely = assembly
         self.metafile = None
@@ -2777,11 +2769,7 @@ class EncodeDatasetsConverter:
         self._bigWigFiles = None
         self._checkPointFile = 'checkpoint.txt'
         self._checkPoint = []
-
-        implementedAssays = ['ChIP-seq', 'RNA-seq', 'DNase-seq', 'FAIRE-seq']
-        if assay not in implementedAssays:
-            raise NotImplementedError(' {0} is not implemented. Use one of the followings: {1}'.format(assay, implementedAssays))
-        self.assay = assay
+        self._implementedAssays = ['ChIP-seq', 'RNA-seq', 'DNase-seq', 'FAIRE-seq']
 
         if methodToCombine not in ['mean', 'max', 'min']:
             raise NotImplementedError(' Method [{0}] to combine bigwig file not implemented. Use: \'mean\', \'max\' or \'min\' ' .format(methodToCombine))
@@ -3002,12 +2990,18 @@ class EncodeDatasetsConverter:
             reader = csv.DictReader(csvfile, delimiter='\t')
             for row in reader:
                 if row['File format'] == 'bigWig' and row['Assembly'] == self.assembely:
+
+                    # Skipping if assay is not implemented
+                    if row['Assay'] not in self._implementedAssays:
+                        self.logger.info(' Assay [{0}] not implemented. Skipping it...'.format(row['Assay']))
+                        continue
+
                     data = None
-                    if self.assay == 'ChIP-seq':
+                    if row['Assay'] == 'ChIP-seq':
                         data = self._readMetaDataChIPseq(row)
-                    if self.assay == 'RNA-seq':
+                    if row['Assay'] == 'RNA-seq':
                         data = self._readMetaDataRNAseq(row)
-                    if self.assay in ['DNase-seq', 'FAIRE-seq'] :
+                    if row['Assay'] in ['DNase-seq', 'FAIRE-seq'] :
                         data = self._readMetaDataDNaseSeq(row)
 
                     if data is not None:
@@ -3015,6 +3009,7 @@ class EncodeDatasetsConverter:
                         data['url'] = row['File download URL']
                         data['Experiment accession'] = row['Experiment accession']
                         data['File accession'] = row['File accession']
+                        data['Assay'] = row['Assay']
 
                         # Sometime biological replicates are not provided
                         if not row['Biological replicate(s)']:

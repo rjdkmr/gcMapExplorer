@@ -139,13 +139,6 @@ Example: hg19, GRCh38 etc.
 
 """
 
-assayHelp = \
-""" Name of assay.
-Presently, four assays are implemented:
-'ChIP-seq', 'RNA-seq', 'DNase-seq' and 'FAIRE-seq'.
-
-"""
-
 bigWigToWigHelp = \
 """Path to bigWigToWig tool.
 
@@ -257,7 +250,7 @@ def main():
     if not os.path.isdir(workDir):
         showErrorAndExit(parser, '\nScratch Dirctory "{0}" not found !!!\n'.format(workDir))
 
-    endodeDatasets = gmlib.genomicsDataHandler.EncodeDatasetsConverter(inputFile, args.assembly, assay=args.assay, pathTobigWigToWig=bigWigToWig,
+    endodeDatasets = gmlib.genomicsDataHandler.EncodeDatasetsConverter(inputFile, args.assembly, pathTobigWigToWig=bigWigToWig,
                                                             methodToCombine=args.methodToCombine, pathTobigWigInfo=bigWigInfo, workDir=workDir)
     endodeDatasets.saveAsH5(outDir, resolutions=resolutions, coarsening_methods=coarsening_methods, compression=args.compression, keep_original=args.keep_original)
     del endodeDatasets
@@ -299,14 +292,10 @@ def parseArguments():
     parser.add_argument('-i', '--input', action='store',
                         type=argparse.FileType('r'), metavar='input.txt',
                         dest='inputFile', help=inputFileHelp)
+
     parser.add_argument('-amb', '--assembly', action='store',
                         metavar = 'hg19', default='hg19',
                         dest='assembly',help=assemblyHelp)
-
-    parser.add_argument('-asy', '--assay', action='store',
-                        metavar = 'ChIP-seq', default='ChIP-seq',
-                        choices=['ChIP-seq', 'RNA-seq', 'DNase-seq', 'FAIRE-seq'],
-                        dest='assay',help=assayHelp)
 
     parser.add_argument('-b2w', '--bigWigToWig', action='store',
                         type=str, metavar='bigWigToWig',
@@ -317,6 +306,7 @@ def parseArguments():
                         metavar='bigWigInfo', dest='bigWigInfo',
                         default=config['Programs']['bigWigInfo'],
                         help=bigWigInfoHelp)
+
     parser.add_argument('-r', '--resolutions', action='store', type=str,
                         metavar='"List of Resolutions"', dest='resolutions',
                         help=resolutionHelp)
