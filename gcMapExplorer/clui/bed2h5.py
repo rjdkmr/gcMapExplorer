@@ -193,8 +193,8 @@ def get_resolution_list(resolution, parser):
         if not r.strip():
             continue
         try:
-            b = gmlib.ccmap.resolutionToBinsize(r)
-            rlist.append( gmlib.ccmap.binsizeToResolution(b) )
+            b = gmlib.util.resolutionToBinsize(r)
+            rlist.append( gmlib.util.binsizeToResolution(b) )
         except ValueError:
             showErrorAndExit(parser, '\n"{0}" contains resolution "{1}", which is not an acceptable resolution.\n'.format(resolution, r))
 

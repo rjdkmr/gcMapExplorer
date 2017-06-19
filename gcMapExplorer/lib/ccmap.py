@@ -30,6 +30,8 @@ import logging
 import gzip
 import h5py
 
+from .util import *
+
 from gcMapExplorer.config import getConfig
 
 # get configuration
@@ -42,133 +44,6 @@ dtype_npBINarray = 'float32'
 logger = logging.getLogger('ccmap')
 logger.setLevel(logging.INFO)
 
-class MapNotFoundError(Exception):
-	def __init__(self, value):
-		super(MapNotFoundError, self).__init__()
-		self.value = value
-
-	def __str__(self):
-		return repr(self.value)
-
-class ResolutionNotFoundError(Exception):
-	def __init__(self, value):
-		super(ResolutionNotFoundError, self).__init__()
-		self.value = value
-
-	def __str__(self):
-		return repr(self.value)
-
-def resolutionToBinsize(resolution):
-	"""Return the bin size from the resolution unit
-
-	It is a convenient function to convert resolution unit to binsize.
-	It has a support of base (b), kilobase (kb), megabase (mb) and
-	gigabase (gb) unit. It also convert decimal resolution unit as shown below
-	in examples.
-
-	Parameters
-	----------
-
-	resolution:	str
-		resolution in b, kb, mb or gb.
-
-	Returns
-	-------
-	binsize : int
-		bin size
-
-	Examples
-	--------
-		>>> resolutionToBinsize('1b')
-		1
-		>>> resolutionToBinsize('10b')
-		10
-		>>> resolutionToBinsize('1kb')
-		1000
-		>>> resolutionToBinsize('16kb')
-		16000
-		>>> resolutionToBinsize('1.23kb')
-		1230
-		>>> resolutionToBinsize('1.6mb')
-		1600000
-		>>> resolutionToBinsize('1.457mb')
-		1457000
-
-	"""
-	factor = None
-	base = None
-	if re.search('\d+b', resolution) is not None:
-		factor = 1
-	elif re.search('kb', resolution) is not None:
-		factor = 1000
-	elif re.search('mb', resolution) is not None:
-		factor = 1000000
-	elif re.search('gb', resolution) is not None:
-		factor = 1000000000
-	else:
-		raise ValueError(' \'{0}\' keyword of resolution not implemented.' .format(resolution))
-
-	if re.search('(\d+.\d+)', resolution) is not None:
-		base = float( re.search('(\d+.\d+)', resolution).group() )
-	else:
-		base = int( re.search('(\d+)', resolution).group() )
-
-	return int(base*factor)
-
-def binsizeToResolution(binsize):
-	"""Return the resolution unit from the bin size
-
-	It is a convenient function to convert binsize into resolution unit.
-	It has a support of base (b), kilobase (kb), megabase (mb) and
-	gigabase (gb) unit. It also convert binsize to decimal resolution unit as
-	shown below in examples.
-
-	Parameters
-	----------
-
-	binsize:	int
-		bin size
-
-	Returns
-	-------
-	resolution : str
-		resolution unit
-
-	Examples
-	--------
-		>>> binsizeToResolution(1)
-		'1b'
-		>>> binsizeToResolution(10)
-		'10b'
-		>>> binsizeToResolution(10000)
-		'10kb'
-		>>> binsizeToResolution(100000)
-		'100kb'
-		>>> binsizeToResolution(125500)
-		'125.5kb'
-		>>> binsizeToResolution(1000000)
-		'1mb'
-		>>> binsizeToResolution(1634300)
-		'1.6343mb'
-
-	"""
-
-	suffix = { 0:'b', 1: 'kb', 2: 'mb', 3: 'gb' }
-	rest = None
-	count = 0
-	while (1):
-		rest = binsize/(1000**count)
-		if rest >= 1000:
-			count += 1
-		else:
-			break
-
-	if rest - int(rest) == 0:
-		resolution = str(int(rest)) + suffix[count]
-	else:
-		resolution = str(rest) + suffix[count]
-
-	return resolution
 
 class CCMAP:
 	"""This class contains variables to store Hi-C Data.
@@ -305,12 +180,10 @@ class CCMAP:
 			workDir = config['Dirs']['WorkingDirectory']
 
 		# Only filename is generated
-		fd, self.path2matrix = tempfile.mkstemp(prefix='npBinary_', suffix='.tmp', dir=workDir)
+		fd, self.path2matrix = tempfile.mkstemp(prefix='gcx_npBinary_', suffix='.tmp', dir=workDir)
 		os.close(fd)
-		try:
+		if os.path.isfile(self.path2matrix):
 			os.remove(self.path2matrix)
-		except:
-			pass
 
 	def make_readable(self):
 		"""Enable reading the numpy array binary file.
@@ -374,7 +247,7 @@ class CCMAP:
 		dirname = os.path.dirname( self.path2matrix )
 		ccMapObj.gen_matrix_file(workDir=dirname)
 
-		#ccMapObj.path2matrix = os.path.join(os.getcwd(), 'nparray_' + name_generator() + '.bin')
+		#ccMapObj.path2matrix = os.path.join(os.getcwd(), 'nparray_' + getRandomName() + '.bin')
 
 		self.make_readable()
 		ccMapObj.make_writable()
@@ -657,7 +530,7 @@ def load_ccmap(infile, workDir=None):
 
 	return ccMapObj
 
-def export_cmap(cmap, outfile, doNotWriteZeros=True):
+def export_cmap(ccmap, outfile, doNotWriteZeros=True):
 	"""To export ``.ccmap`` as text file
 
 	This function export ``.ccmap`` as coordinate list (COO) format sparse matrix file.
@@ -676,7 +549,7 @@ def export_cmap(cmap, outfile, doNotWriteZeros=True):
 
 	fout = open(outfile, 'w')
 
-	if hasattr(cmap, make_readable):
+	if hasattr(ccmap, 'make_readable'):
 		ccmap.make_readable()
 
 	try:
@@ -691,6 +564,57 @@ def export_cmap(cmap, outfile, doNotWriteZeros=True):
 	except (SystemExit, KeyboardInterrupt) as e:
 		del ccmap
 		raise e
+
+def checkCCMapObjectOrFile(ccMap, workDir=None):
+	"""Check whether ccmap is a obejct or file
+
+	It can be used to check whether input is a :class:`gcMapExplorer.lib.ccmap.CCMAP`
+	or a ccmap file.
+
+	It returns the :class:`gcMapExplorer.lib.ccmap.CCMAP` and input type name:
+	i.e. ``File`` or ``Object`` as an identification keyword for the input.
+
+	In case if ``ccMap`` argument is a filename, this file
+	will be opened as a :class:`gcMapExplorer.lib.ccmap.CCMAP` object and
+	will be returned with ``ccmapType`` as ``File``.
+
+	In case if ``ccMap`` argument is a :class:`gcMapExplorer.lib.ccmap.CCMAP`
+	object, this file, same object will be returned with ``ccmapType`` as
+	``Object``.
+
+	Parameters
+	----------
+	ccMap : :class:`gcMapExplorer.lib.ccmap.CCMAP` or str
+		CCMAP object or ccmap file.
+
+	workDir : str
+		Path to the directory where temporary intermediate files are generated.
+		If ``None``, files are generated in the temporary directory according to the main configuration.
+
+	Returns
+	-------
+	ccMapObj : :class:`gcMapExplorer.lib.ccmap.CCMAP`
+		CCMAP object
+
+	ccmapType : str
+		'File' or 'Object'
+
+	"""
+	# Check whether input is a file or a obejct
+	ccmapType = 'Object'
+	ccMapObj = None
+	if not isinstance(ccMap, CCMAP):
+		ccmapType = 'File'
+		if not os.path.isfile(ccMap):
+			logger.info(' {0} file not found.'.format(ccMap))
+			logger.info(' Not able to normalize.')
+			return None
+		else:
+			ccMapObj = load_ccmap(ccMap, workDir=workDir)
+	else:
+		ccMapObj = ccMap
+
+	return ccMapObj, ccmapType
 
 def downSampleCCMap(cmap, level=2, workDir=None):
 
@@ -827,62 +751,13 @@ def smoothen_map(ccMapObj, filter_pass=1):
 	smooth_map.make_unreadable()
 	return smooth_map
 
-def GetTransitionProbablityMatrix(ccMapObj,  percentile_thershold_no_data=None, thershold_data_occup=None):
-	""" To calculate transition probablity matrix.
-
-	This method can be used to calculate transition probablity matrix. This is similar to markov-chain transition matrix.
-
-	:note: This transition matrix is not symmetric, because each row represents stochastic row vector,
-		which contains contact probablity of this bin with every other bins and sum of row is always equal to one. See here: |markov chain link|.
-
-	Parameters
-	----------
-	ccMapObj : :class:`gcMapExplorer.lib.ccmap.CCMAP`
-		A CCMAP object, which has to be smoothen.
-
-	percentile_thershold_no_data : int
-		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
-		``percentile_thershold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
-		For example: if this value is 99, those row or columns will be discarded which contains larger than number of zeros (missing data) at 99 percentile.
-
-		To calculate percentile, all blank rows are removed, then in all rows, number of zeros are counted. Afterwards, number of zeros at
-		`percentile_thershold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
-		the whole row and column is assigned to have missing data. This percentile indicates highest numbers of zeros (missing data) in given rows/columns.
-
-	thershold_data_occup : float
-		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
-		This ratio is (number of bins with data) / (total number of bins in the given row/column).
-		For example: if `thershold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
-
-		Note that this parameter is suitable for low resolution data because maps are likely to be much less sparse.
-
-	Returns
-	-------
-	ccMapObj : :class:`gcMapExplorer.lib.ccmap.CCMAP`
-		The smoothed CCMAP.
-
-	"""
-
-	NormHiCmap = ccMapObj.copy()
-	NormHiCmap.make_editable()
-	ccMapObj.make_readable()
-
-	bNonZeros = cmh.get_nonzeros_index(ccMapObj.matrix, thershold_percentile=percentile_thershold_no_data, thershold_data_occup=thershold_data_occup)
-	A = (ccMapObj.matrix[bNonZeros,:])[:,bNonZeros]   # Selected row-column which are not all zeros
-
-	NormHiCmap.minvalue, NormHiCmap.maxvalue = cmh.CalculateTransitionProbablity(ccMapObj.matrix, ~bNonZeros, Out=NormHiCmap.matrix)
-
-	NormHiCmap.bNoData = ~bNonZeros
-	NormHiCmap.matrix=None
-
-	return NormHiCmap
 
 def LogOfMatrix(ccMapObj):
 
 	ccMapObj.make_readable()
 
 	LogHiCmap = CCMAP()
-	LogHiCmap.path2matrix = os.getcwd() + '/nparray_' + name_generator() + '.bin'
+	LogHiCmap.path2matrix = os.getcwd() + '/nparray_' + getRandomName() + '.bin'
 
 	LogHiCmap.shape = ccMapObj.shape
 	LogHiCmap.xticks = ccMapObj.xticks
@@ -899,7 +774,7 @@ def LogOfMatrix(ccMapObj):
 	bNonZeros = ~LogHiCmap.bNoData
 
 	# Log of part of matrix containing data
-	path2matrixA = os.getcwd() + '/nparray_' + name_generator() + '.bin'
+	path2matrixA = os.getcwd() + '/nparray_' + getRandomName() + '.bin'
 	A = (ccMapObj.matrix[bNonZeros,:])[:,bNonZeros]   # Selected row-column which are not all zeros
 	BinMatrixA = np.memmap(path2matrixA, dtype=dtype_npBINarray, mode='w+', shape=A.shape)
 	BinMatrixA[:] = np.log10(A)[:]
@@ -938,28 +813,6 @@ def LogOfMatrix(ccMapObj):
 
 	return LogHiCmap
 
-def StationaryDistributionByMultiply(ccMapObj, stop_tol=1e-12, vector=None, iteration=None):
-
-	ccMapObj.make_readable()
-	bNonZeros = ~ccMapObj.bNoData
-	mem = psutil.virtual_memory()
-
-	if ccMapObj.matrix.nbytes < mem.available:
-		print("Using RAM")
-		vector = cmh.CalcStationaryDistributionRAM(ccMapObj.matrix, ccMapObj.shape, bNonZeros, stop_tol=stop_tol, iteration=None)
-	else:
-		print("Using HDD")
-		vector = cmh.CalcStationaryDistributionHDD(ccMapObj.matrix, ccMapObj.shape, bNonZeros, stop_tol=stop_tol, iteration=None)
-
-	return vector
-
-def StationaryDistributionByEigenvector(ccMapObj):
-
-	ccMapObj.make_readable()
-	prob_eigenvector = cmh.CalcStationaryDistributionByEigen(ccMapObj.matrix, ccMapObj.shape, ccMapObj.bNoData)
-	ccMapObj.make_unreadable()
-
-	return prob_eigenvector
 
 def gen_HiC_svg_plot(ccMapObj, outfile):
 
@@ -1082,9 +935,6 @@ def gen_HiC_svg_plot(ccMapObj, outfile):
 
 	print("Merging plot segments in one svg file...\n")
 	combine_svg(file_data)
-
-def name_generator(size=10, chars=string.ascii_letters + string.digits ):
-	 return ''.join(random.choice(chars) for _ in range(size))
 
 def gen_backup(filename):
 	fc = 1

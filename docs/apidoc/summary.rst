@@ -14,24 +14,32 @@
 Summary of Python Modules
 -------------------------
 
+.. currentmodule:: gcMapExplorer.config
+
+config module
+~~~~~~~~~~~~~
+.. autosummary::
+    updateConfig
+    getConfig
+		cleanScratch
+
 .. currentmodule:: gcMapExplorer.lib
 
 ccmap module
 ~~~~~~~~~~~~
 .. autosummary::
-	ccmap.CCMAP.copy
-	ccmap.CCMAP.get_ticks
-	ccmap.CCMAP.make_readable
-	ccmap.CCMAP.make_unreadable
-	ccmap.CCMAP.make_writable
-	ccmap.CCMAP.make_editable
-	ccmap.resolutionToBinsize
-	ccmap.binsizeToResolution
-	ccmap.jsonify
-	ccmap.dejsonify
-	ccmap.save_ccmap
-	ccmap.load_ccmap
-	ccmap.export_cmap
+		ccmap.CCMAP.copy
+		ccmap.CCMAP.get_ticks
+		ccmap.CCMAP.make_readable
+		ccmap.CCMAP.make_unreadable
+		ccmap.CCMAP.make_writable
+		ccmap.CCMAP.make_editable
+		ccmap.jsonify
+		ccmap.dejsonify
+		ccmap.save_ccmap
+		ccmap.load_ccmap
+		ccmap.export_cmap
+		ccmap.checkCCMapObjectOrFile
 
 
 ccmapHelpers module
@@ -43,6 +51,20 @@ ccmapHelpers module
 		ccmapHelpers.MemoryMappedArray.copy_to
 		ccmapHelpers.get_nonzeros_index
 		ccmapHelpers.remove_zeros
+
+
+util module
+~~~~~~~~~~~
+.. autosummary::
+    util.resolutionToBinsize
+    util.binsizeToResolution
+    util.sorted_nicely
+    util.locate_significant_digit_after_decimal
+    util.kth_diag_indices
+    util.detectOutliers1D
+    util.getRandomName
+    util.MapNotFoundError
+    util.ResolutionNotFoundError
 
 
 gcmap module
@@ -98,7 +120,26 @@ cmstats module
 ~~~~~~~~~~~~~~~~~
 .. autosummary::
     cmstats.correlateCMaps
+		cmstats.correlateGCMaps
 		cmstats.getAvgContactByDistance
+
+
+corrMatrix module
+~~~~~~~~~~~~~~~~~
+.. autosummary::
+    corrMatrix.calculateCorrMatrix
+		corrMatrix.calculateCorrMatrixForGCMaps
+
+
+statDist module
+~~~~~~~~~~~~~~~
+.. autosummary::
+    statDist.calculateTransitionProbablityMatrix
+    statDist.transitionProbablityMatrixForCCMap
+    statDist.transitionProbablityMatrixForGCMap
+    statDist.statDistrByEigenDecompForCCMap
+    statDist.statDistrByEigenDecompForGCMap
+    statDist.stationaryDistributionByEigenDecomp
 
 
 genomicsDataHandler module

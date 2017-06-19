@@ -30,7 +30,6 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.uic import loadUiType
 
-from gcMapExplorer import importer
 from gcMapExplorer.config import getConfig
 
 # get configuration

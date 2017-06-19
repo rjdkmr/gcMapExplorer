@@ -30,6 +30,7 @@ import h5py
 from . import ccmap as cmp
 from . import gcmap as gmp
 from . import ccmapHelpers as cmh
+from . import util
 from . import genomicsDataHandler as gdh
 
 from gcMapExplorer.config import getConfig
@@ -43,28 +44,39 @@ def correlateCMaps(ccMapObjOne, ccMapObjTwo, ignore_triangular=True, diagonal_of
 	This function can be used to calculate either Pearson or Spearman rank-order correlation
 	between two Hi-C maps. It also ignore lower-trangular matrix with diagnonal offset to avoid duplicate and large values.
 
-
 	Parameters
 	----------
 	ccMapObjOne : :class:`gcMapExplorer.lib.ccmap.CCMAP`
 		First :class:`gcMapExplorer.lib.ccmap.CCMAP` instance containing Hi-C data
+
 	ccMapObjTwo : :class:`gcMapExplorer.lib.ccmap.CCMAP`
 		Second :class:`gcMapExplorer.lib.ccmap.CCMAP` instance containing Hi-C data
+
 	ignore_triangular : bool
 		Whether entire matrix is considered or only one half triangular region of matrixis considered.
+
 	diagonal_offset : int
 		If ``ignore_triangular=True``, it is used to determine how much bins are ignored from the diagonal in one half triangular region of matrix.
 		``diagonal_offset = 0`` is the main diagonal, ``diagonal_offset > 0`` means ignore this many bins from the diagonal.
+
 	corrType : str
 		Correlation type. For Pearson and Spearman rank-order correlation, use ``pearson`` and ``spearman``, respectively.
+
 	blockSize : str
 		To calculate block-wise correlations by sliding block of given size along diagonals. It should be in resolution.
 		For example, ``1mb``, ``500kb``, ``5mb``, ``2.5mb`` etc.
 		If ``None``, correlation of whole map is calculated. Sliding step of block depends on ``slideStepSize``.
+
 	slideStepSize : int
-	  	Step-size in bins by which blocks will be shifted for block-wise correlation. If slideStepSize is large then blocks might not be overlapped.
+		Step-size in bins by which blocks will be shifted for block-wise correlation. If slideStepSize is large then blocks might not be overlapped.
+
+	cutoffPercentile : float
+		Cutoff percentile to discard values during correlation calculation. If a cutoff percentile is given, values less than this
+		percentile value will not be considered during correlation calculation.
+
 	workDir : str
 		Name of working directory, where temporary files will be kept.If ``workDir = None``, file will be generated in OS based temporary directory.
+
 	outFile : str
 		Name of output file. Only written for block-wise correlation.
 
@@ -73,15 +85,14 @@ def correlateCMaps(ccMapObjOne, ccMapObjTwo, ignore_triangular=True, diagonal_of
 	-------
 	corr : float or list
 		Correlation coefficient
+
 	pvalue/centers : float or list
 		If ``blockSize=None`` 2-tailed p-value is returned. For block-wise correlation, list of block-center is returned.
 
 
 	.. seealso::
-
-		* `scipy.stats.stats.pearsonr <http://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pearsonr.html#scipy.stats.pearsonr>`_ for Pearson correlation.
-		* `scipy.stats.stats.spearmanr <http://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.spearmanr.html#scipy.stats.spearmanr>`_ for Spearman rank-order correlation.
-
+		* `scipy.stats.pearsonr <http://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pearsonr.html#scipy.stats.pearsonr>`_ for Pearson correlation.
+		* `scipy.stats.spearmanr <http://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.spearmanr.html#scipy.stats.spearmanr>`_ for Spearman rank-order correlation.
 
 
 	"""
@@ -111,7 +122,7 @@ def correlateCMaps(ccMapObjOne, ccMapObjTwo, ignore_triangular=True, diagonal_of
 		logger.info(' Block-wise correlation with [{0}] block-size'.format(blockSize))
 
 		# checking if block-size is larger than smallest shape
-		size = int(cmp.resolutionToBinsize(blockSize)/ccMapObjOne.binsize)
+		size = int(util.resolutionToBinsize(blockSize)/ccMapObjOne.binsize)
 		if size >= smallest_shape:
 			raise AssertionError ("Size of input block [{0}] is larger than smallest size [{1}] of Hi-C map".format(size, smallest_shape))
 		else:
@@ -136,8 +147,8 @@ def correlateCMaps(ccMapObjOne, ccMapObjTwo, ignore_triangular=True, diagonal_of
 		mask = cmh.MemoryMappedArray(shape=(smallest_shape, smallest_shape), dtype=np.bool, workDir=workDir)
 
 		# Determine masks for two maps and combine it
-		m1.arr[:] = ccMapObjOne.matrix[:smallest_shape, :smallest_shape] <= ccMapObjOne.minvalue
-		m2.arr[:] = ccMapObjTwo.matrix[:smallest_shape, :smallest_shape] <= ccMapObjTwo.minvalue
+		m1.arr[:] = ccMapObjOne.matrix[:smallest_shape, :smallest_shape] < ccMapObjOne.minvalue
+		m2.arr[:] = ccMapObjTwo.matrix[:smallest_shape, :smallest_shape] < ccMapObjTwo.minvalue
 
 		if cutoffPercentile is not None:
 			percentileOne = np.percentile(ma.array(ccMapObjOne.matrix[:smallest_shape, :smallest_shape], mask=m1.arr).compressed(), cutoffPercentile)
@@ -149,7 +160,7 @@ def correlateCMaps(ccMapObjOne, ccMapObjTwo, ignore_triangular=True, diagonal_of
 			mask.arr[ np.nonzero( ccMapObjOne.matrix[:smallest_shape, :smallest_shape] == 0.0) ] = True
 			mask.arr[ np.nonzero( ccMapObjTwo.matrix[:smallest_shape, :smallest_shape] == 0.0) ] = True
 		else:
-			mask.arr[:] = ( m1.arr | m2.arr )
+			mask.arr[:] = ( m1.arr & m2.arr )
 
 		# Mask lower diagonal with diagonal_offset
 		if ignore_triangular:
@@ -230,6 +241,66 @@ def correlateCMaps(ccMapObjOne, ccMapObjTwo, ignore_triangular=True, diagonal_of
 
 
 def correlateGCMaps(gcmapOne, gcmapTwo, outFile=None, blockSize=None, slideStepSize=1, name=None, cutoffPercentile=None, ignore_triangular=True, diagonal_offset=1, corrType='pearson', workDir=None, logHandler=None):
+	"""To calculate correlation between common Hi-C maps from two gcmap files
+
+	This function can be used to calculate either Pearson or Spearman rank-order correlation between common maps present in two gcmap files.
+	It also ignore lower-trangular matrix with diagnonal offset to avoid duplicate and large values.
+
+	.. note:: If block-wise correlation calculation will be initiated by ``blockSize`` option, a ``outFile`` and ``name`` is also
+			required for further processing. The block-wise correlation will stored in output HDF5 format file.
+
+
+	Parameters
+	----------
+	gcmapOne : str
+		First gcmap file.
+
+	gcmapTwo : str
+		Second gcmap file
+
+	outFile : str
+		Name of output file. Only written for block-wise correlation.
+
+	blockSize : str
+		To calculate block-wise correlations by sliding block of given size along diagonals. It should be in resolution.
+		For example, ``1mb``, ``500kb``, ``5mb``, ``2.5mb`` etc.
+		If ``None``, correlation of whole map is calculated. Sliding step of block depends on ``slideStepSize``.
+
+	slideStepSize : int
+		Step-size in bins by which blocks will be shifted for block-wise correlation. If slideStepSize is large then blocks might not be overlapped.
+
+	name : str
+		Title of dataset in HDF5 output file. If ``blockSize`` option is used, ``name`` is an essential argument.
+
+	cutoffPercentile : float
+		Cutoff percentile to discard values during correlation calculation. If a cutoff percentile is given, values less than this
+		percentile value will not be considered during correlation calculation.
+
+	ignore_triangular : bool
+		Whether entire matrix is considered or only one half triangular region of matrixis considered.
+
+	diagonal_offset : int
+		If ``ignore_triangular=True``, it is used to determine how much bins are ignored from the diagonal in one half triangular region of matrix.
+		``diagonal_offset = 0`` is the main diagonal, ``diagonal_offset > 0`` means ignore this many bins from the diagonal.
+
+	corrType : str
+		Correlation type. For Pearson and Spearman rank-order correlation, use ``pearson`` and ``spearman``, respectively.
+
+	workDir : str
+		Name of working directory, where temporary files will be kept.If ``workDir = None``, file will be generated in OS based temporary directory.
+
+	Returns
+	-------
+	mapList : list
+		List of chromosomes
+
+	corrs : list
+		Correlation coefficient of each chromosome
+
+	pvalue : list
+		2-tailed p-value for correlation coefficient of each chromosome.
+
+	"""
 
 	# logger
 	logger = logging.getLogger('correlateGCMaps')
@@ -258,7 +329,7 @@ def correlateGCMaps(gcmapOne, gcmapTwo, outFile=None, blockSize=None, slideStepS
 			mapListTwo.append(key)
 	hdf5.close()
 
-	mapList = cmh.sorted_nicely( list(set(mapListOne).intersection(mapListTwo)) )
+	mapList = util.sorted_nicely( list(set(mapListOne).intersection(mapListTwo)) )
 
 	if blockSize is not None:
 		h5Handle = gdh.HDF5Handler(outFile)
@@ -303,7 +374,7 @@ def correlateGCMaps(gcmapOne, gcmapTwo, outFile=None, blockSize=None, slideStepS
 			centers = np.asarray(centers) / binsize
 			centers = centers.astype(int)
 			dataArray[(centers,)] = corr
-			h5Handle._addDataByArray(key, cmp.binsizeToResolution(binsize), name, dataArray)
+			h5Handle.addDataByArray(key, util.binsizeToResolution(binsize), name, dataArray)
 		else:
 			corrs.append(corr)
 			pvalues.append(centers)
@@ -447,72 +518,90 @@ def correlateCMapsBinWise(ccMapObjOne, ccMapObjTwo, corrType='pearson', cutoffPe
 
 	return corr, centers
 
-def _addDataToH5(bins, values, binsize, shape, fileName, chromosome, dataName):
-	h5Handle = gdh.HDF5Handler(fileName)
-	dataArray = np.zeros(shape=(shape,))
-	idx = np.asarray(bins) / binsize
-	idx = idx.astype(int)
-	dataArray[(idx,)] = values
-	h5Handle._addDataByArray(chromosome, cmp.binsizeToResolution(binsize), dataName, dataArray)
-	h5Handle.close()
 
+def getAvgContactByDistance(ccmaps, stats='median', removeOutliers=False, outliersThershold=3.5):
+	"""To calcualte average contact as a function of distance
 
-def getAvgContactByDistance(ccmaps, stats='median'):
-    """To calcualte average contact as a function of distance
+	Parameters
+	----------
+	ccmaps : :class:`gcMapExplorer.lib.ccmap.CCMAP` or list[:class:`gcMapExplorer.lib.ccmap.CCMAP`]
+		Input contact maps
 
-    Parameters
-    ----------
-    hicmaps : :class:`gcMapExplorer.lib.ccmap.CCMAP` or list[:class:`gcMapExplorer.lib.ccmap.CCMAP`]
+	stats : str
+		Statistics for scaling. Accepted methods are ``mean``
+		and ``median``.
 
-    Returns
-    -------
-    avg_contacts : numpy.array
-    	A one-dimensional numpy array containing average contacts, where index is distance between two locations for given resolution/binsize.
-    	For example, if ``ccmap.binsize=100000`` and ``avg_contacts[4]=1234.56``, then at distance of 400000 b, average contact is ``1234.56``.
+	removeOutliers : bool
+		If ``True``, outliers will be removed before calculating input
+		statistics.
 
-    """
-    ccmapList = []
-    if isinstance(ccmaps, cmp.CCMAP) or isinstance(ccmaps, gmp.GCMAP):
-        ccmapList = [ccmaps]
-    elif isinstance(ccmaps, list):
-        for ccmap in ccmaps:
-            if not isinstance(ccmap, cmp.CCMAP):
-                raise TypeError ('Not a list of CCMAP instances')
+	outliersThershold : float
+		The modified z-score to use as a threshold. Observations with
+		a modified z-score (based on the median absolute deviation) greater
+		than this value will be classified as outliers.
 
-        ccmapList = ccmaps
+	Returns
+	-------
+		avg_contacts : numpy.array
+		A one-dimensional numpy array containing average contacts, where index is distance between two locations for given resolution/binsize.
+		For example, if ``ccmap.binsize=100000`` and ``avg_contacts[4]=1234.56``, then at distance of 400000 b, average contact is ``1234.56``.
 
-    else:
-        raise TypeError ('Not a CCMAP instance or a list of CCMAP instances')
+	"""
+	ccmapList = []
+	if isinstance(ccmaps, cmp.CCMAP) or isinstance(ccmaps, gmp.GCMAP):
+		ccmapList = [ccmaps]
+	elif isinstance(ccmaps, list):
+		for ccmap in ccmaps:
+			if not isinstance(ccmap, cmp.CCMAP):
+				raise TypeError ('Not a list of CCMAP instances')
 
-    # Determine max shape
-    largest_shape = 0
-    for ccmap in ccmapList:
-        largest_shape = max(ccmap.shape[0], largest_shape)
+		ccmapList = ccmaps
+	else:
+		raise TypeError ('Not a CCMAP instance or a list of CCMAP instances')
 
-    # Start calculation stats
-    avg_contacts = []
-    for i in range(largest_shape):
+	# Determine max shape
+	largest_shape = 0
+	for ccmap in ccmapList:
+		largest_shape = max(ccmap.shape[0], largest_shape)
 
-        data = np.empty(0)
+	# Start calculation stats
+	avg_contacts = []
+	for i in range(largest_shape):
 
-        for t in range(len(ccmapList)):
-            idx = cmh.kth_diag_indices(i, ccmapList[t].matrix)
+		data = np.empty(0)
 
-            # Mask all zero values, then calculate stats
-            marray = ma.masked_equal(ccmapList[t].matrix[idx], 0.0, copy=False)
-            data = np.hstack((marray.compressed(), data))
+		for t in range(len(ccmapList)):
+		    idx = util.kth_diag_indices(i, ccmapList[t].matrix)
 
-        if data.shape[0] >= 1:
-            if stats == 'median':
-                t_avg = np.median(data)
-            else:
-                t_avg = np.mean(data)
+		    # Mask all zero values, then calculate stats
+		    marray = ma.masked_equal(ccmapList[t].matrix[idx], 0.0, copy=False)
+		    data = np.hstack((marray.compressed(), data))
 
-            avg_contacts.append( t_avg )
+		if data.shape[0] >= 1:
 
-        else:
-            avg_contacts.append( 0.0 )
+			notOutlierIndex = None
+			outliersCount = 0
+			if removeOutliers:
+				outliers = util.detectOutliers1D(data, thresh=outliersThershold)
+				outliersCount = np.sum(outliers)
+				notOutlierIndex = np.nonzero(~outliers)
 
-        del data
+			if stats == 'median':
+				if removeOutliers and outliersCount>0:
+					t_avg = np.median(data[notOutlierIndex])
+				else:
+					t_avg = np.median(data)
+			else:
+				if removeOutliers and outliersCount>0:
+					t_avg = np.mean(data[notOutlierIndex])
+				else:
+					t_avg = np.mean(data)
 
-    return np.asarray(avg_contacts)
+			avg_contacts.append( t_avg )
+
+		else:
+			avg_contacts.append( 0.0 )
+
+		del data
+
+	return np.asarray(avg_contacts)

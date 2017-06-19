@@ -23,6 +23,10 @@
 import sys, os, random
 import numpy as np
 import logging
+
+from .config import cleanScratch
+
+# Set logging level
 logging.basicConfig(level=logging.INFO)
 
 gui_tools =      ['browser', 'cmapImporter', 'cmapNormalizer', 'h5Converter']
@@ -120,6 +124,8 @@ def main():
         from .clui import corrBWcmaps
         corrBWcmaps.main()
 
+    # And at the end clean scratch directory, currently only remove .tmp and .npy file
+    cleanScratch()
 
 def show_help(options):
     print(' ==============================')
@@ -152,7 +158,6 @@ def show_help(options):
         print('\t{0} : {1}\n'.format(tool, options[tool]))
 
     print(' ==============================')
-
 
 
 if __name__=="__main__":

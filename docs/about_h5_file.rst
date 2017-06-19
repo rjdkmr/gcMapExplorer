@@ -111,7 +111,7 @@ several commands are available.
     bigwig2h5 : convert bigWig to h5 <commands/bigWig2h5>
     wig2h5 : convert wig to h5 <commands/wig2h5>
     bed2h5 : convert bed to h5 <commands/bed2h5>
-    encodeToH5 : download and convert ENCODE datasets to h5 <commands/encodeToH5>
+    encode2H5 : download and convert ENCODE datasets to h5 <commands/encode2h5>
 
 
 Convert using ``gcMapExplorer`` Python modules:

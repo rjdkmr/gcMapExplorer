@@ -1,11 +1,13 @@
 normMCFS - Scale maps using Median/Mean Contact Frequency
 ---------------------------------------------------------
 
-This method can be used to normalize contact map using Median contact values
-for particular distance between two locations/coordinates. At first, Median
-distance contact frequency for each distance is calculated. Subsequently,
-the observed contact frequency is divided by median contact frequency obtained
-for distance between the two locations.
+This method can be used to normalize contact map with expected values.
+These expected values could be either Median or Average contact values
+for particular distance between two locations/coordinates. At first,
+Median/Average distance contact frequency for each distance is calculated.
+Subsequently, the observed contact frequency is either divided ('o/e') or
+substracted ('o-e') by median/average contact frequency obtained for
+distance between the two locations.
 
 Usage:
 
@@ -13,8 +15,8 @@ Usage:
 
     usage: gcMapExplorer normMCFS [-h] [-i input.gcmap] [-fi gcmap]
                                   [-o output.gcmap] [-fo gcmap] [-s median]
-                                  [-vmax VMAX] [-vmin VMIN] [-ptnd 99] [-tdo 0.8]
-                                  [-cmeth lzf]
+                                  [-vmax VMAX] [-vmin VMIN] [-st o/e] [-ptnd 99]
+                                  [-tdo 0.8] [-cmeth lzf]
                                   [-wd /home/rajendra/deskForWork/scratch]
 
 
@@ -56,6 +58,11 @@ Usage:
                          Maximum thershold value for normalization.
                         If contact frequency is greater than or equal to this thershold value,
                         this value is discarded during normalization.
+
+  -st o/e, --stype o/e   Type of scaling.
+                        It may be either 'o/e' or 'o-e'. In case of 'o/e',
+                        Observed/Expected will be calculated while (Observed - Expected)
+                        will be calculated for 'o-e'.
 
   -ptnd 99, --percentile-thershold-no-data 99
                          It can be used to filter the map, where rows/columns with largest numbers

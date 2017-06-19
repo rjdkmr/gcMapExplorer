@@ -44,10 +44,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from gcMapExplorer import ccmap as cmp
-from gcMapExplorer import gcmap as gmp
-from gcMapExplorer import ccmapHelpers as cmh
-from gcMapExplorer import genomicsDataHandler as gdh
+import gcMapExplorer.lib as gmlib
 
 from . import browserHelpers
 from . import guiHelpers
@@ -97,6 +94,8 @@ class GenomicDataSetSubPlotHelper:
 
         self.genomicDataColorButton.clicked.connect( self.changeGenomicDatasetPlotColor )
         self.genomicDataLineWidthSpinBox.valueChanged.connect( self.changeGenomicDatasetPlotLineWidth )
+        self.genomicDataPercentileSpinBox.valueChanged.connect(self.displayGenomicDataPercentile)
+
 
     def openGenomicDatasetFile(self, hiCmapAxis):
         """Open genomic dataset file, load it and plot it.
@@ -368,6 +367,7 @@ class GenomicDataSetSubPlotHelper:
         # New range for spin-box and selta-step
         self.genomicDataYScalingSpinBox.setRange(lowerLimit, upperLimit)
         self.genomicDataYScalingSpinBox.setSingleStep(dstep)
+        self.genomicDataYScalingSpinBox.setDecimals(self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yticksDecimals+1)
 
         # If user changes only lower limit, spinbox connected method is called because spinbox holds only upper limit
         if prev_lowerLimit != lowerLimit:
@@ -409,6 +409,34 @@ class GenomicDataSetSubPlotHelper:
             self.changeYScaleGenomicSubplotSpinbox()
         else:
             self.genomicDataYScalingSpinBox.setValue(upperLimit)
+
+    def displayGenomicDataPercentile(self, value):
+        """Display percentile value for a given percentile
+
+        It only gives information about the percentile value
+        """
+        # Get index of axes
+
+        hidx, gidx = self.getCurrentHicmapAndGenmoicSubplotIndex()
+
+        if hidx is None and gidx is None:   return
+        if hidx is None:    return
+        if gidx is None:    return
+
+        if self.hiCmapAxes[hidx].doNotPlot: return
+
+        if self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].dataArray is None:  return
+
+        dataArray = self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].dataArray
+
+        if value not in self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].percentileValues:
+            percentile = np.percentile(dataArray[dataArray[:] != 0 ], value)
+            self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].percentileValues[value] = percentile
+        else:
+            percentile = self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].percentileValues[value]
+
+        self.percentileValueLineEdit.setText(str(percentile))
+
 
     def changeGenomicDatasetPlotColor(self):
         """ Set the color of genomic dataset plot
@@ -1419,7 +1447,7 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         self.hiCmapAxes[aidx].initialize(path, fileType, mapName=mapName, resolution=resolution, filesOpened=self.filesOpened)
 
         # Make matrix readble
-        if isinstance(self.hiCmapAxes[aidx].ccmap, cmp.CCMAP):
+        if isinstance(self.hiCmapAxes[aidx].ccmap, gmlib.ccmap.CCMAP):
             self.hiCmapAxes[aidx].ccmap.make_readable()
 
         # To get new limit
@@ -1491,7 +1519,7 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
                             binSizeMatched = False
 
             if binSizeMatched:
-                self.interchangeableResolutions = list( map(cmp.binsizeToResolution, sorted( list(common) ) ) )
+                self.interchangeableResolutions = list( map(gmlib.util.binsizeToResolution, sorted( list(common) ) ) )
             else:
                 self.interchangeableResolutions = None
 
@@ -1767,7 +1795,7 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
             QMessageBox.warning(self, "Warning!", msg)
             return
 
-        mapUnitSize = cmp.resolutionToBinsize(self.hiCmapAxes[aidx].mapUnit)
+        mapUnitSize = gmlib.util.resolutionToBinsize(self.hiCmapAxes[aidx].mapUnit)
 
         if self.gotoSpaceCBox.currentIndex() == 1:
             x = int( x / self.hiCmapAxes[aidx].ccmap.binsize)
@@ -2221,7 +2249,7 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
             if map_value != 0:
                 map_value = np.log(map_value)
 
-        mapUnitSize = cmp.resolutionToBinsize(temp_ccmap_axis.mapUnit)
+        mapUnitSize = gmlib.util.resolutionToBinsize(temp_ccmap_axis.mapUnit)
         self.status_bar.showMessage('|  Real X = {0:,}  |  Real Y = {1:,}  |  X = {2}  |  Y = {3}  |  Value = {4:.6f}  |' .format(
                                     int(mapUnitSize*real_xcoor), int(mapUnitSize*real_ycoor),
                                     real_xcoor, real_ycoor, map_value))
@@ -2467,7 +2495,7 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
             if newResIndex < len(self.interchangeableResolutions):
                 resolutionChanged = True
                 for i in range(len(self.hiCmapAxes)):
-                    if cmp.resolutionToBinsize(self.interchangeableResolutions[newResIndex]) > self.hiCmapAxes[i].ccmap.binsizes[-1]:
+                    if gmlib.util.resolutionToBinsize(self.interchangeableResolutions[newResIndex]) > self.hiCmapAxes[i].ccmap.binsizes[-1]:
                         resolutionChanged = False
                         break
 
@@ -2516,7 +2544,7 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
             if newResIndex >= 0:
                 resolutionChanged = True
                 for i in range(len(self.hiCmapAxes)):
-                    if cmp.resolutionToBinsize(self.interchangeableResolutions[newResIndex]) < self.hiCmapAxes[i].ccmap.binsizes[0]:
+                    if gmlib.util.resolutionToBinsize(self.interchangeableResolutions[newResIndex]) < self.hiCmapAxes[i].ccmap.binsizes[0]:
                         resolutionChanged = False
                         break
 
@@ -2744,6 +2772,9 @@ class GenomicDataPlotAxis:
         self.plotLineWidth = 0.5       # Vertical Line Width
         self.axes_props = None         # AxesProperties instance
         self.yticks = None             # yticks
+        self.yticksFormat = 'plain'    # Ytick label formats - plain or scientific
+        self.yticksDecimals = 2        # Decimals in y ticks formatting
+        self.percentileValues = dict() # Store values at given percentile
 
 
         # Genomic dataset stuffs
@@ -2788,7 +2819,15 @@ class GenomicDataPlotAxis:
             # Setting yticks based on ylimits, only change yticks when y-limits are changed
             ydiff = value[0] - value[1]
             yticks = np.linspace(self.ylimit[0], self.ylimit[1], 100)
-            self.yticks = np.around(yticks, decimals=1)
+
+            # Set tick label according to precision
+            self.yticksDecimals = gmlib.util.locate_significant_digit_after_decimal(self.ylimit[1])
+            if self.yticksDecimals > 3:
+                self.yticksFormatStyle = 'sci'
+                self.yticks = np.around(yticks, decimals=self.yticksDecimals+1)
+            else:
+                self.yticks = np.around(yticks, decimals=self.yticksDecimals+1)
+
             self.updatePlot()
 
     @property
@@ -2864,13 +2903,13 @@ class GenomicDataPlotAxis:
 
         """
         if filename not in filesOpened:
-            self.hdf5Hand = gdh.HDF5Handler(filename)
+            self.hdf5Hand = gmlib.genomicsDataHandler.HDF5Handler(filename)
             filesOpened[filename] = self.hdf5Hand
         else:
             self.hdf5Hand = filesOpened[filename]
 
         dialog = browserHelpers.DialogGenomicsDataSelector(self.hdf5Hand, requestedBinsize=self.hiCmapAxis.ccmap.binsize)
-        dialog.setChromosomeResolution(self.hiCmapAxis.ccmap.xlabel, cmp.binsizeToResolution(self.hiCmapAxis.ccmap.binsize))
+        dialog.setChromosomeResolution(self.hiCmapAxis.ccmap.xlabel, gmlib.util.binsizeToResolution(self.hiCmapAxis.ccmap.binsize))
         dialog.exec_()
 
         if dialog.selected_data is not None:
@@ -2887,7 +2926,7 @@ class GenomicDataPlotAxis:
         dialog.exec_()
 
         if dialog.inputFileName is not None:
-            self.txtFileHand = gdh.TextFileHandler(dialog.inputFileName, self.hiCmapAxis.ccmap.shape[0],
+            self.txtFileHand = gmlib.genomicsDataHandler.TextFileHandler(dialog.inputFileName, self.hiCmapAxis.ccmap.shape[0],
                                                      binsize=self.hiCmapAxis.ccmap.binsize, title=dialog.title)
             self.txtFileHand.readData()
             self.plotLocation = dialog.plotPosition
@@ -2940,7 +2979,7 @@ class GenomicDataPlotAxis:
 
         """
 
-        newBinsize = cmp.resolutionToBinsize(resolution)
+        newBinsize = gmlib.util.resolutionToBinsize(resolution)
         minimumBinsize = None
 
         # When data is from a hdf5 file
@@ -2960,7 +2999,7 @@ class GenomicDataPlotAxis:
 
             # In case if not found, minimum resolution present for data is obtained for latter use
             if not foundData:
-                minimumBinsize = np.amin(list(map(cmp.resolutionToBinsize, self.hdf5Hand.getResolutionList(chrom, dataName=rdata))))
+                minimumBinsize = np.amin(list(map(gmlib.util.resolutionToBinsize, self.hdf5Hand.getResolutionList(chrom, dataName=rdata))))
 
         # When data is from a text file
         if self.txtFileHand is not None:
@@ -2987,19 +3026,19 @@ class GenomicDataPlotAxis:
         # When data is from a hdf5 file
         if self.hdf5Hand is not None:
             chrom = self.shownDataset[0]
-            minResolution = cmp.binsizeToResolution(minimumBinsize)
+            minResolution = gmlib.util.binsizeToResolution(minimumBinsize)
             rdata = self.shownDataset[2]
 
             success = True
             if change:
-                self.dataArray = cmp.downSample1D(self.hdf5Hand.hdf5[chrom][minResolution][rdata][:], level=level)
+                self.dataArray = gmlib.ccmap.downSample1D(self.hdf5Hand.hdf5[chrom][minResolution][rdata][:], level=level)
                 self.shownDataset = (chrom, resolution, rdata)                # Change shownDataset
 
 
         # When data is from a text file
         if self.txtFileHand is not None:
             if change:
-                self.dataArray = cmp.downSample1D(self.txtFileHand.data, level=level)
+                self.dataArray = gmlib.ccmap.downSample1D(self.txtFileHand.data, level=level)
             success = True
 
         if not success:
@@ -3013,7 +3052,7 @@ class GenomicDataPlotAxis:
         chromNameList = None
         if self.hdf5Hand is not None:
             chromNameList = self.hdf5Hand.getChromList()
-            chromNameList = cmh.sorted_nicely(chromNameList)
+            chromNameList = gmlib.util.sorted_nicely(chromNameList)
 
         return chromNameList
 
@@ -3105,6 +3144,9 @@ class GenomicDataPlotAxis:
 
         # Set upper and lower limit along y-axis
         self.ax.set_ylim(self.ylimit[0], self.ylimit[1])
+
+        # set y tick label formatting
+        self.ax.ticklabel_format(style=self.yticksFormat, axis='y')
 
         # Set upper and lower limit along x-axis using parent ccmap axes
         self.ax.set_xlim(self.hiCmapAxis.axes_props.xTickLocations[0], self.hiCmapAxis.axes_props.xTickLocations[-1])
@@ -3382,10 +3424,10 @@ class CCMAPAXIS:
         self.colorRangeMaxValue = self.ccmap.maxvalue
 
         self.xticklabels, self.yticklabels = self.ccmap.get_ticks()
-        self.xticklabels = self.xticklabels/cmp.resolutionToBinsize(self.mapUnit)
-        self.yticklabels = self.yticklabels/cmp.resolutionToBinsize(self.mapUnit)
+        self.xticklabels = self.xticklabels/gmlib.util.resolutionToBinsize(self.mapUnit)
+        self.yticklabels = self.yticklabels/gmlib.util.resolutionToBinsize(self.mapUnit)
 
-        self.resolution = cmp.binsizeToResolution( self.ccmap.binsize )
+        self.resolution = gmlib.util.binsizeToResolution( self.ccmap.binsize )
 
         if self.ccmap.xlabel is None:
             self.xlabel = 'Unknown' + ' [{0}]'.format(self.mapUnit)
@@ -3402,11 +3444,11 @@ class CCMAPAXIS:
     def updatePropsForResolution(self):
         """ Update ticklabels and resolution according to the new resolution
         """
-        self.resolution = cmp.binsizeToResolution( self.ccmap.binsize )
+        self.resolution = gmlib.util.binsizeToResolution( self.ccmap.binsize )
 
         self.xticklabels, self.yticklabels = self.ccmap.get_ticks()
-        self.xticklabels = self.xticklabels/cmp.resolutionToBinsize(self.mapUnit)
-        self.yticklabels = self.yticklabels/cmp.resolutionToBinsize(self.mapUnit)
+        self.xticklabels = self.xticklabels/gmlib.util.resolutionToBinsize(self.mapUnit)
+        self.yticklabels = self.yticklabels/gmlib.util.resolutionToBinsize(self.mapUnit)
 
     def set_color_spinbox_slider_values(self, spinbox, slider):
         """Used to directly assign the values for spinbox
@@ -3467,7 +3509,7 @@ class CCMAPAXIS:
 
     def set_ccmap(self, path, fileType, mapName=None, resolution=None, filesOpened=None):
         if fileType == 'ccmap':
-            self.ccmap = cmp.load_ccmap(path)
+            self.ccmap = gmlib.ccmap.load_ccmap(path)
             self.fileType = 'ccmap'
 
             # In case if minimum value is zero, change it
@@ -3481,7 +3523,7 @@ class CCMAPAXIS:
             if path not in filesOpened:
                 filesOpened[path] = h5py.File(path, 'r')
 
-            self.ccmap = gmp.GCMAP(filesOpened[path], mapName=mapName, resolution=resolution)
+            self.ccmap = gmlib.gcmap.GCMAP(filesOpened[path], mapName=mapName, resolution=resolution)
             self.fileType = 'gcmap'
 
             # In case if minimum value is zero, change it
@@ -3643,7 +3685,7 @@ class CCMAPAXIS:
                             mapNameMatched = False
 
             if mapNameMatched:
-                self.interchangeableCMapNames = cmh.sorted_nicely( common )
+                self.interchangeableCMapNames = gmlib.util.sorted_nicely( common )
             else:
                 self.interchangeableCMapNames = None
 

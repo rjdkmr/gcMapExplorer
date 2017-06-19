@@ -1248,6 +1248,31 @@
               </widget>
              </item>
              <item>
+              <layout class="QHBoxLayout" name="percentileLayout">
+               <item>
+                <widget class="QLineEdit" name="percentileValueLineEdit">
+                 <property name="readOnly">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLabel" name="percentileLabel">
+                 <property name="text">
+                  <string>at Percentile</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QDoubleSpinBox" name="genomicDataPercentileSpinBox">
+                 <property name="maximum">
+                  <double>100.000000000000000</double>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item>
               <spacer name="verticalSpacer_2">
                <property name="orientation">
                 <enum>Qt::Vertical</enum>

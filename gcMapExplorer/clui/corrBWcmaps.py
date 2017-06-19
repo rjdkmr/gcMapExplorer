@@ -144,7 +144,7 @@ def main():
     blockSize = None
     if args.blockSize is not None:
         try:
-            gmlib.ccmap.resolutionToBinsize(args.blockSize)
+            gmlib.util.resolutionToBinsize(args.blockSize)
         except ValueError:
             msg = '{0} is not an accepted resolution unit!!\n'.format(args.blockSize)
             showErrorAndExit(parser, msg)

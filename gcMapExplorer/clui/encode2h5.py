@@ -72,11 +72,16 @@ Name of output files:
         f. minus-all-reads-<date>-<Experiment accession>-<File accessions>.h5
         g. signal-<date>-<Experiment accession>-<File accession>.h5
 
-    (2) For DNase-seq:
+    (3) For DNase-seq:
         a. uniq-reads-signal-<date>-<Experiment accession>-<File accessions>.h
         b. raw-signal-<date>-<Experiment accession>-<File accessions>.h
         c. all-reads-signal-<date>-<Experiment accession>-<File accessions>.h
         d. signal-<date>-<Experiment accession>-<File accessions>.h5
+
+    (4) For siRNA + RNA-seq:
+        a. uniq-reads-signal-<Experiment target>-<Experiment accession>-<File accessions>.h
+        b. all-reads-signal-<Experiment target>-<Experiment accession>-<File accessions>.h
+        c. signal-<Experiment target>-<Experiment accession>-<File accessions>.h5
 
     Note that name of cell-line is not included here. Therefore, use the
     directory name as a identfiers for cell-lines or species. The Experiment

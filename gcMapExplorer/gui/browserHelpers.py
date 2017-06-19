@@ -36,10 +36,7 @@ from matplotlib import font_manager as mplFontManager
 from matplotlib import colors as mplColors
 from matplotlib.ticker import AutoMinorLocator, MaxNLocator
 
-from gcMapExplorer import cmstats
-from gcMapExplorer import ccmap as cmp
-from gcMapExplorer import ccmapHelpers as cmh
-from gcMapExplorer import genomicsDataHandler as gdh
+import gcMapExplorer.lib as gmlib
 
 from . import guiHelpers
 
@@ -146,7 +143,7 @@ class GCMapSelectorDialog(gcmapSelectorDialogBase, Ui_gcmapSelectorDialog):
         if self.hdf5 is None:
             self.hdf5 = h5py.File(self.filename)
 
-        self.mapList = cmh.sorted_nicely( list( self.hdf5.keys() ) )
+        self.mapList = gmlib.util.sorted_nicely( list( self.hdf5.keys() ) )
 
         self.dictMapListWidgetItems = dict()
         for key in self.mapList:
@@ -179,7 +176,7 @@ class GCMapSelectorDialog(gcmapSelectorDialogBase, Ui_gcmapSelectorDialog):
         self.dictResolutionListWidgetItems = None
         self.dictResolutionListWidgetItems = dict()
         for binsize in self.dictBinSizes[mapName]:
-            listItem = QListWidgetItem(cmp.binsizeToResolution(binsize), self.resolutionListWidget)
+            listItem = QListWidgetItem(gmlib.util.binsizeToResolution(binsize), self.resolutionListWidget)
             self.dictResolutionListWidgetItems[binsize] = listItem
 
         resolutionItem = self.dictResolutionListWidgetItems[ self.dictBinSizes[mapName][0] ]
@@ -219,7 +216,7 @@ class GCMapSelectorDialog(gcmapSelectorDialogBase, Ui_gcmapSelectorDialog):
 
         for binsize in self.dictBinSizes[mapName]:
             if item is self.dictResolutionListWidgetItems[binsize]:
-                resolution = cmp.binsizeToResolution(binsize)
+                resolution = gmlib.util.binsizeToResolution(binsize)
                 break
         return resolution
 
@@ -985,12 +982,12 @@ class DialogGenomicsDataSelector(QDialogGenomicsDataSelectorBase, Ui_DialogGenom
         self.selected_data = None
         self.whereToPlot = None
 
-        if isinstance(hdf5Handle, gdh.HDF5Handler):
+        if isinstance(hdf5Handle, gmlib.genomicsDataHandler.HDF5Handler):
             self.hdf5Handle = hdf5Handle
             if self.hdf5Handle.hdf5 is None:
                 self.hdf5Handle.open()
         else:
-            self.hdf5Handle = gdh.HDF5Handler(hdf5Handle)
+            self.hdf5Handle = gmlib.genomicsDataHandler.HDF5Handler(hdf5Handle)
             self.hdf5Handle.open()
             self.closeFile = True
 
@@ -998,7 +995,7 @@ class DialogGenomicsDataSelector(QDialogGenomicsDataSelectorBase, Ui_DialogGenom
         self.chroms = []
         for key in self.hdf5Handle.hdf5:
             self.chroms.append(key)
-        self.chromNameListWidget.addItems(cmh.sorted_nicely(self.chroms))
+        self.chromNameListWidget.addItems(gmlib.util.sorted_nicely(self.chroms))
 
         # Connect to interface
         self.chromNameListWidget.itemSelectionChanged.connect(self.chromosomeSelector)
@@ -1045,9 +1042,9 @@ class DialogGenomicsDataSelector(QDialogGenomicsDataSelectorBase, Ui_DialogGenom
             self.resolutions.append(key)
 
         # Sort from fine to coarse resolution
-        binsizes = list( map(cmp.resolutionToBinsize, self.resolutions)  )
+        binsizes = list( map(gmlib.util.resolutionToBinsize, self.resolutions)  )
         binsizes = sorted( binsizes )
-        self.chromResolutionListWidget.addItems( list( map(cmp.binsizeToResolution, binsizes)  ) )
+        self.chromResolutionListWidget.addItems( list( map(gmlib.util.binsizeToResolution, binsizes)  ) )
 
     def resolutionSelector(self):
         """ To display/change resolution list when a chromosome is selected by user
@@ -1086,7 +1083,7 @@ class DialogGenomicsDataSelector(QDialogGenomicsDataSelectorBase, Ui_DialogGenom
 
                 # In case if resolution of map not match with genomic dataset
                 if self.requestedBinsize is not None:
-                    requestedResolution = cmp.binsizeToResolution(self.requestedBinsize)
+                    requestedResolution = gmlib.util.binsizeToResolution(self.requestedBinsize)
                     if resolution != requestedResolution:
                         msgBox = QMessageBox(QMessageBox.Warning, 'Warning', 'Selected resolution "{0}" does not match with map resolution "{1}" .'
                                                      .format(resolution, requestedResolution),QMessageBox.Ok, self)
@@ -1383,7 +1380,7 @@ class DialogCorrelationBetweenMaps(QDialogCorrelationMapsBase, Ui_DialogCorrelat
             resolution = self.sizeBlockLineEdit.text()
             if resolution:
                 try:
-                    cmp.resolutionToBinsize(resolution)
+                    gmlib.util.resolutionToBinsize(resolution)
                 except ValueError:
                     msgBox = QMessageBox(QMessageBox.Warning, 'Warning', 'Resolution should be in kb or mb.', QMessageBox.Ok, self)
                     msgBox.exec_()
@@ -1409,13 +1406,13 @@ class DialogCorrelationBetweenMaps(QDialogCorrelationMapsBase, Ui_DialogCorrelat
         """Load hicmaps from input ccmap files
         """
         if self.firstMap is not None:
-            self.firstHicmap = cmp.load_hicmap(self.firstMap)
+            self.firstHicmap = gmlib.ccmap.load_ccmap(self.firstMap)
             self.firstHicmap.make_readable()
         else:
             self.firstHicmap = self.hicmapList[ self.firstMapInputCBox.currentIndex() ]
 
         if self.secondMap is not None:
-            self.secondHicmap = cmp.load_hicmap(self.secondMap)
+            self.secondHicmap = gmlib.ccmap.load_ccmap(self.secondMap)
             self.secondHicmap.make_readable()
         else:
             self.secondHicmap = self.hicmapList[ self.secondMapInputCBox.currentIndex() ]
@@ -1439,7 +1436,7 @@ class DialogCorrelationBetweenMaps(QDialogCorrelationMapsBase, Ui_DialogCorrelat
                         'blockSize':self.blockSize, 'slideStepSize':self.slideStepSize, 'workDir':self.workDir, 'logHandler':self.loggerHandler }
 
             # Initialize a new thread and connect it
-            self.thread = guiHelpers.qtThread(target=cmstats.correlateCMaps, args=(self.firstHicmap, self.secondHicmap), kwargs=kwargs)
+            self.thread = guiHelpers.qtThread(target=gmlib.cmstats.correlateCMaps, args=(self.firstHicmap, self.secondHicmap), kwargs=kwargs)
             self.thread.resultReady.connect( self.finishedCalculation )
 
             # Start the thread

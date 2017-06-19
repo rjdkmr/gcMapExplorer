@@ -263,10 +263,8 @@ class KnightRuizNorm:
 
 		# Removing temporary memory-mapped array file
 		del A_DSMat
-		try:
+		if os.path.isfile(path2matrix):
 			os.remove(path2matrix)
-		except:
-			pass
 
 		return minvalue, maxvalue
 
@@ -352,7 +350,7 @@ class KnightRuizNorm:
 			self.rho_km1 = np.dot( self.rk.arr.conjugate().T, self.Z.arr)           # rho_km1 = rk'*Z
 		else:
 			beta = self.rho_km1 / self.rho_km2
-			self.p.arr = (self.Z.arr + (beta * self.p.arr))[:]
+			self.p.arr[:] = (self.Z.arr + (beta * self.p.arr))[:]
 
 
 		# Update search direction efficiently.
@@ -477,10 +475,8 @@ class KnightRuizNorm:
 
 
 		del A_DSMat
-		try:
+		if os.path.isfile(path2matrix):
 			os.remove(path2matrix)
-		except:
-			pass
 
 		return minvalue, maxvalue
 

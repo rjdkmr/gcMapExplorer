@@ -31,10 +31,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtPrintSupport import *
 from PyQt5.uic import loadUiType
 
-from gcMapExplorer import ccmap as cmp
-from gcMapExplorer import gcmap as gmp
-from gcMapExplorer import ccmapHelpers as cmh
-from gcMapExplorer import genomicsDataHandler as gdh
+from gcMapExplorer import lib as gmlib
 
 from gcMapExplorer.config import getConfig
 
@@ -438,8 +435,8 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
                 if not r.strip():
                     continue
                 try:
-                    b = cmp.resolutionToBinsize(r)
-                    rlist.append( cmp.binsizeToResolution(b) )
+                    b = gmlib.util.resolutionToBinsize(r)
+                    rlist.append( gmlib.util.binsizeToResolution(b) )
                 except ValueError:
                     msg = '"{0}" contains resolution "{1}"...\n which is not an acceptable resolution.'.format(rInList, r)
                     showWarningMessageBox(msg, self )

@@ -33,8 +33,8 @@ from gcMapExplorer.config import getConfig
 config = getConfig()
 
 from . import ccmap as cmp
-from . import ccmapHelpers as cmh
 from . import gcmap as gmp
+from . import util
 
 class CooMatrixHandler:
     """To import ccmap from files similar to sparse matrix in Coordinate (COO) format
@@ -293,7 +293,7 @@ class CooMatrixHandler:
 
         binsize = None
         if self.coordinate != 'real':
-            binsize = cmp.resolutionToBinsize(self.resolution)
+            binsize = util.resolutionToBinsize(self.resolution)
 
         for line in fin:
             line = line.rstrip('\n')
@@ -312,7 +312,7 @@ class CooMatrixHandler:
         self.logger.info('     ... Finished reading file: [{0}] ' .format(filename))
 
         ccMapObj = gen_map_from_locations_value(i, j, value, resolution=self.resolution, workDir=self.workDir, mapType=self.mapType)
-        self.resolution = cmp.binsizeToResolution(ccMapObj.binsize)
+        self.resolution = util.binsizeToResolution(ccMapObj.binsize)
 
         del i
         del j
@@ -358,7 +358,7 @@ class CooMatrixHandler:
 
         binsize = None
         if self.coordinate != 'real':
-            binsize = cmp.resolutionToBinsize(self.resolution)
+            binsize = util.resolutionToBinsize(self.resolution)
 
         while (1):
 
@@ -384,7 +384,7 @@ class CooMatrixHandler:
         self.logger.info('   ...Finished extracting and reading [{0}]' .format(mapfile))
 
         ccMapObj = gen_map_from_locations_value(i, j, value, resolution=self.resolution, workDir=self.workDir, mapType=self.mapType)
-        self.resolution = cmp.binsizeToResolution(ccMapObj.binsize)
+        self.resolution = util.binsizeToResolution(ccMapObj.binsize)
 
         del i
         del j
@@ -704,7 +704,7 @@ class PairCooMatrixHandler:
         ccmap.ylabel = chrom
 
         if self.ccmapOutDir is not None or self.ccmapSuffix is not None:
-            self._save_ccmap(ccmap, chrom, cmp.binsizeToResolution(ccmap.binsize))
+            self._save_ccmap(ccmap, chrom, util.binsizeToResolution(ccmap.binsize))
 
         if self.gcmapOut is not None:
             self._save_gcmap(ccmap)
@@ -1038,12 +1038,10 @@ class HomerInputHandler:
         for chrom in self.chromList:
 
             # Only filename is generated
-            fd, fname = tempfile.mkstemp(prefix='{0}_' .format(chrom), suffix='.tmp', dir=self.workDir)
+            fd, fname = tempfile.mkstemp(prefix='gcx_{0}_' .format(chrom), suffix='.tmp', dir=self.workDir)
             os.close(fd)
-            try:
+            if os.path.isfile(fname):
                 os.remove(fname)
-            except:
-                pass
 
             fout = open(fname, 'w')
             self.fTmpOut[chrom] = fout
@@ -1078,10 +1076,9 @@ class HomerInputHandler:
         self._closeTemporaryOutputFiles()
         if self.fTmpOutNames is not None:
             for key in self.fTmpOutNames:
-                try:
+                if os.path.isfile(self.fTmpOutNames[key]):
                     os.remove(self.fTmpOutNames[key])
-                except:
-                    pass
+
 
     def _getChromListAndResolution(self):
         """ Get chromosome list and resolution
@@ -1131,7 +1128,7 @@ class HomerInputHandler:
                 prev_j = j
 
             if binsize is None:
-                self.resolution = cmp.binsizeToResolution( int( np.amin(step) ) )
+                self.resolution = util.binsizeToResolution( int( np.amin(step) ) )
             else:
                 if binsize != int( np.amin(step) ):
                     raise AssertionError ('Data Resolution does not match in input files.')
@@ -1139,7 +1136,7 @@ class HomerInputHandler:
             # Appending header of each file
             self.headers.append(header)
 
-        self.chromList = cmh.sorted_nicely(list(set(chroms)))
+        self.chromList = util.sorted_nicely(list(set(chroms)))
 
         self.logger.info(" Resolution: {0}" .format(self.resolution))
         outline = ' '
@@ -1358,16 +1355,11 @@ class BinsNContactFilesHandler:
         """
         if self.npyBinFileList is not None:
             for key in self.npyBinFileList:
-                try:
-                    self.npyBinFileList[key][0].close()
-                except:
-                    pass
+                self.npyBinFileList[key][0].close()
 
-                try:
-                    self.logger.info(' Removing temporary numpy array file [{0}] for {1} ...' .format(self.npyBinFileList[key][1], key))
+                self.logger.info(' Removing temporary numpy array file [{0}] for {1} ...' .format(self.npyBinFileList[key][1], key))
+                if os.path.isfile(self.npyBinFileList[key][1]):
                     os.remove(self.npyBinFileList[key][1])
-                except:
-                    pass
 
     def _getChromName(self, chrm):
         """Generate chromosome name
@@ -1467,8 +1459,7 @@ class BinsNContactFilesHandler:
             if self.npyBinFileList is None:
                 self.npyBinFileList = dict()
 
-            name = cmp.name_generator()
-            (fout, fname) = tempfile.mkstemp(suffix='.npy', prefix=key+'_', text=False, dir=self.workDir)
+            (fout, fname) = tempfile.mkstemp(suffix='.tmp', prefix='gcx_nparray_'+key+'_', dir=self.workDir, text=False)
             os.close(fout)
             self.logger.info(' Generating temporary numpy array file [{0}] for {1} ...' .format(fname, key))
 
@@ -1531,7 +1522,7 @@ class BinsNContactFilesHandler:
 
             if ChromTitle != PrevChromTitle and PrevChromTitle != 'dummy':
                 self.logger.info(' \tGenerating Hi-C Map for [{0}] ... \n' .format(PrevChromTitle))
-                ccmap = gen_map_from_locations_value(i, j, value, resolution=cmp.binsizeToResolution(self.binsize), workDir=self.workDir, mapType='intra')
+                ccmap = gen_map_from_locations_value(i, j, value, resolution=util.binsizeToResolution(self.binsize), workDir=self.workDir, mapType='intra')
                 ccmap.xlabel = self._getChromName(PrevChromTitle)
                 ccmap.ylabel = self._getChromName(PrevChromTitle)
 
@@ -1548,7 +1539,7 @@ class BinsNContactFilesHandler:
 
         # Last One
         self.logger.info(' \tGenerating Hi-C Map for [{0}] ... ' .format(ChromTitle))
-        ccmap = gen_map_from_locations_value(i, j, value, resolution=cmp.binsizeToResolution(self.binsize),  workDir=self.workDir, mapType='intra')
+        ccmap = gen_map_from_locations_value(i, j, value, resolution=util.binsizeToResolution(self.binsize),  workDir=self.workDir, mapType='intra')
         ccmap.xlabel = self._getChromName(PrevChromTitle)
         ccmap.ylabel = self._getChromName(PrevChromTitle)
 
@@ -1593,7 +1584,7 @@ class BinsNContactFilesHandler:
         if self.ccmaps is None:
             self._genHiCMaps()
 
-        resolution = cmp.binsizeToResolution(self.binsize)
+        resolution = util.binsizeToResolution(self.binsize)
         for key in self.ccmaps:
             if suffix is None:
                 outFileName = self._getChromName(key) + '_' + resolution + '.ccmap'
@@ -1627,7 +1618,7 @@ class BinsNContactFilesHandler:
         if self.ccmaps is None:
             self._genHiCMaps()
 
-        resolution = cmp.binsizeToResolution(self.binsize)
+        resolution = util.binsizeToResolution(self.binsize)
         for key in self.ccmaps:
             gmp.addCCMap2GCMap(self.ccmaps[key], outputFile,
                                 compression=compression,
@@ -1679,7 +1670,7 @@ def gen_map_from_locations_value(i, j, value, resolution=None, mapType='intra', 
     maxL = np.amax([i, j])
 
     if resolution is not None:
-        ccMapObj.binsize = cmp.resolutionToBinsize(resolution)
+        ccMapObj.binsize = util.resolutionToBinsize(resolution)
     else:
         step = []
         max_count = len(i)

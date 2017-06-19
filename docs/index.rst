@@ -106,6 +106,7 @@ Contents
    About ccmap and npbin files <about_ccmap_file>
    About Genomic track h5 file <about_h5_file>
    Normalization of Hi-C maps <cmapNormalization>
+   Frequently asked questions <faq.rst>
    Download example datasets <dLcmaps>
    Summary of Python Modules <apidoc/summary>
    Examples using Python Modules <modules_examples/index>

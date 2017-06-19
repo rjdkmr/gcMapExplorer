@@ -36,11 +36,13 @@ description = \
 """Scale maps using Median/Mean Contact Frequency
 =================================================
 
-This method can be used to normalize contact map using Median contact values
-for particular distance between two locations/coordinates. At first, Median
-distance contact frequency for each distance is calculated. Subsequently,
-the observed contact frequency is divided by median contact frequency obtained
-for distance between the two locations.
+This method can be used to normalize contact map with expected values.
+These expected values could be either Median or Average contact values
+for particular distance between two locations/coordinates. At first,
+Median/Average distance contact frequency for each distance is calculated.
+Subsequently, the observed contact frequency is either divided ('o/e') or
+substracted ('o-e') by median/average contact frequency obtained for
+distance between the two locations.
 
 =================================================
 
@@ -90,6 +92,14 @@ vmaxHelp = \
 """ Maximum thershold value for normalization.
 If contact frequency is greater than or equal to this thershold value,
 this value is discarded during normalization.
+
+"""
+
+stypeHelp = \
+""" Type of scaling.
+It may be either 'o/e' or 'o-e'. In case of 'o/e',
+Observed/Expected will be calculated while (Observed - Expected)
+will be calculated for 'o-e'.
 
 """
 
@@ -156,14 +166,14 @@ def main():
 
     if args.outputFileFormat == 'ccmap' and args.inputFileFormat == 'ccmap':
         gmlib.normalizer.normalizeCCMapByMCFS(args.inputFile, stats=args.stats, outFile=args.outputFile,
-                                            vmin=args.vmin, vmax=args.vmax,
+                                            vmin=args.vmin, vmax=args.vmax, stype=args.stype,
                                             percentile_thershold_no_data=args.percentile_thershold_no_data,
                                             thershold_data_occup=args.thershold_data_occup,
                                             workDir=args.workDir)
 
     if args.outputFileFormat == 'gcmap' and args.inputFileFormat == 'ccmap':
         norm_ccmap = gmlib.normalizer.normalizeCCMapByMCFS(args.inputFile, stats=args.stats,
-                                            vmin=args.vmin, vmax=args.vmax,
+                                            vmin=args.vmin, vmax=args.vmax, stype=args.stype,
                                             percentile_thershold_no_data=args.percentile_thershold_no_data,
                                             thershold_data_occup=args.thershold_data_occup,
                                             workDir=args.workDir)
@@ -172,7 +182,7 @@ def main():
 
     if args.outputFileFormat == 'gcmap' and args.inputFileFormat == 'gcmap':
         gmlib.normalizer.normalizeGCMapByMCFS(args.inputFile, args.outputFile,
-                                            stats=args.stats, vmin=args.vmin, vmax=args.vmax, 
+                                            stats=args.stats, vmin=args.vmin, vmax=args.vmax, stype=args.stype,
                                             percentile_thershold_no_data=args.percentile_thershold_no_data,
                                             thershold_data_occup=args.thershold_data_occup,
                                             compression=args.compression,
@@ -213,6 +223,11 @@ def parseArguments():
     parser.add_argument('-vmin', '--minimum-value', action='store',
                         dest='vmin', metavar=None, type=float,
                         help=vmaxHelp)
+
+    parser.add_argument('-st', '--stype', action='store',
+                        dest='stype', metavar='o/e', type=str,
+                        choices=['o/e', 'o-e'], default='o/e',
+                        help=stypeHelp)
 
     parser.add_argument('-ptnd', '--percentile-thershold-no-data', action='store',
                         dest='percentile_thershold_no_data', metavar=99,

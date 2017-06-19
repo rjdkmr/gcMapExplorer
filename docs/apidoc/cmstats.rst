@@ -6,7 +6,8 @@ cmstats module
 
 .. autosummary::
     cmstats.correlateCMaps
+    cmstats.correlateGCMaps
 		cmstats.getAvgContactByDistance
 
 .. automodule:: gcMapExplorer.lib.cmstats
-	:members: correlateCMaps, getAvgContactByDistance
+	:members: correlateCMaps, correlateGCMaps, getAvgContactByDistance

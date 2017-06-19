@@ -23,26 +23,37 @@
 import numpy as np
 
 
-from . import ccmapHelpers as cmh
-
+# This method normalize the raw contact map by removing biases from experimental procedure.
+# For more details, see `this publication <http://www.nature.com/nmeth/journal/v9/n10/full/nmeth.2148.html>`_.
+#
+# Steps are taken from supporting information.
+# Below only double-sided (DS) reads only version is implemented, therefore
+# terms with SS are not present here. For example Steps 2 and 3 is not present.
 
 def performIterativeCorrection(matrix, tol, iteration):
     count = 0
-    B = np.ones(matrix.shape[0], dtype=np.float)
+    contact_count = np.sum(matrix)
+    B = np.ones((matrix.shape[0],1), dtype=np.float)   # Step - 0
+    prev_B = None
 
+    # Step - 8, Repeat steps 1-7 until variance of dB becomes negligible.
     while True:
-        dB = np.sum(matrix, axis=0)              # Sum over rows
-        dB = dB/np.mean(dB[np.nonzero(dB != 0)])      # Renormalization by mean value
-        dB[np.nonzero(dB == 0)] = 1                   # Set zeros value to one
+        dB = np.sum(matrix, axis=0)                   # Step - 1, Sum over rows
+        dB = dB.reshape((matrix.shape[0],1))
+        dB = dB/np.mean(dB[dB != 0])                  # Step - 4, Renormalization by mean value
+        dB[dB == 0] = 1                               # Step - 5, Set zeros value to one
 
-        # Divide W_ij by dB_i dB_j
-        for i in range(matrix.shape[0]):
-            matrix[i] = matrix[i] / dB
-            matrix[:, i] = matrix[:, i] / dB
+        # Step - 6, Divide W_ij by dB_i dB_j
+        matrix /= dB
+        matrix /= dB.T
+        
+        B = B *  dB                                   # Step - 7
+        B *= np.sqrt(np.sum(matrix) / contact_count)
+        matrix *= contact_count / np.sum(matrix)
 
-        B = B *  dB
-
-        if np.var(dB) < tol or count > iteration:
-            break
+        if prev_B is not None:
+            if np.abs(prev_B - B).sum() < tol or count > iteration:
+                break
 
         count = count + 1
+        prev_B = B.copy()

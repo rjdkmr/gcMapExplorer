@@ -94,6 +94,8 @@ this value is discarded during normalization.
 tolHelp = \
 """ Tolerance for matrix balancing.
 Smaller tolreance increases accuracy in sums of rows and columns.
+Tolerance value. The relative increment in the results before declaring
+convergence.
 
 """
 
@@ -192,7 +194,7 @@ def main():
     if args.outputFileFormat == 'gcmap' and args.inputFileFormat == 'gcmap':
         gmlib.normalizer.normalizeGCMapByIC(args.inputFile, args.outputFile,
                                             tol=args.tol,  iteration=args.iteration,
-                                            vmin=args.vmin, vmax=args.vmax, 
+                                            vmin=args.vmin, vmax=args.vmax,
                                             percentile_thershold_no_data=args.percentile_thershold_no_data,
                                             thershold_data_occup=args.thershold_data_occup,
                                             workDir=args.workDir)

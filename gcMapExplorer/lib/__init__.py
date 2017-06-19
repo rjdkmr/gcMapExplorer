@@ -6,4 +6,6 @@ __all__ = [ 'ccmap',
             'normalizer',
             'normalizeKnightRuiz',
             'genomicsDataHandler',
+            'corrMatrix',
+            'statDist',
             'TadFinder']

@@ -38,7 +38,7 @@ from urllib.error import URLError
 
 from gcMapExplorer.config import getConfig, updateConfig
 
-from . import ccmap as cmp
+from . import util
 
 # get configuration
 config = getConfig()
@@ -139,15 +139,10 @@ class TempNumpyArrayFiles:
 
     def _removeTempNumpyFile(self, key):
         self.logger.info(' Closing and removing temporary numpy array file [{0}] .' .format(self.files[key]))
-        try:
-            self.arrays[key]._mmap.close()
-        except:
-            pass
+        self.arrays[key]._mmap.close()
 
-        try:
+        if os.path.isfile(self.files[key]):
             os.remove(self.files[key])
-        except:
-            pass
 
     def updateArraysByBigWig(self, bigWigFileName):
         """Update/resize all array files using given bigWig file
@@ -332,7 +327,7 @@ class TempNumpyArrayFiles:
             if regenerate:
                 self._removeTempNumpyFile(key)
 
-            (fd, fname) = tempfile.mkstemp(suffix='.npy', prefix=key+'_', dir=self.workDir, text=False)
+            (fd, fname) = tempfile.mkstemp(suffix='.npy', prefix='gcx_'+key+'_', dir=self.workDir, text=False)
             os.close(fd)     # Close file, error in windows OS
             self.logger.info(' Generating temporary numpy array file [{0}] for {1} ...' .format(fname, key))
 
@@ -467,12 +462,9 @@ class HDF5Handler:
     def close(self):
         """ close hdf5 file
         """
-        try:
-            self.hdf5.close()
-            self.logger.info(' Closed {0} ...' .format(self.filename))
-            self.hdf5 = None
-        except:
-            pass
+        self.hdf5.close()
+        self.logger.info(' Closed {0} ...' .format(self.filename))
+        self.hdf5 = None
 
     def open(self):
         """ open hdf5 file
@@ -930,10 +922,8 @@ class BigWigHandler:
         if self.wigToDel:
             for f in self.WigFileNames:
                 self.logger.info(' Removing temporary Wig file [{0}] .' .format(f))
-                try:
+                if os.path.isfile(f):
                     os.remove(f)
-                except:
-                    pass
 
     def _getBigWigInfo(self, filename):
         """Base method to Retrieve chromosome names and their sizes
@@ -1105,7 +1095,7 @@ class BigWigHandler:
                 self.WigFileNames = outfilenames
         else:
             for i in range(len(self.bigWigFileNames)):
-                tName = os.path.join(self.workDir, '{0}_{1}.wig.tmp' .format(cmp.name_generator(), i+1) )
+                tName = os.path.join(self.workDir, '{0}_{1}.wig.tmp' .format(util.getRandomName(), i+1) )
                 self.WigFileNames.append(tName)
                 self.wigToDel = True
 
@@ -1331,7 +1321,7 @@ class WigHandler:
         """
 
         output = []
-        binsize = cmp.resolutionToBinsize(resolution)
+        binsize = util.resolutionToBinsize(resolution)
         size = self.chromSizeInfo[Chrom] + 1
 
         for i in range(1, size, binsize):
@@ -2181,7 +2171,7 @@ class BEDHandler:
         """
 
         output = []
-        binsize = cmp.resolutionToBinsize(resolution)
+        binsize = util.resolutionToBinsize(resolution)
         size = self.chromSizeInfo[Chrom] + 1
 
         for i in range(1, size, binsize):
@@ -2769,7 +2759,7 @@ class EncodeDatasetsConverter:
         self._bigWigFiles = None
         self._checkPointFile = 'checkpoint.txt'
         self._checkPoint = []
-        self._implementedAssays = ['ChIP-seq', 'RNA-seq', 'DNase-seq', 'FAIRE-seq']
+        self._implementedAssays = ['ChIP-seq', 'siRNA knockdown followed by RNA-seq', 'RNA-seq', 'DNase-seq', 'FAIRE-seq']
 
         if methodToCombine not in ['mean', 'max', 'min']:
             raise NotImplementedError(' Method [{0}] to combine bigwig file not implemented. Use: \'mean\', \'max\' or \'min\' ' .format(methodToCombine))
@@ -2789,10 +2779,8 @@ class EncodeDatasetsConverter:
         self.downloadMetaData()
 
     def __del__(self):
-        try:
+        if os.path.isfile(self.metafile):
             os.remove(self.metafile)
-        except:
-            pass
 
         if self._bigWigFiles is not None:
             self._removeBigWigFiles()
@@ -2881,9 +2869,28 @@ class EncodeDatasetsConverter:
         name = re.split('-', row['Experiment target'])[0]
 
         if 'signal p-value' in row['Output type']:
-            data['type'] = 'signal'
+            data['type'] = 'signal-' + name
         elif 'fold change' in row['Output type']:
-            data['type'] = 'fold'
+            data['type'] = 'fold-' + name
+        else:
+            return
+
+        return data
+
+    def _readMetaData_siRNA_RNAseq(self, row):
+        data = dict()
+        name = re.split('-', row['Experiment target'])[0]
+
+        if re.search('signal', row['Output type']) is not None:
+
+            if re.search('unique reads', row['Output type']) is not None:
+                data['type'] = 'uniq-reads-signal' + '-' + name
+            if re.search('all reads', row['Output type']) is not None:
+                data['type'] = 'all-reads-signal' + '-' + name
+
+            if 'type' not in data:
+                data['type'] = 'signal' + '-' + name
+
         else:
             return
 
@@ -2960,7 +2967,7 @@ class EncodeDatasetsConverter:
         fin.close()
 
         # Generate metadata file name
-        name = cmp.name_generator()+'.tsv'
+        name = 'gcx_' + util.getRandomName()+ '.tsv'
         self.metafile = os.path.join(self.workDir, name)
 
         # Download the file
@@ -2999,6 +3006,8 @@ class EncodeDatasetsConverter:
                     data = None
                     if row['Assay'] == 'ChIP-seq':
                         data = self._readMetaDataChIPseq(row)
+                    if row['Assay'] == 'siRNA knockdown followed by RNA-seq':
+                        data = self._readMetaData_siRNA_RNAseq(row)
                     if row['Assay'] == 'RNA-seq':
                         data = self._readMetaDataRNAseq(row)
                     if row['Assay'] in ['DNase-seq', 'FAIRE-seq'] :
@@ -3098,8 +3107,11 @@ class EncodeDatasetsConverter:
                 fin = open(self._checkPointFile, 'w')
                 json.dump({'titles' :  self._checkPoint }, fin, indent=4, separators=(',', ':') )
                 fin.close()
-            except:
+            except IOError:
                 pass
+            except:
+                raise
+
         return
 
     def saveAsH5(self, outDir, resolutions=None, coarsening_methods=None, compression='lzf', keep_original=False):
@@ -3122,11 +3134,17 @@ class EncodeDatasetsConverter:
                 g. signal-<date>-<Experiment accession>-<File accession>.h5
 
 
-            (2) For DNase-seq:
+            (3) For DNase-seq:
                 a. uniq-reads-signal-<date>-<Experiment accession>-<File accessions>.h
                 b. raw-signal-<date>-<Experiment accession>-<File accessions>.h
                 c. all-reads-signal-<date>-<Experiment accession>-<File accessions>.h
                 d. signal-<date>-<Experiment accession>-<File accessions>.h5
+
+
+            (4) For siRNA + RNA-seq:
+                a. uniq-reads-signal-<Experiment target>-<Experiment accession>-<File accessions>.h
+                b. all-reads-signal-<Experiment target>-<Experiment accession>-<File accessions>.h
+                c. signal-<Experiment target>-<Experiment accession>-<File accessions>.h5
 
 
         .. note:: Because downloading and conversion might take very long time,
@@ -3175,7 +3193,7 @@ class EncodeDatasetsConverter:
         if self.workDir is None or self.workDir == config['Dirs']['workingdirectory']:
             tmpNumpArrayFiles = TempNumpyArrayFiles()
         else:
-            tmpNumpArrayFiles = TempNumpyArrayFiles(workDir=workDir)
+            tmpNumpArrayFiles = TempNumpyArrayFiles(workDir=self.workDir)
 
         self._checkPointFile = os.path.join(outDir, self._checkPointFile)
         self._readFromCheckPoint()
@@ -3252,11 +3270,9 @@ class EncodeDatasetsConverter:
             return
 
         for key in self._bigWigFiles:
-            try:
-                self.logger.info(' Removing temporary bigwig file [{0}] '.format(self._bigWigFiles[key]))
+            self.logger.info(' Removing temporary bigwig file [{0}] '.format(self._bigWigFiles[key]))
+            if os.path.isfile(self._bigWigFiles[key]):
                 os.remove(self._bigWigFiles[key])
-            except:
-                pass
 
         self._bigWigFiles = None
 
@@ -3352,15 +3368,13 @@ class TextFileHandler:
         """
         if self.tmpNumpyFileName is not None:
             del self.data
-            try:
+            if os.path.isfile(self.tmpNumpyFileName):
                 os.remove(self.tmpNumpyFileName)
-            except:
-                pass
 
     def _generateTempNumpyFile(self):
         """Generate temporary numpy memory-mapped file
         """
-        (fd, fname) = tempfile.mkstemp(suffix='.npy', prefix='np_', dir=self.workDir, text=False)
+        (fd, fname) = tempfile.mkstemp(suffix='.npy', prefix='gcx_np_', dir=self.workDir, text=False)
         os.close(fd)     # Close file, error in windows OS
         self.logger.info(' Generating temporary numpy array file [{0}] ...' .format(fname))
 

@@ -44,33 +44,6 @@ dtype_npBINarray = 'float32'
 logger = logging.getLogger('normalizer')
 logger.setLevel(logging.INFO)
 
-def _checkCCMAP(ccMap, workDir=None):
-	""" Check if ccmap is a obejct and file
-
-	Returns
-	-------
-	ccMap : :class:`gcMapExplorer.lib.ccmap.CCMAP` or str
-		CCMAP object or ccmap file.
-
-	ccmapType : str
-		'File' or Object
-
-	"""
-	# Check whether input is a file or a obejct
-	ccmapType = 'Object'
-	ccMapObj = None
-	if not isinstance(ccMap, cmp.CCMAP):
-		ccmapType = 'File'
-		if not os.path.isfile(ccMap):
-			logger.info(' {0} file not found.'.format(ccMap))
-			logger.info(' Not able to normalize.')
-			return None
-		else:
-			ccMapObj = cmp.load_ccmap(ccMap, workDir=workDir)
-	else:
-		ccMapObj = ccMap
-
-	return ccMapObj, ccmapType
 
 def NormalizeKnightRuizOriginal(ccMapObj, tol=1e-12, x0=None, delta=0.1, Delta=3, fl=0):
 	'''Original Knight-Ruiz algorithm for matrix balancing
@@ -246,10 +219,8 @@ def NormalizeKnightRuizOriginal(ccMapObj, tol=1e-12, x0=None, delta=0.1, Delta=3
 	del BinNormMatrix
 	del A_DSMat
 
-	try:
+	if os.path.isfile(path2matrix):
 		os.remove(path2matrix)
-	except:
-		pass
 
 	return normCCMap
 
@@ -312,7 +283,7 @@ def normalizeCCMapByKR(ccMap, memory='RAM', tol=1e-12, outFile=None, vmin=None, 
 	"""
 
 	# Check whether input is a file or a obejct
-	ccMapObjOrig, ccmapType = _checkCCMAP(ccMap, workDir=workDir)
+	ccMapObjOrig, ccmapType = cmp.checkCCMapObjectOrFile(ccMap, workDir=workDir)
 
 	# Make another copy here for maximum and minimum thershold value
 	if vmin is not None or vmax is not None:
@@ -420,7 +391,7 @@ def normalizeCCMapByKR(ccMap, memory='RAM', tol=1e-12, outFile=None, vmin=None, 
 		if ccmapType == 'File' and 'ccMapObj' in locals():	del ccMapObj
 		logger.warning(e)
 		logger.warning('Error in normalizing map!!!')
-		return None
+		raise e
 
 def normalizeGCMapByKR(gcMapInputFile, gcMapOutFile, mapSizeCeilingForMemory=20000, vmin=None, vmax=None, tol=1e-12, percentile_thershold_no_data=None, thershold_data_occup=None, compression='lzf', workDir=None, logHandler=None):
 	"""Normalize a gcmap using Knight-Ruiz matrix balancing method.
@@ -523,7 +494,12 @@ def normalizeGCMapByKR(gcMapInputFile, gcMapOutFile, mapSizeCeilingForMemory=200
 		# In case of program termination, delete the newly created ccmap and raise error
 		except (KeyboardInterrupt, SystemExit) as e:
 			if 'ccMap' in locals():	del ccMap
+			if 'norm_ccmap' in locals():	del norm_ccmap
+			if 'gcmap' in locals():	del gcmap
 			raise e
+
+		del ccMap
+		del norm_ccmap
 
 def normalizeCCMapByIC(ccMap, tol=1e-4, vmin=None, vmax=None, outFile=None, iteration=500, percentile_thershold_no_data=None, thershold_data_occup=None, workDir=None):
 	""" Normalize a ccmap by Iterative correction method
@@ -537,7 +513,7 @@ def normalizeCCMapByIC(ccMap, tol=1e-4, vmin=None, vmax=None, outFile=None, iter
 		A CCMAP object containing observed contact frequency or a ccmap file
 
 	tol : float
-		Tolerance value. If variance of Delta-B is less than tolerance, stop the iterative process.
+		Tolerance value. The relative increment in the results before declaring convergence.
 
 	vmin : float
 		Minimum thershold value for normalization. If contact frequency is less than or equal to this thershold value, this value is discarded during normalization.
@@ -579,7 +555,7 @@ def normalizeCCMapByIC(ccMap, tol=1e-4, vmin=None, vmax=None, outFile=None, iter
 	"""
 
 	# Check whether input is a file or a obejct
-	ccMapObj, ccmapType = _checkCCMAP(ccMap, workDir=workDir)
+	ccMapObj, ccmapType = cmp.checkCCMapObjectOrFile(ccMap, workDir=workDir)
 
 	tmap = ccMapObj.copy()
 
@@ -690,7 +666,7 @@ def normalizeGCMapByIC(gcMapInputFile, gcMapOutFile, vmin=None, vmax=None, tol=1
 		Maximum thershold value for normalization. If contact frequency is greater than or equal to this thershold value, this value is discarded during normalization.
 
 	tol : float
-		Tolerance value. If variance of Delta-B is less than tolerance, stop the iterative process.
+		Tolerance value. The relative increment in the results before declaring convergence.
 
 	iteration : int
 		Number of iteration to stop the normalization.
@@ -755,23 +731,30 @@ def normalizeGCMapByIC(gcMapInputFile, gcMapOutFile, vmin=None, vmax=None, tol=1
 		# In case of program termination, delete the newly created ccmap and raise error
 		except (KeyboardInterrupt, SystemExit) as e:
 			if 'ccMap' in locals():	del ccMap
+			if 'norm_ccmap' in locals():	del norm_ccmap
+			if 'gcmap' in locals():	del gcmap
 			raise e
 
-def normalizeCCMapByMCFS(ccMap, stats='median', vmin=None, vmax=None, outFile=None, percentile_thershold_no_data=None, thershold_data_occup=None, workDir=None):
+		del ccMap
+		del norm_ccmap
+
+def normalizeCCMapByMCFS(ccMap, stats='median', vmin=None, vmax=None, stype='o/e', outFile=None, percentile_thershold_no_data=None, thershold_data_occup=None, workDir=None):
 	""" Scale ccmap using Median Contact Frequency
 
-	This method can be used to normalize contact map using Median contact values
-	for particular distance between two locations/coordinates. At first, Median
-	distance contact frequency for each distance is calculated. Subsequently,
-	the observed contact frequency is divided by median contact frequency
-	obtained for distance between the two locations.
+	This method can be used to normalize contact map with expected values.
+	These expected values could be either Median or Average contact values
+	for particular distance between two locations/coordinates. At first,
+	Median/Average distance contact frequency for each distance is calculated.
+	Subsequently, the observed contact frequency is either divided ('o/e') or
+	substracted ('o-e') by median/average contact frequency obtained for
+	distance between the two locations.
 
 	.. note:
-		In place of median, mean can be also used for scaling. See below for options.
+		In place of median, mean can be also used for normalization. See below for options.
 
 	Parameters
 	----------
-	ccMapObj : :class:`gcMapExplorer.lib.ccmap.CCMAP` or ccmap file
+	ccMap : :class:`gcMapExplorer.lib.ccmap.CCMAP` or ccmap file
 		A CCMAP object containing observed contact frequency or a ccmap file
 
 	stats : str
@@ -782,6 +765,11 @@ def normalizeCCMapByMCFS(ccMap, stats='median', vmin=None, vmax=None, outFile=No
 
 	vmax : float
 		Maximum thershold value for normalization. If contact frequency is greater than or equal to this thershold value, this value is discarded during normalization.
+
+	stype : str
+		Type of scaling. It may be either 'o/e' or 'o-e'. In case of 'o/e',
+		Observed/Expected will be calculated while (Observed - Expected)
+		will be calculated for 'o-e'.
 
 	outFile : str
 		Name of output ccmap file, to save directly the normalized map as a ccmap file. In case of this option, ``None`` will return.
@@ -813,8 +801,12 @@ def normalizeCCMapByMCFS(ccMap, stats='median', vmin=None, vmax=None, outFile=No
 
 	"""
 
+	if stype not in ['o/e', 'o-e']:
+		logger.warning('Wrong value {0} for stype: {1}.'.format(stype, ['o/e', 'o-e']))
+		return None
+
 	# Check whether input is a file or a obejct
-	ccMapObjOrig, ccmapType = _checkCCMAP(ccMap, workDir=workDir)
+	ccMapObjOrig, ccmapType = cmp.checkCCMapObjectOrFile(ccMap, workDir=workDir)
 
 	# Make another copy here for maximum and minimum thershold value
 	if vmin is not None or vmax is not None:
@@ -844,9 +836,15 @@ def normalizeCCMapByMCFS(ccMap, stats='median', vmin=None, vmax=None, outFile=No
 
 	# Main section
 	try:
-		avcnorm._normalizeByAvgContact(ccMapObj, normCCMap, stats=stats,
-					percentile_thershold_no_data=percentile_thershold_no_data,
-					thershold_data_occup=thershold_data_occup)
+		if stype == 'o/e':
+			avcnorm._normalizeByAvgContactByDivision(ccMapObj, normCCMap, stats=stats,
+						percentile_thershold_no_data=percentile_thershold_no_data,
+						thershold_data_occup=thershold_data_occup)
+
+		if stype == 'o-e':
+			avcnorm._normalizeByAvgContactBySubstraction(ccMapObj, normCCMap, stats=stats,
+						percentile_thershold_no_data=percentile_thershold_no_data,
+						thershold_data_occup=thershold_data_occup)
 
 		if ccMapObj.xlabel is not None:
 			logger.info(' 	...Finished Median Contact Frequency Scaling for {0} map...'.format(ccMapObj.xlabel))
@@ -882,14 +880,16 @@ def normalizeCCMapByMCFS(ccMap, stats='median', vmin=None, vmax=None, outFile=No
 		logger.warning('Error in Median Contact Frequency Scaling!!!')
 		return None
 
-def normalizeGCMapByMCFS(gcMapInputFile, gcMapOutFile, stats='median', vmin=None, vmax=None, percentile_thershold_no_data=None, thershold_data_occup=None, compression='lzf', workDir=None, logHandler=None):
+def normalizeGCMapByMCFS(gcMapInputFile, gcMapOutFile, stats='median', vmin=None, vmax=None, stype='o/e', percentile_thershold_no_data=None, thershold_data_occup=None, compression='lzf', workDir=None, logHandler=None):
 	""" Scale all maps in gcmap using Median Contact Frequency
 
-	This method can be used to normalize contact map using Median contact values
-	for particular distance between two locations/coordinates. At first, Median
-	distance contact frequency for each distance is calculated. Subsequently,
-	the observed contact frequency is divided by median contact frequency
-	obtained for distance between the two locations.
+	This method can be used to normalize contact map with expected values.
+	These expected values could be either Median or Average contact values
+	for particular distance between two locations/coordinates. At first,
+	Median/Average distance contact frequency for each distance is calculated.
+	Subsequently, the observed contact frequency is either divided ('o/e') or
+	substracted ('o-e') by median/average contact frequency obtained for
+	distance between the two locations.
 
 	Parameters
 	----------
@@ -907,6 +907,11 @@ def normalizeGCMapByMCFS(gcMapInputFile, gcMapOutFile, stats='median', vmin=None
 
 	vmax : float
 		Maximum thershold value for normalization. If contact frequency is greater than or equal to this thershold value, this value is discarded during normalization.
+
+	stype : str
+		Type of scaling. It may be either 'o/e' or 'o-e'. In case of 'o/e',
+		Observed/Expected will be calculated while (Observed - Expected)
+		will be calculated for 'o-e'.
 
 	percentile_thershold_no_data : int
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
@@ -943,6 +948,9 @@ def normalizeGCMapByMCFS(gcMapInputFile, gcMapOutFile, stats='median', vmin=None
 
 	"""
 
+	if stype not in ['o/e', 'o-e']:
+		raise ValueError('Wrong value {0} for stype: {1}.'.format(stype, ['o/e', 'o-e']))
+
 	# Get list of maps in ascending order
 	gcmap = gmp.GCMAP(gcMapInputFile)
 	gcmap.loadSmallestMap()
@@ -970,7 +978,7 @@ def normalizeGCMapByMCFS(gcMapInputFile, gcMapOutFile, stats='median', vmin=None
 				ccMap.make_unreadable()
 
 			try:
-				norm_ccmap = normalizeCCMapByMCFS(ccMap, stats=stats,
+				norm_ccmap = normalizeCCMapByMCFS(ccMap, stats=stats, stype=stype,
 							percentile_thershold_no_data=percentile_thershold_no_data,
 							thershold_data_occup=thershold_data_occup,
 							workDir=workDir)
@@ -994,6 +1002,9 @@ def normalizeGCMapByMCFS(gcMapInputFile, gcMapOutFile, stats='median', vmin=None
 
 			# In case of program termination, delete the newly created ccmap and raise error
 			except (KeyboardInterrupt, SystemExit) as e:
+				if 'ccMap' in locals():	del ccMap
 				if 'norm_ccmap' in locals():	del norm_ccmap
 				if 'gcmap' in locals():	del gcmap
 				raise e
+
+			del ccMap

@@ -25,6 +25,7 @@ import tempfile
 import configparser
 from appdirs import system
 from appdirs import AppDirs
+import psutil
 
 
 defaultConfigText="""
@@ -47,13 +48,26 @@ else:
 configFile = os.path.join(configAppDirs.user_config_dir, configFileName)
 
 
-def defaultConfiguration():
+def _defaultConfiguration():
     config = configparser.ConfigParser()
     config.read_string(defaultConfigText)
     return config
 
 def updateConfig(section, option, value):
+    """ Update configuration file
+
+    Parameters
+    ----------
+    section : str
+        Section of the configuration files. It could be ``Dirs`` or ``Programs``.
+    option : str
+        Input option, for which value is to be changed.
+    value : str or int
+        New value of the input option.
+    """
+
     config = getConfig()
+
     if section not in config:
         return
     if option not in config[section]:
@@ -65,6 +79,34 @@ def updateConfig(section, option, value):
         config.write(fout)
 
 def getConfig():
+    """ To get the present configuration.
+
+    Configuration file has the following organization.
+
+    ::
+
+        Configuration
+            ├─────────── Dirs
+            │             └──────── WorkingDirectory
+            │
+            └─────────── Programs
+                          ├──────── bigWigInfo
+                          └──────── bigWigToWig
+
+
+    In case no configuration file is found, a new file is generated and default
+    value is assigned to each option.
+
+    Returns
+    -------
+    config : dict
+        Dictionary of Dictionaries with option name and value pair.
+        For example, config['Dirs']['WorkingDirectory'] contains path to
+        scratch directory. Similarly, config['Programs']['bigWigInfo']
+        contains path to bigWigInfo program.
+
+
+    """
     if not os.path.exists(configFile):
 
         if not os.path.exists(configAppDirs.user_config_dir):
@@ -74,7 +116,8 @@ def getConfig():
                 pass
 
 
-        config = defaultConfiguration()
+        config = _defaultConfiguration()
+        print(" No configuration file found... Generating a new configuration file with default values as follows:")
         with open(configFile, 'w') as fout:
             config.write(fout)
 
@@ -85,20 +128,34 @@ def getConfig():
     return config
 
 
-def initConfig():
-    print('Configuration file not found...')
-    print('Starting configuration:')
+def cleanScratch():
+    """ Clean scratch directory.
 
-    while True:
-        s = input('--> Write working directory name [current: {0}]'.format(config['Dirs']['WorkingDirectory']))
-        if s:
-            if not os.path.exists(s):
-                print('Path {0} does not exist... Please retry...'.format(s))
-            else:
-                config['Dirs']['WorkingDirectory'] = s
-                break
+    It checks whether any other gcMapExplorer process is running. In case,
+    when only one process (i.e. current) is running, all files with "gcx"
+    prefix will be deleted from default scratch directory.
 
-    with open(configFileName, 'w') as fout:
-        config.write(fout)
+    """
+    config = getConfig()
+    count = 0
+    for pid in psutil.pids():
+        p = psutil.Process(pid)
+        if 'gcMapExplorer' in p.name():
+            count += 1
 
-    return config
+    # If only one gcMapExplorer is running, it is the current one
+    if count == 1:
+        print('\n-------------------------')
+        print(' Cleaning default scratch {0} directory.'.format(config['Dirs']['WorkingDirectory']))
+        for f in os.listdir(config['Dirs']['WorkingDirectory']):
+            if not os.path.isfile(f):
+                continue
+            basename = os.path.basename(f)
+            base = os.path.splitext(basename)[0]
+            if base in ["gcx"]:
+                try:
+                    os.remove(f)
+                except IOError:
+                    pass
+
+        print('     ... Finished Cleaning')

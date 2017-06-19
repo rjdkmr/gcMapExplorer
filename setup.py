@@ -40,6 +40,7 @@ ext_modules = [
     Extension("gcMapExplorer.lib.normalizeAverageContact", ["gcMapExplorer/lib/normalizeAverageContact.pyx"]  ),
     Extension("gcMapExplorer.lib.normalizeKnightRuiz",     ["gcMapExplorer/lib/normalizeKnightRuiz.pyx"]      ),
     Extension("gcMapExplorer.lib.normalizeIC",             ["gcMapExplorer/lib/normalizeIC.pyx"]              ),
+    Extension("gcMapExplorer.lib._corrMatrixCore",         ["gcMapExplorer/lib/_corrMatrixCore.pyx"]          ),
     Extension("gcMapExplorer.lib.TadFinder",               ["gcMapExplorer/lib/TadFinder.pyx"]                ),
     ]
 
@@ -48,7 +49,7 @@ setup(
     version = __version__,
 
     # Required packages
-    install_requires = [ 'appdirs>=1.4', 'numpy>=1.6',  'scipy>=0.9', 'matplotlib>=1.1.0', 'dask>=0.7.3', 'toolz>=0.7.4', 'h5py>=2.2.1', 'Cython>=0.23.0' ],
+    install_requires = [ 'appdirs>=1.4', 'numpy>=1.6',  'scipy>=0.9', 'matplotlib>=1.1.0', 'dask>=0.7.3', 'toolz>=0.7.4', 'psutil>=5.2.0', 'h5py>=2.2.1', 'Cython>=0.23.0' ],
     #ext_modules = cythonize("gcMapExplorer/lib/*.pyx", compiler_directives={'embedsignature': True}),
     ext_modules = cythonize(ext_modules, compiler_directives={'embedsignature': True}),
     packages=find_packages(),

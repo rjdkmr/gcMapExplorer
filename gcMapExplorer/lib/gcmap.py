@@ -30,7 +30,7 @@ from gcMapExplorer.config import getConfig
 config = getConfig()
 
 from . import ccmap as cmp
-from . import ccmapHelpers as cmh
+from . import util
 
 
 class GCMAP:
@@ -203,10 +203,14 @@ class GCMAP:
         # In case if map name is not given, load the first map
         if mapName is None and chromAtX is None and chromAtY is None:
             self.genMapNameList()
-            mapName = self.mapNameList[0]
+            if self.mapNameList is not None:
+                mapName = self.mapNameList[0]
+            else:
+                mapName = None
 
-        self._setLabels(mapName, chromAtX, chromAtY)
-        self._readMap(resolution=resolution)
+        if mapName is not None:
+            self._setLabels(mapName, chromAtX, chromAtY)
+            self._readMap(resolution=resolution)
 
     def __del__(self):
         if self.fileOpened:
@@ -227,6 +231,10 @@ class GCMAP:
         mapList = []
         for mapName in self.hdf5.keys():
             mapList.append(mapName)
+
+        # In case of new file, no maps.
+        if not mapList:
+            return
 
         if sortBy == 'size':
             # Get mapname and resolution of already loaded map
@@ -251,7 +259,7 @@ class GCMAP:
                 self.changeMap(mapName=oldMapName, resolution=oldResolution)
 
         else:
-            self.mapNameList = cmh.sorted_nicely( mapList )
+            self.mapNameList = util.sorted_nicely( mapList )
 
     def _setLabels(self, mapName, chromAtX, chromAtY):
         """ Set xlabel and ylabel
@@ -259,7 +267,7 @@ class GCMAP:
 
         if mapName is not None:
             if mapName not in self.hdf5:
-                raise cmp.MapNotFoundError(' [{0}] dataset not found in [{1}] file...'.format(mapName, self.hdf5.filename))
+                raise util.MapNotFoundError(' [{0}] dataset not found in [{1}] file...'.format(mapName, self.hdf5.filename))
             self.groupName = mapName
             self.xlabel = self.hdf5[mapName].attrs['xlabel']
             self.ylabel = self.hdf5[mapName].attrs['ylabel']
@@ -296,7 +304,7 @@ class GCMAP:
         """
 
         if self.groupName not in self.hdf5:
-            raise cmp.MapNotFoundError(' [{0}] dataset not found in [{1}] file...'.format(self.groupName, self.hdf5.filename))
+            raise util.MapNotFoundError(' [{0}] dataset not found in [{1}] file...'.format(self.groupName, self.hdf5.filename))
 
         # determining finest resolution map
         self.binsizes = []
@@ -306,13 +314,13 @@ class GCMAP:
         self.binsizes = sorted(self.binsizes)
 
         # At the start, always choose finest resolution
-        self.finestResolution = cmp.binsizeToResolution(self.binsizes[0])
+        self.finestResolution = util.binsizeToResolution(self.binsizes[0])
         if resolution is not None:
-            resolutionList = list( map(cmp.binsizeToResolution, self.binsizes ) )
+            resolutionList = list( map(util.binsizeToResolution, self.binsizes ) )
             if resolution in resolutionList:
                 self.resolution = resolution
             else:
-                raise cmp.ResolutionNotFoundError (' "{0}" resolution not found for "{1}" in file: "{2}".'.format(resolution, self.groupName, self.hdf5.filename ) )
+                raise util.ResolutionNotFoundError (' "{0}" resolution not found for "{1}" in file: "{2}".'.format(resolution, self.groupName, self.hdf5.filename ) )
         else:
             self.resolution = self.finestResolution
 
@@ -357,28 +365,15 @@ class GCMAP:
 
         """
 
+        success = True
         idx = self.binsizes.index(self.binsize)
         if idx == len(self.binsizes) - 1:
-            return False
+            success = False
 
-        self.resolution = cmp.binsizeToResolution(self.binsizes[idx+1])
+        if success:
+            self.changeResolution(util.binsizeToResolution(self.binsizes[idx+1]))
 
-        self.dtype = self.hdf5[self.groupName][self.resolution].dtype
-
-        for key in ['minvalue', 'maxvalue', 'binsize']:
-            self.__dict__[key] = self.hdf5[self.groupName][self.resolution].attrs[key]
-
-        self.shape = (self.hdf5[self.groupName][self.resolution].attrs['xshape'], self.hdf5[self.groupName][self.resolution].attrs['yshape'])
-        self.xticks = [0, self.shape[0]*self.binsize]
-        self.yticks = [0, self.shape[1]*self.binsize]
-
-        self.title = self.xlabel + '_vs_' + self.ylabel
-
-        if self.resolution+'-bNoData' in self.hdf5[self.groupName]:
-            self.bNoData = np.asarray( self.hdf5[self.groupName][self.resolution+'-bNoData'][:], dtype=np.bool )
-        self.matrix = self.hdf5[self.groupName][self.resolution]
-
-        return True
+        return success
 
     def toFinerResolution(self):
         """ Try to change contact map to next finer resolution
@@ -390,28 +385,15 @@ class GCMAP:
 
         """
 
+        success = True
         idx = self.binsizes.index(self.binsize)
         if idx == 0:
-            return False
+            success = False
 
-        self.resolution = cmp.binsizeToResolution(self.binsizes[idx-1])
+        if success:
+            self.changeResolution(util.binsizeToResolution(self.binsizes[idx-1]))
 
-        self.dtype = self.hdf5[self.groupName][self.resolution].dtype
-
-        for key in ['minvalue', 'maxvalue', 'binsize']:
-            self.__dict__[key] = self.hdf5[self.groupName][self.resolution].attrs[key]
-
-        self.shape = (self.hdf5[self.groupName][self.resolution].attrs['xshape'], self.hdf5[self.groupName][self.resolution].attrs['yshape'])
-        self.xticks = [0, self.shape[0]*self.binsize]
-        self.yticks = [0, self.shape[1]*self.binsize]
-
-        self.title = self.xlabel + '_vs_' + self.ylabel
-
-        if self.resolution+'-bNoData' in self.hdf5[self.groupName]:
-            self.bNoData = np.asarray( self.hdf5[self.groupName][self.resolution+'-bNoData'][:], dtype=np.bool )
-        self.matrix = self.hdf5[self.groupName][self.resolution]
-
-        return True
+        return success
 
     def changeResolution(self, resolution):
         """ Try to change contact map of a given resolution.
@@ -424,11 +406,17 @@ class GCMAP:
         Returns
         -------
         success : bool
-            If change was successfu ``True`` otherwise ``False``.
+            If change was successful ``True`` otherwise ``False``.
 
         """
 
-        self._readMap(resolution=resolution)
+        success = True
+        try:
+            self._readMap(resolution=resolution)
+        except util.ResolutionNotFoundError:
+            success = False
+
+        return success
 
     def changeMap(self, mapName=None, chromAtX=None, chromAtY=None, resolution=None):
         """ Change the map for another chromosome
@@ -494,7 +482,7 @@ class GCMAP:
 
         oldMapName = self.groupName
         oldChromAtX = self.xlabel
-        oldChromAtY = self.xlabel
+        oldChromAtY = self.ylabel
         oldResolution = self.resolution
 
         doExist = True
@@ -504,13 +492,14 @@ class GCMAP:
             self._setLabels(mapName, chromAtX, chromAtY)
             self.matrix = None
             self._readMap(resolution=resolution)
-        except(cmp.ResolutionNotFoundError, cmp.ResolutionNotFoundError) as e:
+        except(util.MapNotFoundError, util.ResolutionNotFoundError) as e:
             doExist = False
         except Exception as e:
             raise e
 
-        # Revert to old one
-        self.changeMap(mapName=oldMapName, chromAtX=oldChromAtX, chromAtY=oldChromAtY, resolution=oldResolution)
+        # Revert to old one, if a new file, nothing to revert
+        if oldMapName is not None:
+            self.changeMap(mapName=oldMapName, chromAtX=oldChromAtX, chromAtY=oldChromAtY, resolution=oldResolution)
 
         return doExist
 
@@ -558,7 +547,7 @@ class GCMAP:
         newBinsize = self.binsize * level
 
         # Create and add map
-        resolution = cmp.binsizeToResolution(newBinsize)
+        resolution = util.binsizeToResolution(newBinsize)
 
         if  self.hdf5[self.groupName].attrs['compression'] == 'lzf':
             outCmap = self.hdf5[self.groupName].create_dataset(resolution, outputShape, dtype=self.dtype, chunks=True, compression="lzf", shuffle=True)
@@ -769,9 +758,9 @@ def loadGCMapAsCCMap(filename, mapName=None, chromAtX=None, chromAtY=None, resol
         binsizes = []
         for key in hdf5[groupName].keys():
             if 'bNoData' not in key:
-                binsizes.append( cmp.resolutionToBinsize(key) )
+                binsizes.append( util.resolutionToBinsize(key) )
         binsizes = sorted(binsizes)
-        resolution = cmp.binsizeToResolution(binsizes[0])
+        resolution = util.binsizeToResolution(binsizes[0])
         del binsizes
 
     cmap = cmp.CCMAP(dtype=hdf5[groupName][resolution].dtype)
@@ -801,7 +790,7 @@ def loadGCMapAsCCMap(filename, mapName=None, chromAtX=None, chromAtY=None, resol
     return cmap
 
 
-def addCCMap2GCMap(cmap, filename, compression='lzf', generateCoarse=True, coarsingMethod='sum', replaceCMap=True, logHandler=None):
+def addCCMap2GCMap(cmap, filename, scaleoffset=None, compression='lzf', generateCoarse=True, coarsingMethod='sum', replaceCMap=True, logHandler=None):
     """ Add :class:`gcMapExplorer.lib.ccmap.CCMAP` to a gcmap file
 
     Parameters
@@ -810,6 +799,12 @@ def addCCMap2GCMap(cmap, filename, compression='lzf', generateCoarse=True, coars
         An instance of :class:`gcMapExplorer.lib.ccmap.CCMAP`, which will be added to gcmap file
     filename : str
         Name of ``gcmap`` file or h5py.File instance or GCMAP.hdf5 to which output data will be written.
+    scaleoffset : int
+        For integer data, this specifies the number of bits to retain in hdf5 file. In case of ``0``
+        value, HDF5 automatically compute the number of bits required for lossless compression of the chunk.
+        For floating-point data, indicates the number of digits after the decimal point to retain.
+        This can help to reduce the final file size. In case of ``None`` data will be stored without any
+        loss of precision.
     compression : str
         Compression method. Presently allowed : ``lzf`` for LZF compression and ``gzip`` for GZIP compression.
     generateCoarse : bool
@@ -882,7 +877,7 @@ def addCCMap2GCMap(cmap, filename, compression='lzf', generateCoarse=True, coars
         group.attrs['compression'] = compression
 
         # Create and add map
-        resolution = cmp.binsizeToResolution(cmap.binsize)
+        resolution = util.binsizeToResolution(cmap.binsize)
         if generateCoarse:
             logger.info(' Adding data to [{0}] for [{1}] ...'.format(filename, groupName))
         else:
@@ -894,7 +889,7 @@ def addCCMap2GCMap(cmap, filename, compression='lzf', generateCoarse=True, coars
 
 
         # Add new map
-        newCmap = group.create_dataset(resolution, cmap.shape, dtype=cmap.dtype, data=cmap.matrix, chunks=True, compression=compression, shuffle=True)
+        newCmap = group.create_dataset(resolution, cmap.shape, dtype=cmap.dtype, data=cmap.matrix, chunks=True, compression=compression, shuffle=True, scaleoffset=scaleoffset)
 
         # Save all other attributes
         if cmap.bNoData is not None:
