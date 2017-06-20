@@ -168,7 +168,7 @@ after_success:
   - |
     pip install --upgrade twine
     if [[ $TRAVIS_OS_NAME != 'osx' ]]; then
-      pip wheel --no-cache-dir -w wheels .
+      pip wheel --no-deps --no-cache-dir -w wheels .
       auditwheel show wheels/*.whl
       auditwheel repair wheels/*.whl
       twine upload --skip-existing wheelhouse/*
