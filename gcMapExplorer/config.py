@@ -118,6 +118,12 @@ def getConfig():
 
         config = _defaultConfiguration()
         print(" No configuration file found... Generating a new configuration file with default values as follows:")
+        print("==============================")
+        print("Configuration file: {0}".format(configFile))
+        print("==============================")
+        config.write(sys.stdout)
+        print("==============================")
+
         with open(configFile, 'w') as fout:
             config.write(fout)
 
@@ -126,6 +132,20 @@ def getConfig():
         config.read(configFile)
 
     return config
+
+def printConfig():
+    """Print configuration file
+
+    It can be used to print the configuration file. It shows the current
+    configuration of gcMapExplorer.
+
+    """
+    config = getConfig()
+    print("==============================")
+    print("Configuration file: {0}".format(configFile))
+    print("==============================")
+    config.write(sys.stdout)
+    print("==============================")
 
 
 def cleanScratch():
@@ -139,14 +159,18 @@ def cleanScratch():
     config = getConfig()
     count = 0
     for pid in psutil.pids():
-        p = psutil.Process(pid)
-        if 'gcMapExplorer' in p.name():
-            count += 1
+        p = None
+        try:
+            p = psutil.Process(pid)
+        except psutil.NoSuchProcess:
+            pass
+
+        if p is not None:
+            if 'gcMapExplorer' in p.name():
+                count += 1
 
     # If only one gcMapExplorer is running, it is the current one
     if count == 1:
-        print('\n-------------------------')
-        print(' Cleaning default scratch {0} directory.'.format(config['Dirs']['WorkingDirectory']))
         for f in os.listdir(config['Dirs']['WorkingDirectory']):
             if not os.path.isfile(f):
                 continue

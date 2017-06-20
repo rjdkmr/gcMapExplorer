@@ -21,6 +21,7 @@ config module
 .. autosummary::
     updateConfig
     getConfig
+		printConfig
 		cleanScratch
 
 .. currentmodule:: gcMapExplorer.lib

@@ -38,6 +38,15 @@ Examples
     # Set path to bigWigToWig program
     gcMapExplorer.config.updateConfig('Programs', 'bigWigToWig', 'Path/to/bigWigToWig')
 
+    # Print current configuration file content
+    gcMapExplorer.config.printConfig()
+
+    # Get configuration
+    config = gcMapExplorer.config.getConfig()
+
+    # Get scratch directory
+    print(config['Dirs']['WorkingDirectory'])
+
 
 Summary
 -------
@@ -46,7 +55,8 @@ Summary
 .. autosummary::
     updateConfig
     getConfig
+    printConfig
 		cleanScratch
 
 .. automodule:: gcMapExplorer.config
-	:members: updateConfig, getConfig, cleanScratch
+	:members: updateConfig, getConfig, printConfig, cleanScratch
