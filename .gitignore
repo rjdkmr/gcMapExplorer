@@ -25,6 +25,8 @@ develop-eggs/
 dist/
 downloads/
 eggs/
+wheels/
+wheelhouse/
 .eggs/
 lib64/
 parts/

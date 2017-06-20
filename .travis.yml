@@ -40,6 +40,10 @@ before_install:
 
       echo "No need to install PyQt5. It is required during execution only"
 
+      # Builds, directory for temporay installation
+      mkdir -p builds
+      chmod a+rw builds
+
       ## Install sip and pyqt5
       #export DISPLAY=:99.0
       #sh -e /etc/init.d/xvfb start
@@ -49,10 +53,6 @@ before_install:
       #sudo chmod a+rw /downloads
       #curl -L -o /downloads/sip.tar.gz https://nchc.dl.sourceforge.net/project/pyqt/sip/sip-4.18/sip-4.18.tar.gz
       #curl -L -o /downloads/PyQt5_gpl-5.6.tar.gz https://superb-dca2.dl.sourceforge.net/project/pyqt/PyQt5/PyQt-5.6/PyQt5_gpl-5.6.tar.gz
-
-      # Builds
-      #sudo mkdir -p /builds
-      #sudo chmod a+rw /builds
 
       # Qt5
       #sudo add-apt-repository -y ppa:beineri/opt-qt562
@@ -81,6 +81,15 @@ before_install:
 
       # Out from builds
       #popd
+
+      # Install patchelf
+      pushd builds
+      curl -L -o patchelf-0.9.tar.gz https://nixos.org/releases/patchelf/patchelf-0.9/patchelf-0.9.tar.gz
+      tar -zxvf patchelf-0.9.tar.gz
+      pushd patchelf-0.9
+      ./configure && make && sudo make install
+      popd
+      popd
 
     else
       brew update
@@ -131,6 +140,10 @@ install:
     pip install --upgrade matplotlib
     pip install --upgrade h5py
 
+    if [[ $TRAVIS_OS_NAME != 'osx' ]]; then
+      pip install auditwheel
+    fi
+
     # Install gcMapExplorer
     pip install -ve .
 
@@ -154,5 +167,13 @@ after_success:
   # succeed the first time and will be skipped by twine in subsiquent attempts.
   - |
     pip install --upgrade twine
-    python setup.py sdist bdist_wheel
+    if [[ $TRAVIS_OS_NAME != 'osx' ]]; then
+      pip wheel --no-cache-dir -w wheels .
+      auditwheel show wheels/*.whl
+      auditwheel repair wheels/*.whl
+      twine upload --skip-existing wheelhouse/*
+      python setup.py sdist
+    else
+      python setup.py sdist bdist_wheel
+    fi
     twine upload --skip-existing dist/*
