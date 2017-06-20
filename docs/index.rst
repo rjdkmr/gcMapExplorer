@@ -102,9 +102,7 @@ Contents
    Requirements and Installation <install>
    How to use gcMapExplorer? <usage.rst>
    Genome Contact Map Browser <mapBrowser.rst>
-   About gcmap file <about_gcmap_file>
-   About ccmap and npbin files <about_ccmap_file>
-   About Genomic track h5 file <about_h5_file>
+   About file formats <file_formats>
    Normalization of Hi-C maps <cmapNormalization>
    Frequently asked questions <faq.rst>
    Download example datasets <dLcmaps>
