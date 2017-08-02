@@ -54,9 +54,9 @@ Features
 Citation
 --------
 
-Rajendra Kumar, Haitham Sobhy, Per Stenberg and Ludvig Lizana (2017).
-Genome Contact Map Explorer - A platform for the comparison, interactive visualization and analysis of genome contact maps.
-*Nucleic Acids Res.* (**Accepted**).
+Rajendra Kumar, Haitham Sobhy, Per Stenberg and Ludvig Lizana.
+`Genome Contact Map Explorer - A platform for the comparison, interactive visualization and analysis of genome contact maps. <https://doi.org/10.1093/nar/gkx644>`_
+*Nucleic Acids Res.* (2017).
 
 
 Screen-shots
