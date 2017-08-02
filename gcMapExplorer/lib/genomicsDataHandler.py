@@ -1095,7 +1095,7 @@ class BigWigHandler:
                 self.WigFileNames = outfilenames
         else:
             for i in range(len(self.bigWigFileNames)):
-                tName = os.path.join(self.workDir, '{0}_{1}.wig.tmp' .format(util.getRandomName(), i+1) )
+                tName = os.path.join(self.workDir, 'gcx_{0}_{1}.wig.tmp' .format(util.getRandomName(), i+1) )
                 self.WigFileNames.append(tName)
                 self.wigToDel = True
 
