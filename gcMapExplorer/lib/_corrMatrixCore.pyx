@@ -36,9 +36,199 @@ ctypedef np.int_t dtypeInt_t
 ctypedef np.float_t dtypeFloat_t
 ctypedef np.float32_t dtypeFloat32_t
 
+# declare the interface to the C code
+cdef extern from "corrMatrixCoreSRC.h" nogil:
+    int _correlationMatrix(double *in_array, double *out_array, int size, double *maskvalue)
+    int _covarianceMatrix(double *in_array, double *out_array, int size, double *maskvalue)
+    double _calculateCorrelation(double *x, double*y, int n, double *maskvalue)
+    double _calculateCovariance(double *x, double*y, int n, double *maskvalue)
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def calculateCorrMatrix(np.ndarray[double, ndim=2, mode="c"] in_array not None, np.ndarray[double, ndim=2, mode="c"] out=None, maskvalue=None):
+    """Calculate correlation matrix from a 2D numpy array.
+    During calculation, array values equal to maskvalue will not be considered.
+
+    .. note: In the background it is implemented in C language and therefore,
+        it is accurate and much faster than the ``numpy.ma.corrcoef``.
+
+    .. warning: input and output arrays should be of data type ``numpy.float64``.
+        Therefore, convert type to ``numpy.float64`` before using this function.
+
+    Parameters
+    ----------
+    in_array : numpy.ndarray
+        Input numpy array
+    out : numpy.ndarray
+        If it is ``None``, output array is returned.
+    maskvalue : float
+        If this value is given, all elements of input array with this equal
+        value is masked during the calculation.
+
+    Returns
+    -------
+    out : numpy.ndarray or None
+        In case of ``out=None``, ouput array will be returned. Otherwise, ``None``
+        is returned
+    """
+    cdef int size
+    cdef double c_maskvalue
+
+    size = in_array.shape[0]
+    toReturn = False
+    if out is None:
+        out = np.zeros((size, size), dtype=in_array.dtype)
+        toReturn = True
+
+    if maskvalue is not None:
+        c_maskvalue = dtypeFloat32(maskvalue)
+        with nogil:
+            _correlationMatrix(&in_array[0,0], &out[0,0], size, &c_maskvalue)
+    else:
+        with nogil:
+            _correlationMatrix(&in_array[0,0], &out[0,0], size, NULL)
+
+
+    if toReturn:
+        return out
+    else:
+        return None
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def calculateCovMatrix(np.ndarray[double, ndim=2, mode="c"] in_array not None, np.ndarray[double, ndim=2, mode="c"] out=None, maskvalue=None):
+    """Calculate covariance matrix from a 2D numpy array.
+    During calculation, array values equal to maskvalue will not be considered.
+
+    .. warning: input and output arrays should be of data type ``numpy.float64``.
+        Therefore, convert type to ``numpy.float64`` before using this function.
+
+    Parameters
+    ----------
+    in_array : numpy.ndarray
+        Input numpy array
+    out : numpy.ndarray
+        If it is ``None``, output array is returned.
+    maskvalue : float
+        If this value is given, all elements of input array with this equal
+        value is masked during the calculation.
+
+    Returns
+    -------
+    out : numpy.ndarray or None
+        In case of ``out=None``, ouput array will be returned. Otherwise, ``None``
+        is returned
+
+    """
+
+    cdef int size
+    cdef double c_maskvalue
+
+    size = in_array.shape[0]
+    toReturn = False
+    if out is None:
+        out = np.zeros((size, size), dtype=in_array.dtype)
+        toReturn = True
+
+    if maskvalue is not None:
+        c_maskvalue = maskvalue
+        _covarianceMatrix(&in_array[0,0], &out[0,0], size, &c_maskvalue)
+    else:
+        _covarianceMatrix(&in_array[0,0], &out[0,0], size, NULL)
+
+
+    if toReturn:
+        return out
+    else:
+        return None
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def calculateCorrelation(np.ndarray[double, ndim=1, mode="c"] x not None, np.ndarray[double, ndim=1, mode="c"] y not None, maskvalue=None):
+    """Calculate correlation between two 1D numpy array.
+    During calculation, array values equal to maskvalue will not be considered.
+
+    .. warning: input array should be of data type ``numpy.float64``.
+        Therefore, convert type to ``numpy.float64`` before using this function.
+
+    Parameters
+    ----------
+    x : numpy.ndarray
+        First input numpy array
+    y : numpy.ndarray
+        Second input numpy array
+    maskvalue : float
+        If this value is given, all elements of input array with this equal
+        value is masked during the calculation.
+
+    Returns
+    -------
+    result : float
+        Correlation coefficient
+
+    """
+    cdef int size
+    cdef double c_maskvalue
+    cdef double result
+
+    size = x.shape[0]
+
+    if maskvalue is not None:
+        c_maskvalue = maskvalue
+        with nogil:
+            result = _calculateCorrelation(&x[0], &y[0], size, &c_maskvalue)
+    else:
+        with nogil:
+            result = _calculateCorrelation(&x[0], &y[0], size, NULL)
+
+    return result
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def calculateCovariance(np.ndarray[double, ndim=1, mode="c"] x not None, np.ndarray[double, ndim=1, mode="c"] y not None, maskvalue=None):
+    """Calculate covariance between two 1D numpy array.
+    During calculation, array values equal to maskvalue will not be considered.
+
+    .. warning: input array should be of data type ``numpy.float64``.
+        Therefore, convert type to ``numpy.float64`` before using this function.
+
+    Parameters
+    ----------
+    x : numpy.ndarray
+        First input numpy array
+    y : numpy.ndarray
+        Second input numpy array
+    maskvalue : float
+        If this value is given, all elements of input array with this equal
+        value is masked during the calculation.
+
+    Returns
+    -------
+    result : float
+        Covariance value
+
+
+    """
+    cdef int size
+    cdef double c_maskvalue
+    cdef double result
+
+    size = x.shape[0]
+
+    if maskvalue is not None:
+        c_maskvalue = maskvalue
+        with nogil:
+            result = _calculateCovariance(&x[0], &y[0], size, &c_maskvalue)
+    else:
+        with nogil:
+            result = _calculateCovariance(&x[0], &y[0], size, NULL)
+
+    return result
+
 @cython.boundscheck(False) # turn off bounds-checking for entire function
 @cython.wraparound(False)  # turn off negative index wrapping for entire function
-def _calculateCorrMatrix(np.ndarray[dtypeFloat_t, ndim=2] matrix):
+def _calculateCorrMatrixOLDSLOW(np.ndarray[dtypeFloat_t, ndim=2] matrix):
     assert matrix.dtype == dtypeFloat
     cdef:
         int length = matrix.shape[0]
@@ -56,7 +246,7 @@ def _calculateCorrMatrix(np.ndarray[dtypeFloat_t, ndim=2] matrix):
 
     for i in range(length):
         boolMatrix[i] = ( matrix[i] != 0)
-        boolMatrix[:, i] = (matrix[i] != 0)
+        boolMatrix[:, i] = (matrix[:, i] != 0)
 
     for i in range(length):
         if i % 100 == 0:

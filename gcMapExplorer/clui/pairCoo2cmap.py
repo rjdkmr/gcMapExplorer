@@ -37,7 +37,7 @@ description = \
 """Import map from files similar to paired sparse matrix Coordinate (COO) format
 ===============================================================================
 
-This format is very similar to COO format with addiotional infromation of
+This format is very similar to COO format with additional information of
 chromosome. Therefore, maps for all chromosome could be contained in a single
 file.
 
@@ -73,7 +73,7 @@ ccmapSuffixHelp = \
 """ Use this to convert all contact maps to ccmaps file. Provide suffix of
 ccmap file names with this option and it will enable the conversion.
 
-Ouput ccmap file name is generated outmatically as follows;
+Output ccmap file name is generated automatically as follows;
 <chromosome>_<resolution>_<suffix>.ccmap
 
 Note that -od/--out-dir option is also required because all ccmaps will be
@@ -102,7 +102,7 @@ intended to use with -gcm/--gcmap option. Three accepted methods are
         max  : Maximum of values.
 
 This option generates all coarser maps where resolutions will be coarsened by
-a factor of two, consequetively. e.g.: In case of 10 kb input resolution,
+a factor of two, consecutively. e.g.: In case of 10 kb input resolution,
 downsampled maps of "20kb", "40kb", "80kb", "160kb", "320kb" etc. will be
 generated until, map size is less than 500.
 
@@ -130,7 +130,7 @@ def main():
 
     # Check for scratch directory
     if not os.path.isdir(args.workDir):
-        showErrorAndExit(parser, '\nScratch Dirctory "{0}" not found !!!\n'.format(args.workDir))
+        showErrorAndExit(parser, '\nScratch Directory "{0}" not found !!!\n'.format(args.workDir))
 
     # Main region here
     pair_coo_reader = gmlib.importer.PairCooMatrixHandler(
@@ -140,7 +140,7 @@ def main():
                                     gcmapOut=args.fileGCMap)
 
     pair_coo_reader.setGCMapOptions(
-            coarsingMethod=args.coarsingMethod,
+            coarseningMethod=args.coarsingMethod,
             compression=args.compression
         )
 
@@ -171,7 +171,7 @@ def parseArguments():
                         help='Data compression method for gcmap file.\n')
 
     parser.add_argument('-dmeth', '--downsample-method', action='store',
-                        dest='coarsingMethod', metavar='sum',
+                        dest='coarseningMethod', metavar='sum',
                         choices=['max', 'mean', 'sum'], default='sum',
                         help=downsampleMethodHelp)
 

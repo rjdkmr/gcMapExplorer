@@ -38,10 +38,10 @@ exec(open('gcMapExplorer/_version.py').read())
 
 ext_modules = [
     Extension("gcMapExplorer.lib.ccmapHelpers",            ["gcMapExplorer/lib/ccmapHelpers.pyx"]             ),
-    Extension("gcMapExplorer.lib.normalizeAverageContact", ["gcMapExplorer/lib/normalizeAverageContact.pyx"]  ),
     Extension("gcMapExplorer.lib.normalizeKnightRuiz",     ["gcMapExplorer/lib/normalizeKnightRuiz.pyx"]      ),
-    Extension("gcMapExplorer.lib.normalizeIC",             ["gcMapExplorer/lib/normalizeIC.pyx"]              ),
-    Extension("gcMapExplorer.lib._corrMatrixCore",         ["gcMapExplorer/lib/_corrMatrixCore.pyx"]          ),
+    Extension("gcMapExplorer.lib.normalizeCore",           ["gcMapExplorer/lib/normalizeCore.pyx"]            ),
+    Extension("gcMapExplorer.lib._corrMatrixCore",         ["gcMapExplorer/lib/_corrMatrixCore.pyx", "gcMapExplorer/lib/corrMatrixCoreSRC.c"] , include_dirs=[numpy.get_include()],
+                extra_compile_args=['-fopenmp'], extra_link_args=['-fopenmp']),
     Extension("gcMapExplorer.lib.TadFinder",               ["gcMapExplorer/lib/TadFinder.pyx"]                ),
     ]
 

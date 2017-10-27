@@ -35,9 +35,10 @@ import time
 from . import ccmapHelpers as cmh
 from . import ccmap as cmp
 from . import gcmap as gmp
+from . import cmstats
 from . import normalizeKnightRuiz as krnorm
-from . import normalizeAverageContact as avcnorm
-from . import normalizeIC as icnorm
+from . import normalizeCore as normCore
+from . import util
 
 dtype_npBINarray = 'float32'
 
@@ -224,11 +225,11 @@ def NormalizeKnightRuizOriginal(ccMapObj, tol=1e-12, x0=None, delta=0.1, Delta=3
 
 	return normCCMap
 
-def normalizeCCMapByKR(ccMap, memory='RAM', tol=1e-12, outFile=None, vmin=None, vmax=None, percentile_thershold_no_data=None, thershold_data_occup=None, workDir=None):
+def normalizeCCMapByKR(ccMap, memory='RAM', tol=1e-12, outFile=None, vmin=None, vmax=None, percentile_threshold_no_data=None, threshold_data_occup=None, workDir=None):
 	"""Normalize a ccmap using Knight-Ruiz matrix balancing method.
 
 	.. note::
-		* This function uses a modified version of orginal ported code given in :meth:`NormalizeKnightRuizOriginal`.
+		* This function uses a modified version of original ported code given in :meth:`NormalizeKnightRuizOriginal`.
 		* **Please refer to:** P.A. Knight and D. Ruiz (2013). A fast algorithm for matrix balancing (2013). IMA Journal of Numerical Analysis, 33, 1029-1047
 
 	Parameters
@@ -243,30 +244,30 @@ def normalizeCCMapByKR(ccMap, memory='RAM', tol=1e-12, outFile=None, vmin=None, 
 			* ``HDD``: All intermediate arrays are generated as memory mapped array files on hard-disk.
 
 	tol : float
-		Tolerance for matrix balancing. Smaller tolreance increases accuracy in sums of rows and columns.
+		Tolerance for matrix balancing. Smaller tolerance increases accuracy in sums of rows and columns.
 
 	outFile : str
 		Name of output ccmap file, to save directly the normalized map as a ccmap file. In case of this option, ``None`` will return.
 
 	vmin : float
-		Minimum thershold value for normalization. If contact frequency is less than or equal to this thershold value, this value is discarded during normalization.
+		Minimum threshold value for normalization. If contact frequency is less than or equal to this threshold value, this value is discarded during normalization.
 
 	vmax : float
-		Maximum thershold value for normalization. If contact frequency is greater than or equal to this thershold value, this value is discarded during normalization.
+		Maximum threshold value for normalization. If contact frequency is greater than or equal to this threshold value, this value is discarded during normalization.
 
-	percentile_thershold_no_data : int
+	percentile_threshold_no_data : int
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
-		``percentile_thershold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
+		``percentile_threshold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
 		For example: if this value is 99, those row or columns will be discarded which contains larger than number of zeros (missing data) at 99 percentile.
 
 		To calculate percentile, all blank rows are removed, then in all rows, number of zeros are counted. Afterwards, number of zeros at
-		`percentile_thershold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
+		`percentile_threshold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
 		the whole row and column is assigned to have missing data. This percentile indicates highest numbers of zeros (missing data) in given rows/columns.
 
-	thershold_data_occup : float
+	threshold_data_occup : float
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
 		This ratio is (number of bins with data) / (total number of bins in the given row/column).
-		For example: if `thershold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
+		For example: if `threshold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
 
 		Note that this parameter is suitable for low resolution data because maps are likely to be much less sparse.
 
@@ -282,10 +283,10 @@ def normalizeCCMapByKR(ccMap, memory='RAM', tol=1e-12, outFile=None, vmin=None, 
 
 	"""
 
-	# Check whether input is a file or a obejct
+	# Check whether input is a file or a object
 	ccMapObjOrig, ccmapType = cmp.checkCCMapObjectOrFile(ccMap, workDir=workDir)
 
-	# Make another copy here for maximum and minimum thershold value
+	# Make another copy here for maximum and minimum threshold value
 	if vmin is not None or vmax is not None:
 		ccMapObj = ccMapObjOrig.copy()
 		ccMapObj.make_editable()
@@ -293,7 +294,7 @@ def normalizeCCMapByKR(ccMap, memory='RAM', tol=1e-12, outFile=None, vmin=None, 
 		if ccmapType == 'File':
 			del ccMapObjOrig
 
-		ccmapType = 'File' # This temporary file should be deleted when neccessary
+		ccmapType = 'File' # This temporary file should be deleted when necessary
 		if vmin is not None:
 			ccMapObj.matrix[ np.nonzero(ccMapObj.matrix <= vmin) ] = 0.0
 		if vmax is not None:
@@ -323,7 +324,7 @@ def normalizeCCMapByKR(ccMap, memory='RAM', tol=1e-12, outFile=None, vmin=None, 
 	try:
 
 		if memory=='RAM':
-			bNonZeros = cmh.get_nonzeros_index(ccMapObj.matrix, thershold_percentile=percentile_thershold_no_data, thershold_data_occup=thershold_data_occup)
+			bNonZeros = cmh.get_nonzeros_index(ccMapObj.matrix, threshold_percentile=percentile_threshold_no_data, threshold_data_occup=threshold_data_occup)
 
 			A = (ccMapObj.matrix[bNonZeros,:])[:,bNonZeros]   # Selected row-column which are not all zeros
 
@@ -337,8 +338,8 @@ def normalizeCCMapByKR(ccMap, memory='RAM', tol=1e-12, outFile=None, vmin=None, 
 		elif memory == 'HDD':
 
 			# Selected row-column which are not all zeros
-			A, normCCMap.bNoData  = cmh.remove_zeros(ccMapObj.matrix, thershold_percentile=percentile_thershold_no_data,
-			                                            thershold_data_occup=thershold_data_occup, workDir=workDir)
+			A, normCCMap.bNoData  = cmh.remove_zeros(ccMapObj.matrix, threshold_percentile=percentile_threshold_no_data,
+			                                            threshold_data_occup=threshold_data_occup, workDir=workDir)
 
 			# Try for removing temporary files related to above variable A
 			try:
@@ -393,7 +394,7 @@ def normalizeCCMapByKR(ccMap, memory='RAM', tol=1e-12, outFile=None, vmin=None, 
 		logger.warning('Error in normalizing map!!!')
 		raise e
 
-def normalizeGCMapByKR(gcMapInputFile, gcMapOutFile, mapSizeCeilingForMemory=20000, vmin=None, vmax=None, tol=1e-12, percentile_thershold_no_data=None, thershold_data_occup=None, compression='lzf', workDir=None, logHandler=None):
+def normalizeGCMapByKR(gcMapInputFile, gcMapOutFile, mapSizeCeilingForMemory=20000, vmin=None, vmax=None, tol=1e-12, percentile_threshold_no_data=None, threshold_data_occup=None, compression='lzf', workDir=None, logHandler=None):
 	"""Normalize a gcmap using Knight-Ruiz matrix balancing method.
 
 
@@ -410,27 +411,27 @@ def normalizeGCMapByKR(gcMapInputFile, gcMapOutFile, mapSizeCeilingForMemory=200
 		normalization will be performed using disk (HDD).
 
 	vmin : float
-		Minimum thershold value for normalization. If contact frequency is less than or equal to this thershold value, this value is discarded during normalization.
+		Minimum threshold value for normalization. If contact frequency is less than or equal to this threshold value, this value is discarded during normalization.
 
 	vmax : float
-		Maximum thershold value for normalization. If contact frequency is greater than or equal to this thershold value, this value is discarded during normalization.
+		Maximum threshold value for normalization. If contact frequency is greater than or equal to this threshold value, this value is discarded during normalization.
 
 	tol : float
-		Tolerance for matrix balancing. Smaller tolreance increases accuracy in sums of rows and columns.
+		Tolerance for matrix balancing. Smaller tolerance increases accuracy in sums of rows and columns.
 
-	percentile_thershold_no_data : int
+	percentile_threshold_no_data : int
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
-		``percentile_thershold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
+		``percentile_threshold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
 		For example: if this value is 99, those row or columns will be discarded which contains larger than number of zeros (missing data) at 99 percentile.
 
 		To calculate percentile, all blank rows are removed, then in all rows, number of zeros are counted. Afterwards, number of zeros at
-		`percentile_thershold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
+		`percentile_threshold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
 		the whole row and column is assigned to have missing data. This percentile indicates highest numbers of zeros (missing data) in given rows/columns.
 
-	thershold_data_occup : float
+	threshold_data_occup : float
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
 		This ratio is (number of bins with data) / (total number of bins in the given row/column).
-		For example: if `thershold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
+		For example: if `threshold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
 
 		Note that this parameter is suitable for low resolution data because maps are likely to be much less sparse.
 
@@ -481,15 +482,15 @@ def normalizeGCMapByKR(gcMapInputFile, gcMapOutFile, mapSizeCeilingForMemory=200
 				memory = 'RAM'
 
 			norm_ccmap = normalizeCCMapByKR(ccMap, memory=memory, tol=tol,
-						percentile_thershold_no_data=percentile_thershold_no_data,
-						thershold_data_occup=thershold_data_occup,
+						percentile_threshold_no_data=percentile_threshold_no_data,
+						threshold_data_occup=threshold_data_occup,
 						workDir=workDir)
 
 			if norm_ccmap is not None:
 				gmp.addCCMap2GCMap(norm_ccmap, gcMapOutFile,
-									compression=compression,
-									generateCoarse=True, coarsingMethod='sum',
-									logHandler=logHandler)
+                                   compression=compression,
+                                   generateCoarse=True, coarseningMethod='sum',
+                                   logHandler=logHandler)
 
 		# In case of program termination, delete the newly created ccmap and raise error
 		except (KeyboardInterrupt, SystemExit) as e:
@@ -501,7 +502,7 @@ def normalizeGCMapByKR(gcMapInputFile, gcMapOutFile, mapSizeCeilingForMemory=200
 		del ccMap
 		del norm_ccmap
 
-def normalizeCCMapByIC(ccMap, tol=1e-4, vmin=None, vmax=None, outFile=None, iteration=500, percentile_thershold_no_data=None, thershold_data_occup=None, workDir=None):
+def normalizeCCMapByIC(ccMap, tol=1e-4, vmin=None, vmax=None, outFile=None, iteration=500, percentile_threshold_no_data=None, threshold_data_occup=None, workDir=None):
 	""" Normalize a ccmap by Iterative correction method
 
 	This method normalize the raw contact map by removing biases from experimental procedure.
@@ -516,10 +517,10 @@ def normalizeCCMapByIC(ccMap, tol=1e-4, vmin=None, vmax=None, outFile=None, iter
 		Tolerance value. The relative increment in the results before declaring convergence.
 
 	vmin : float
-		Minimum thershold value for normalization. If contact frequency is less than or equal to this thershold value, this value is discarded during normalization.
+		Minimum threshold value for normalization. If contact frequency is less than or equal to this threshold value, this value is discarded during normalization.
 
 	vmax : float
-		Maximum thershold value for normalization. If contact frequency is greater than or equal to this thershold value, this value is discarded during normalization.
+		Maximum threshold value for normalization. If contact frequency is greater than or equal to this threshold value, this value is discarded during normalization.
 
 	outFile : str
 		Name of output ccmap file, to save directly the normalized map as a ccmap file. In case of this option, ``None`` will return.
@@ -527,19 +528,19 @@ def normalizeCCMapByIC(ccMap, tol=1e-4, vmin=None, vmax=None, outFile=None, iter
 	iteration : int
 		Number of iteration to stop the normalization.
 
-	percentile_thershold_no_data : int
+	percentile_threshold_no_data : int
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
-		``percentile_thershold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
+		``percentile_threshold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
 		For example: if this value is 99, those row or columns will be discarded which contains larger than number of zeros (missing data) at 99 percentile.
 
 		To calculate percentile, all blank rows are removed, then in all rows, number of zeros are counted. Afterwards, number of zeros at
-		`percentile_thershold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
+		`percentile_threshold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
 		the whole row and column is assigned to have missing data. This percentile indicates highest numbers of zeros (missing data) in given rows/columns.
 
-	thershold_data_occup : float
+	threshold_data_occup : float
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
 		This ratio is (number of bins with data) / (total number of bins in the given row/column).
-		For example: if `thershold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
+		For example: if `threshold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
 
 		Note that this parameter is suitable for low resolution data because maps are likely to be much less sparse.
 
@@ -554,7 +555,7 @@ def normalizeCCMapByIC(ccMap, tol=1e-4, vmin=None, vmax=None, outFile=None, iter
 
 	"""
 
-	# Check whether input is a file or a obejct
+	# Check whether input is a file or a object
 	ccMapObj, ccmapType = cmp.checkCCMapObjectOrFile(ccMap, workDir=workDir)
 
 	tmap = ccMapObj.copy()
@@ -575,7 +576,7 @@ def normalizeCCMapByIC(ccMap, tol=1e-4, vmin=None, vmax=None, outFile=None, iter
 
 	# Check if any filter is applied
 	applyFilter = True
-	if percentile_thershold_no_data is None and thershold_data_occup is None:
+	if percentile_threshold_no_data is None and threshold_data_occup is None:
 	    applyFilter = False
 
 	try:
@@ -584,12 +585,12 @@ def normalizeCCMapByIC(ccMap, tol=1e-4, vmin=None, vmax=None, outFile=None, iter
 		matrix = None
 		bNonZeros = None
 		if applyFilter:
-		    bNonZeros = cmh.get_nonzeros_index(tmap.matrix, thershold_percentile=percentile_thershold_no_data, thershold_data_occup=thershold_data_occup)
+		    bNonZeros = cmh.get_nonzeros_index(tmap.matrix, threshold_percentile=percentile_threshold_no_data, threshold_data_occup=threshold_data_occup)
 		    matrix = (tmap.matrix[bNonZeros,:])[:,bNonZeros]   # Selected row-column which are not all zeros
-		    icnorm.performIterativeCorrection(matrix, tol, iteration)
+		    normCore.performIterativeCorrection(matrix, tol, iteration)
 		else:
 			matrix = tmap.matrix
-			icnorm.performIterativeCorrection(matrix, tol, iteration)
+			normCore.performIterativeCorrection(matrix, tol, iteration)
 			bNonZeros = ~np.all( tmap.matrix == 0.0, axis=0)
 
 		ma = np.ma.masked_equal(matrix, 0.0, copy=False)
@@ -645,7 +646,7 @@ def normalizeCCMapByIC(ccMap, tol=1e-4, vmin=None, vmax=None, outFile=None, iter
 		logger.warning('Error in Iterative Correction!!!')
 		return None
 
-def normalizeGCMapByIC(gcMapInputFile, gcMapOutFile, vmin=None, vmax=None, tol=1e-12, iteration=500, percentile_thershold_no_data=None, thershold_data_occup=None, compression='lzf', workDir=None, logHandler=None):
+def normalizeGCMapByIC(gcMapInputFile, gcMapOutFile, vmin=None, vmax=None, tol=1e-12, iteration=500, percentile_threshold_no_data=None, threshold_data_occup=None, compression='lzf', workDir=None, logHandler=None):
 	"""Normalize a gcmap using Iterative Correction.
 
 	This method normalize the raw contact map by removing biases from experimental procedure.
@@ -660,10 +661,10 @@ def normalizeGCMapByIC(gcMapInputFile, gcMapOutFile, vmin=None, vmax=None, tol=1
 		Name of output gcmap file.
 
 	vmin : float
-		Minimum thershold value for normalization. If contact frequency is less than or equal to this thershold value, this value is discarded during normalization.
+		Minimum threshold value for normalization. If contact frequency is less than or equal to this threshold value, this value is discarded during normalization.
 
 	vmax : float
-		Maximum thershold value for normalization. If contact frequency is greater than or equal to this thershold value, this value is discarded during normalization.
+		Maximum threshold value for normalization. If contact frequency is greater than or equal to this threshold value, this value is discarded during normalization.
 
 	tol : float
 		Tolerance value. The relative increment in the results before declaring convergence.
@@ -671,19 +672,19 @@ def normalizeGCMapByIC(gcMapInputFile, gcMapOutFile, vmin=None, vmax=None, tol=1
 	iteration : int
 		Number of iteration to stop the normalization.
 
-	percentile_thershold_no_data : int
+	percentile_threshold_no_data : int
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
-		``percentile_thershold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
+		``percentile_threshold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
 		For example: if this value is 99, those row or columns will be discarded which contains larger than number of zeros (missing data) at 99 percentile.
 
 		To calculate percentile, all blank rows are removed, then in all rows, number of zeros are counted. Afterwards, number of zeros at
-		`percentile_thershold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
+		`percentile_threshold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
 		the whole row and column is assigned to have missing data. This percentile indicates highest numbers of zeros (missing data) in given rows/columns.
 
-	thershold_data_occup : float
+	threshold_data_occup : float
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
 		This ratio is (number of bins with data) / (total number of bins in the given row/column).
-		For example: if `thershold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
+		For example: if `threshold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
 
 		Note that this parameter is suitable for low resolution data because maps are likely to be much less sparse.
 
@@ -718,15 +719,15 @@ def normalizeGCMapByIC(gcMapInputFile, gcMapOutFile, vmin=None, vmax=None, tol=1
 		try:
 			norm_ccmap = normalizeCCMapByIC(ccMap, tol=tol, iteration=iteration,
 						vmin=vmin, vmax=vmax,
-						percentile_thershold_no_data=percentile_thershold_no_data,
-						thershold_data_occup=thershold_data_occup,
+						percentile_threshold_no_data=percentile_threshold_no_data,
+						threshold_data_occup=threshold_data_occup,
 						workDir=workDir)
 
 			if norm_ccmap is not None:
 				gmp.addCCMap2GCMap(norm_ccmap, gcMapOutFile,
-									compression=compression,
-									generateCoarse=True, coarsingMethod='sum',
-									logHandler=logHandler)
+                                   compression=compression,
+                                   generateCoarse=True, coarseningMethod='sum',
+                                   logHandler=logHandler)
 
 		# In case of program termination, delete the newly created ccmap and raise error
 		except (KeyboardInterrupt, SystemExit) as e:
@@ -738,7 +739,7 @@ def normalizeGCMapByIC(gcMapInputFile, gcMapOutFile, vmin=None, vmax=None, tol=1
 		del ccMap
 		del norm_ccmap
 
-def normalizeCCMapByMCFS(ccMap, stats='median', vmin=None, vmax=None, stype='o/e', outFile=None, percentile_thershold_no_data=None, thershold_data_occup=None, workDir=None):
+def normalizeCCMapByMCFS(ccMap, stats='median', vmin=None, vmax=None, stype='o/e', outFile=None, scaleUpInput=False, percentile_threshold_no_data=None, threshold_data_occup=None, workDir=None):
 	""" Scale ccmap using Median Contact Frequency
 
 	This method can be used to normalize contact map with expected values.
@@ -746,7 +747,7 @@ def normalizeCCMapByMCFS(ccMap, stats='median', vmin=None, vmax=None, stype='o/e
 	for particular distance between two locations/coordinates. At first,
 	Median/Average distance contact frequency for each distance is calculated.
 	Subsequently, the observed contact frequency is either divided ('o/e') or
-	substracted ('o-e') by median/average contact frequency obtained for
+	subtracted ('o-e') by median/average contact frequency obtained for
 	distance between the two locations.
 
 	.. note:
@@ -761,10 +762,10 @@ def normalizeCCMapByMCFS(ccMap, stats='median', vmin=None, vmax=None, stype='o/e
 	    Statistics to be calculated along diagonals: It may be either "mean" or "median". By default, it is "median".
 
 	vmin : float
-		Minimum thershold value for normalization. If contact frequency is less than or equal to this thershold value, this value is discarded during normalization.
+		Minimum threshold value for normalization. If contact frequency is less than or equal to this threshold value, this value is discarded during normalization.
 
 	vmax : float
-		Maximum thershold value for normalization. If contact frequency is greater than or equal to this thershold value, this value is discarded during normalization.
+		Maximum threshold value for normalization. If contact frequency is greater than or equal to this threshold value, this value is discarded during normalization.
 
 	stype : str
 		Type of scaling. It may be either 'o/e' or 'o-e'. In case of 'o/e',
@@ -774,19 +775,24 @@ def normalizeCCMapByMCFS(ccMap, stats='median', vmin=None, vmax=None, stype='o/e
 	outFile : str
 		Name of output ccmap file, to save directly the normalized map as a ccmap file. In case of this option, ``None`` will return.
 
-	percentile_thershold_no_data : int
+	scaleUpInput : bool
+		Scale up the input map by multiplying it with constant value. This constant value is precision of minimum value multiplied
+		by 10. This scale up changes the minimum value to a integer value and accordingly whole map is changed. It is beneficial
+		when input map contains very small value as generated from KR normalization.
+
+	percentile_threshold_no_data : int
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
-		``percentile_thershold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
+		``percentile_threshold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
 		For example: if this value is 99, those row or columns will be discarded which contains larger than number of zeros (missing data) at 99 percentile.
 
 		To calculate percentile, all blank rows are removed, then in all rows, number of zeros are counted. Afterwards, number of zeros at
-		`percentile_thershold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
+		`percentile_threshold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
 		the whole row and column is assigned to have missing data. This percentile indicates highest numbers of zeros (missing data) in given rows/columns.
 
-	thershold_data_occup : float
+	threshold_data_occup : float
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
 		This ratio is (number of bins with data) / (total number of bins in the given row/column).
-		For example: if `thershold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
+		For example: if `threshold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
 
 		Note that this parameter is suitable for low resolution data because maps are likely to be much less sparse.
 
@@ -805,22 +811,28 @@ def normalizeCCMapByMCFS(ccMap, stats='median', vmin=None, vmax=None, stype='o/e
 		logger.warning('Wrong value {0} for stype: {1}.'.format(stype, ['o/e', 'o-e']))
 		return None
 
-	# Check whether input is a file or a obejct
+	# Check whether input is a file or a object
 	ccMapObjOrig, ccmapType = cmp.checkCCMapObjectOrFile(ccMap, workDir=workDir)
 
-	# Make another copy here for maximum and minimum thershold value
-	if vmin is not None or vmax is not None:
+	# Make another copy here for maximum and minimum threshold value
+	if vmin is not None or vmax is not None or scaleUpInput:
 		ccMapObj = ccMapObjOrig.copy()
 		ccMapObj.make_editable()
 
 		if ccmapType == 'File':
 			del ccMapObjOrig
 
-		ccmapType = 'File' # This temporary file should be deleted when neccessary
+		ccmapType = 'File' # This temporary file should be deleted when necessary
 		if vmin is not None:
 			ccMapObj.matrix[ np.nonzero(ccMapObj.matrix <= vmin) ] = 0.0
 		if vmax is not None:
 			ccMapObj.matrix[ np.nonzero(ccMapObj.matrix >= vmax) ] = 0.0
+
+		# Scale up the input here
+		if scaleUpInput:
+			toScale = util.locate_significant_digit_after_decimal(ccMapObj.minvalue) + 1
+			ccMapObj.matrix[:] = ccMapObj.matrix[:] * (10**toScale)
+
 		ccMapObj.matrix.flush()
 		ccMapObj.make_unreadable()
 
@@ -836,15 +848,24 @@ def normalizeCCMapByMCFS(ccMap, stats='median', vmin=None, vmax=None, stype='o/e
 
 	# Main section
 	try:
+		normCCMap.make_editable()
+		ccMapObj.make_readable()
+
+		bNonZeros = cmh.get_nonzeros_index(ccMapObj.matrix, threshold_percentile=percentile_threshold_no_data, threshold_data_occup=threshold_data_occup)
+		normCCMap.bNoData = ~bNonZeros
+
+		ccMapObj.make_readable()
+		avgContacts = cmstats.getAvgContactByDistance(ccMapObj, stats=stats)
+
 		if stype == 'o/e':
-			avcnorm._normalizeByAvgContactByDivision(ccMapObj, normCCMap, stats=stats,
-						percentile_thershold_no_data=percentile_thershold_no_data,
-						thershold_data_occup=thershold_data_occup)
+			normCore.normalizeByAvgContactByDivision(ccMapObj.matrix, avgContacts, Out=normCCMap.matrix)
 
 		if stype == 'o-e':
-			avcnorm._normalizeByAvgContactBySubstraction(ccMapObj, normCCMap, stats=stats,
-						percentile_thershold_no_data=percentile_thershold_no_data,
-						thershold_data_occup=thershold_data_occup)
+			normCore.normalizeByAvgContactBySubstraction(ccMapObj.matrix, avgContacts, Out=normCCMap.matrix)
+
+		marray = np.ma.masked_equal(normCCMap.matrix, 0.0, copy=False)
+		normCCMap.minvalue = marray.min()
+		normCCMap.maxvalue = np.amax(normCCMap.matrix)
 
 		if ccMapObj.xlabel is not None:
 			logger.info(' 	...Finished Median Contact Frequency Scaling for {0} map...'.format(ccMapObj.xlabel))
@@ -880,7 +901,7 @@ def normalizeCCMapByMCFS(ccMap, stats='median', vmin=None, vmax=None, stype='o/e
 		logger.warning('Error in Median Contact Frequency Scaling!!!')
 		return None
 
-def normalizeGCMapByMCFS(gcMapInputFile, gcMapOutFile, stats='median', vmin=None, vmax=None, stype='o/e', percentile_thershold_no_data=None, thershold_data_occup=None, compression='lzf', workDir=None, logHandler=None):
+def normalizeGCMapByMCFS(gcMapInputFile, gcMapOutFile, stats='median', vmin=None, vmax=None, stype='o/e', scaleUpInput=False, percentile_threshold_no_data=None, threshold_data_occup=None, compression='lzf', workDir=None, logHandler=None):
 	""" Scale all maps in gcmap using Median Contact Frequency
 
 	This method can be used to normalize contact map with expected values.
@@ -888,7 +909,7 @@ def normalizeGCMapByMCFS(gcMapInputFile, gcMapOutFile, stats='median', vmin=None
 	for particular distance between two locations/coordinates. At first,
 	Median/Average distance contact frequency for each distance is calculated.
 	Subsequently, the observed contact frequency is either divided ('o/e') or
-	substracted ('o-e') by median/average contact frequency obtained for
+	subtracted ('o-e') by median/average contact frequency obtained for
 	distance between the two locations.
 
 	Parameters
@@ -903,29 +924,34 @@ def normalizeGCMapByMCFS(gcMapInputFile, gcMapOutFile, stats='median', vmin=None
 	    Statistics to be calculated along diagonals: It may be either "mean" or "median". By default, it is "median".
 
 	vmin : float
-		Minimum thershold value for normalization. If contact frequency is less than or equal to this thershold value, this value is discarded during normalization.
+		Minimum threshold value for normalization. If contact frequency is less than or equal to this threshold value, this value is discarded during normalization.
 
 	vmax : float
-		Maximum thershold value for normalization. If contact frequency is greater than or equal to this thershold value, this value is discarded during normalization.
+		Maximum threshold value for normalization. If contact frequency is greater than or equal to this threshold value, this value is discarded during normalization.
 
 	stype : str
 		Type of scaling. It may be either 'o/e' or 'o-e'. In case of 'o/e',
 		Observed/Expected will be calculated while (Observed - Expected)
 		will be calculated for 'o-e'.
 
-	percentile_thershold_no_data : int
+	scaleUpInput : bool
+		Scale up the input map by multiplying it with constant value. This constant value is precision of minimum value multiplied
+		by 10. This scale up changes the minimum value to a integer value and accordingly whole map is changed. It is beneficial
+		when input map contains very small value as generated from KR normalization.
+
+	percentile_threshold_no_data : int
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
-		``percentile_thershold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
+		``percentile_threshold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
 		For example: if this value is 99, those row or columns will be discarded which contains larger than number of zeros (missing data) at 99 percentile.
 
 		To calculate percentile, all blank rows are removed, then in all rows, number of zeros are counted. Afterwards, number of zeros at
-		`percentile_thershold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
+		`percentile_threshold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
 		the whole row and column is assigned to have missing data. This percentile indicates highest numbers of zeros (missing data) in given rows/columns.
 
-	thershold_data_occup : float
+	threshold_data_occup : float
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
 		This ratio is (number of bins with data) / (total number of bins in the given row/column).
-		For example: if `thershold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
+		For example: if `threshold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
 
 		Note that this parameter is suitable for low resolution data because maps are likely to be much less sparse.
 
@@ -979,8 +1005,9 @@ def normalizeGCMapByMCFS(gcMapInputFile, gcMapOutFile, stats='median', vmin=None
 
 			try:
 				norm_ccmap = normalizeCCMapByMCFS(ccMap, stats=stats, stype=stype,
-							percentile_thershold_no_data=percentile_thershold_no_data,
-							thershold_data_occup=thershold_data_occup,
+							scaleUpInput=scaleUpInput,
+							percentile_threshold_no_data=percentile_threshold_no_data,
+							threshold_data_occup=threshold_data_occup,
 							workDir=workDir)
 
 				if norm_ccmap is not None:
@@ -1008,3 +1035,261 @@ def normalizeGCMapByMCFS(gcMapInputFile, gcMapOutFile, stats='median', vmin=None
 				raise e
 
 			del ccMap
+
+	del gcmap
+
+def normalizeCCMapByVCNorm(ccMap, sqroot=False, vmin=None, vmax=None, outFile=None, percentile_threshold_no_data=None, threshold_data_occup=None, workDir=None):
+	""" Normalize ccmap using Vanilla-Coverage method
+
+	This method was first used in ` Lieberman-Aiden et al., 2009 <http://dx.doi.org/10.1126/science.1181369>`_
+	for inter-chromosomal map. Later it was used for intra-chromosomal map by
+	`Rao et al., 2014 <http://dx.doi.org/10.1016/j.cell.2014.11.021>`_.
+
+	Parameters
+	----------
+	ccMap : :class:`gcMapExplorer.lib.ccmap.CCMAP` or ccmap file
+		A CCMAP object containing observed contact frequency or a ccmap file
+
+	sqroot : bool
+	    If ``True``, square-root of normalized map is calculated.
+
+	vmin : float
+		Minimum threshold value for normalization. If contact frequency is less than or equal to this threshold value, this value is discarded during normalization.
+
+	vmax : float
+		Maximum threshold value for normalization. If contact frequency is greater than or equal to this threshold value, this value is discarded during normalization.
+
+	outFile : str
+		Name of output ccmap file, to save directly the normalized map as a ccmap file. In case of this option, ``None`` will return.
+
+	scaleUpInput : bool
+		Scale up the input map by multiplying it with constant value. This constant value is precision of minimum value multiplied
+		by 10. This scale up changes the minimum value to a integer value and accordingly whole map is changed. It is beneficial
+		when input map contains very small value as generated from KR normalization.
+
+	percentile_threshold_no_data : int
+		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
+		``percentile_threshold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
+		For example: if this value is 99, those row or columns will be discarded which contains larger than number of zeros (missing data) at 99 percentile.
+
+		To calculate percentile, all blank rows are removed, then in all rows, number of zeros are counted. Afterwards, number of zeros at
+		`percentile_threshold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
+		the whole row and column is assigned to have missing data. This percentile indicates highest numbers of zeros (missing data) in given rows/columns.
+
+	threshold_data_occup : float
+		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
+		This ratio is (number of bins with data) / (total number of bins in the given row/column).
+		For example: if `threshold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
+
+		Note that this parameter is suitable for low resolution data because maps are likely to be much less sparse.
+
+	workDir : str
+		Path to the directory where temporary intermediate files are generated.
+		If ``None``, files are generated in the temporary directory according to the main configuration.
+
+	Returns
+	-------
+	ccMapObj : :class:`gcMapExplorer.lib.ccmap.CCMAP` or ``None``
+		Normalized Contact map. When ``outFile`` is provided, ``None`` is returned. In case of any other error, ``None`` is returned.
+
+	"""
+
+	# Check whether input is a file or a object
+	ccMapObjOrig, ccmapType = gmlib.ccmap.checkCCMapObjectOrFile(ccMap, workDir=workDir)
+
+	# Make another copy here for maximum and minimum threshold value
+	if vmin is not None or vmax is not None:
+	    ccMapObj = ccMapObjOrig.copy()
+	    ccMapObj.make_editable()
+
+	    if ccmapType == 'File':
+	        del ccMapObjOrig
+
+	    ccmapType = 'File' # This temporary file should be deleted when necessary
+	    if vmin is not None:
+	        ccMapObj.matrix[ np.nonzero(ccMapObj.matrix <= vmin) ] = 0.0
+	    if vmax is not None:
+	        ccMapObj.matrix[ np.nonzero(ccMapObj.matrix >= vmax) ] = 0.0
+
+
+	    ccMapObj.matrix.flush()
+	    ccMapObj.make_unreadable()
+
+	else:
+	    ccMapObj = ccMapObjOrig
+
+
+	normCCMap = ccMapObj.copy()
+	ccMapObj.make_readable()
+	normCCMap.make_editable()
+
+	try:
+
+	    bNonZeros = gmlib.ccmapHelpers.get_nonzeros_index(ccMapObj.matrix, threshold_percentile=percentile_threshold_no_data, threshold_data_occup=threshold_data_occup)
+	    matrix = (ccMapObj.matrix[bNonZeros,:])[:,bNonZeros]   # Selected row-column which are not all zeros
+
+	    normCCMap.bNoData = ~bNonZeros
+
+	    normCore.performVCNormalization(ccMapObj.matrix, sqroot=sqroot, Out=normCCMap.matrix, bNoData=normCCMap.bNoData)
+	    normCCMap.make_readable()
+
+	    marray = np.ma.masked_equal(normCCMap.matrix, 0.0, copy=False)
+	    normCCMap.minvalue = marray.min()
+	    normCCMap.maxvalue = np.amax(normCCMap.matrix)
+
+
+	    # Save output ccmap file
+	    if outFile is not None:
+	        cmp.save_ccmap(normCCMap, outFile, compress=True)
+
+	    # Delete ccmap object if input was a file
+	    if ccmapType == 'File':
+	        del ccMapObj
+
+	    # Whether outFile is given.
+	    if outFile is None:
+	        return normCCMap
+	    else:
+	        del normCCMap
+	        return None
+
+	# In case of program termination, delete the newly created ccmap and raise error
+	except (KeyboardInterrupt, SystemExit) as e:
+	    if 'normCCMap' in locals():
+	        del normCCMap
+	    if ccmapType == 'File' and 'ccMapObj' in locals():
+	        del ccMapObj
+	    raise e
+
+	# In case of other error, delete the newly created ccmap, print error and return None
+	except Exception as e:
+	    if 'normCCMap' in locals():
+	        del normCCMap
+	    if ccmapType == 'File' and 'ccMapObj' in locals():
+	        del ccMapObj
+	    #logger.warning(e)
+	    #logger.warning('Error in Median Contact Frequency Scaling!!!')
+	    print('Error in Median Contact Frequency Scaling!!!')
+	    return None
+
+def normalizeGCMapByVCNorm(gcMapInputFile, gcMapOutFile, sqroot=False, vmin=None, vmax=None, percentile_threshold_no_data=None, threshold_data_occup=None, compression='lzf', workDir=None, logHandler=None):
+	""" Normalize all maps using Vanilla-Coverage method
+
+	This method was first used in ` Lieberman-Aiden et al., 2009 <http://dx.doi.org/10.1126/science.1181369>`_
+	for inter-chromosomal map. Later it was used for intra-chromosomal map by
+	`Rao et al., 2014 <http://dx.doi.org/10.1016/j.cell.2014.11.021>`_.
+
+	Parameters
+	----------
+	gcMapInputFile : str
+		Name of input gcmap file.
+
+	gcMapOutFile : str
+		Name of output gcmap file.
+
+	sqroot : bool
+	    If ``True``, square-root of normalized map is calculated.
+
+	vmin : float
+		Minimum threshold value for normalization. If contact frequency is less than or equal to this threshold value, this value is discarded during normalization.
+
+	vmax : float
+		Maximum threshold value for normalization. If contact frequency is greater than or equal to this threshold value, this value is discarded during normalization.
+
+	scaleUpInput : bool
+		Scale up the input map by multiplying it with constant value. This constant value is precision of minimum value multiplied
+		by 10. This scale up changes the minimum value to a integer value and accordingly whole map is changed. It is beneficial
+		when input map contains very small value as generated from KR normalization.
+
+	percentile_threshold_no_data : int
+		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
+		``percentile_threshold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
+		For example: if this value is 99, those row or columns will be discarded which contains larger than number of zeros (missing data) at 99 percentile.
+
+		To calculate percentile, all blank rows are removed, then in all rows, number of zeros are counted. Afterwards, number of zeros at
+		`percentile_threshold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
+		the whole row and column is assigned to have missing data. This percentile indicates highest numbers of zeros (missing data) in given rows/columns.
+
+	threshold_data_occup : float
+		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
+		This ratio is (number of bins with data) / (total number of bins in the given row/column).
+		For example: if `threshold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
+
+		Note that this parameter is suitable for low resolution data because maps are likely to be much less sparse.
+
+	compression : str
+	    Compression method in output gcmap file. Presently allowed : ``lzf`` for LZF compression and ``gzip`` for GZIP compression.
+
+	workDir : str
+		Path to the directory where temporary intermediate files are generated.
+		If ``None``, files are generated in the temporary directory according to the main configuration.
+
+
+	Returns
+	-------
+	None
+
+
+	.. seealso::
+		:meth:`gcMapExplorer.lib.normalizer.normalizeCCMapByMCFS`
+
+
+	"""
+
+	# Get list of maps in ascending order
+	gcmap = gmlib.gcmap.GCMAP(gcMapInputFile)
+	gcmap.loadSmallestMap()
+	mapList = gcmap.mapNameList.copy()
+
+	for mapName in mapList:
+
+	    # Iterate over available resolutions
+	    gcmap.changeMap(mapName)
+	    previousResolution = gcmap.resolution
+
+	    while True:
+	        ccMap = gmlib.gcmap.loadGCMapAsCCMap(gcmap.hdf5, mapName=mapName, resolution=gcmap.resolution, workDir=workDir)
+
+	        # Because ccMap is already loaded here, directly edit matrix here
+	        # No need to pass vmin and vmx during normalization as
+	        # it is already taken care here
+	        if vmin is not None or vmax is not None:
+	            ccMap.make_editable()
+	            if vmin is not None:
+	                ccMap.matrix[ np.nonzero(ccMap.matrix <= vmin) ] = 0.0
+	            if vmax is not None:
+	                ccMap.matrix[ np.nonzero(ccMap.matrix >= vmax) ] = 0.0
+	            ccMap.matrix.flush()
+	            ccMap.make_unreadable()
+
+	        try:
+	            norm_ccmap = normalizeCCMapByVCNorm(ccMap, sqroot=sqroot,
+	                                                percentile_threshold_no_data=percentile_threshold_no_data,
+	                                                threshold_data_occup=threshold_data_occup,
+	                                                workDir=workDir)
+
+	            if norm_ccmap is not None:
+	                gmlib.gcmap.addCCMap2GCMap(norm_ccmap, gcMapOutFile,
+	                                   compression=compression,
+	                                   generateCoarse=False, replaceCMap=False,
+	                                   logHandler=logHandler)
+
+	                del norm_ccmap
+
+	            else:
+	                break
+
+	            gcmap.toCoarserResolution()
+	            if previousResolution == gcmap.resolution:
+	                break
+	            else:
+	                previousResolution = gcmap.resolution
+
+	        # In case of program termination, delete the newly created ccmap and raise error
+	        except (KeyboardInterrupt, SystemExit) as e:
+	            if 'ccMap' in locals():	del ccMap
+	            if 'norm_ccmap' in locals():	del norm_ccmap
+	            if 'gcmap' in locals():	del gcmap
+	            raise e
+
+	        del ccMap

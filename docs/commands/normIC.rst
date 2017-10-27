@@ -31,33 +31,33 @@ Usage:
   -o output.gcmap, --output output.gcmap
                          Output ccmap or gcmap file.
 
-                        When input file is ccmap, ouput file can be gcmap. However, when a input file
+                        When input file is ccmap, output file can be gcmap. However, when a input file
                         is gcmap, output file will be only in gcmap.
 
   -fo gcmap, --format-output gcmap
                          Input format: 'ccmap' or 'gcmap'.
 
-                        When input file is ccmap, ouput file can be gcmap. However, when a input file
+                        When input file is ccmap, output file can be gcmap. However, when a input file
                         is gcmap, output file will be only in gcmap.
 
   -t 0.0001, --tolerance 0.0001
                          Tolerance for matrix balancing.
-                        Smaller tolreance increases accuracy in sums of rows and columns.
+                        Smaller tolerance increases accuracy in sums of rows and columns.
 
   -vmax VMAX, --maximum-value VMAX
-                         Minimum thershold value for normalization.
-                        If contact frequency is less than or equal to this thershold value,
+                         Minimum threshold value for normalization.
+                        If contact frequency is less than or equal to this threshold value,
                         this value is discarded during normalization.
 
   -vmin VMIN, --minimum-value VMIN
-                         Maximum thershold value for normalization.
-                        If contact frequency is greater than or equal to this thershold value,
+                         Maximum threshold value for normalization.
+                        If contact frequency is greater than or equal to this threshold value,
                         this value is discarded during normalization.
 
   -c 500, --iteration 500
                          Number of iteration to stop the normalization.
 
-  -ptnd 99, --percentile-thershold-no-data 99
+  -ptnd 99, --percentile-threshold-no-data 99
                          It can be used to filter the map, where rows/columns with largest numbers
                         of missing data can be discarded. Its value should be between 1 and 100.
                         This options discard the rows and columns which are above this percentile.
@@ -71,7 +71,7 @@ Usage:
                         This percentile indicates highest numbers of zeros (missing data) in given
                         rows/columns.
 
-  -tdo 0.8, --thershold-data-occupancy 0.8
+  -tdo 0.8, --threshold-data-occupancy 0.8
                          It can be used to filter the map, where rows/columns with largest numbers
                         of missing data can be discarded.This ratio is:
                           (number of bins with data) / (total number of bins in the given row/column)

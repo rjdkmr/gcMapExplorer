@@ -9,7 +9,7 @@
 File formats
 ============
 
-gcMapExplorer uses three format of files. Both gcmap and genmoic track file are
+gcMapExplorer uses three format of files. Both gcmap and genomic track file are
 in |hdf5| format while ccmap file is in |numpy memmap| format.
 
 .. toctree::

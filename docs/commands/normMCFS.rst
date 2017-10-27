@@ -6,7 +6,7 @@ These expected values could be either Median or Average contact values
 for particular distance between two locations/coordinates. At first,
 Median/Average distance contact frequency for each distance is calculated.
 Subsequently, the observed contact frequency is either divided ('o/e') or
-substracted ('o-e') by median/average contact frequency obtained for
+subtracted ('o-e') by median/average contact frequency obtained for
 distance between the two locations.
 
 Usage:
@@ -36,13 +36,13 @@ Usage:
   -o output.gcmap, --output output.gcmap
                          Output ccmap or gcmap file.
 
-                        When input file is ccmap, ouput file can be gcmap. However, when a input file
+                        When input file is ccmap, output file can be gcmap. However, when a input file
                         is gcmap, output file will be only in gcmap.
 
   -fo gcmap, --format-output gcmap
                          Input format: 'ccmap' or 'gcmap'.
 
-                        When input file is ccmap, ouput file can be gcmap. However, when a input file
+                        When input file is ccmap, output file can be gcmap. However, when a input file
                         is gcmap, output file will be only in gcmap.
 
   -s median, --stats median
@@ -50,13 +50,13 @@ Usage:
                         It may be either “mean” or “median”. By default, it is “median”.
 
   -vmax VMAX, --maximum-value VMAX
-                         Minimum thershold value for normalization.
-                        If contact frequency is less than or equal to this thershold value,
+                         Minimum threshold value for normalization.
+                        If contact frequency is less than or equal to this threshold value,
                         this value is discarded during normalization.
 
   -vmin VMIN, --minimum-value VMIN
-                         Maximum thershold value for normalization.
-                        If contact frequency is greater than or equal to this thershold value,
+                         Maximum threshold value for normalization.
+                        If contact frequency is greater than or equal to this threshold value,
                         this value is discarded during normalization.
 
   -st o/e, --stype o/e   Type of scaling.
@@ -64,7 +64,7 @@ Usage:
                         Observed/Expected will be calculated while (Observed - Expected)
                         will be calculated for 'o-e'.
 
-  -ptnd 99, --percentile-thershold-no-data 99
+  -ptnd 99, --percentile-threshold-no-data 99
                          It can be used to filter the map, where rows/columns with largest numbers
                         of missing data can be discarded. Its value should be between 1 and 100.
                         This options discard the rows and columns which are above this percentile.
@@ -78,7 +78,7 @@ Usage:
                         This percentile indicates highest numbers of zeros (missing data) in given
                         rows/columns.
 
-  -tdo 0.8, --thershold-data-occupancy 0.8
+  -tdo 0.8, --threshold-data-occupancy 0.8
                          It can be used to filter the map, where rows/columns with largest numbers
                         of missing data can be discarded.This ratio is:
                           (number of bins with data) / (total number of bins in the given row/column)

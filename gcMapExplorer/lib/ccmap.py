@@ -107,7 +107,7 @@ class CCMAP:
 				When a temporary or new object is saved, the numpy array binary file is copied to the destination directory and state is changed to saved.
 				However, after saving, state become temporary. This method ensures that the saved copy is not deleted and only temporary copy is deleted after executing the script.
 
-				When a already saved object is loaded, it is in saved state. The numpy array binary file is read from the original location and remaines saved
+				When a already saved object is loaded, it is in saved state. The numpy array binary file is read from the original location and remains saved
 				at the original location after executing the script.
 
 			* ``compressed``:
@@ -185,6 +185,42 @@ class CCMAP:
 		if os.path.isfile(self.path2matrix):
 			os.remove(self.path2matrix)
 
+	def gen_from_matrix(self, matrix, binsize, xlabel=None, ylabel=None, workDir=None):
+		""" Generate CCMAP from a numpy matrix 2D array
+		"""
+		if self.matrix is not None:
+			raise AssertionError('CCMAP object already contains a map.')
+
+		if self.path2matrix:
+			raise AssertionError('CCMAP object has already contains a memory mapped file')
+
+		self.gen_matrix_file(workDir=workDir)
+		self.shape = matrix.shape
+		self.dtype = matrix.dtype
+		self.binsize = binsize
+		self.make_writable()
+
+		self.matrix[:] = matrix.copy()[:]
+
+		if xlabel is not None:
+			self.xlabel = xlabel
+		else:
+			self.xlabel = 'unknown'
+
+		if ylabel is not None:
+			self.ylabel = ylabel
+		else:
+			self.ylabel = 'unknown'
+
+		self.title = self.xlabel + '_vs_' + self.ylabel
+		self.xticks = [0, self.shape[0]*binsize]
+		self.yticks = [0, self.shape[1]*binsize]
+
+		self.maxvalue = np.max(self.matrix)
+		ma = np.ma.masked_equal(matrix, 0.0, copy=False)
+		self.minvalue = ma.min()
+
+
 	def make_readable(self):
 		"""Enable reading the numpy array binary file.
 
@@ -243,7 +279,7 @@ class CCMAP:
 		for key in self.__dict__:
 			ccMapObj.__dict__[key] = self.__dict__[key]
 
-		# Generaing temporary numpy array file
+		# Generating temporary numpy array file
 		dirname = os.path.dirname( self.path2matrix )
 		ccMapObj.gen_matrix_file(workDir=dirname)
 
@@ -266,7 +302,7 @@ class CCMAP:
 def jsonify(ccMapObj):
 	"""Changes data type of attributes in CCMAP object for |json link|.
 
-	Before saving the CCMAP object, its attributes data types are neccessary to change because few data types are not supported by json.
+	Before saving the CCMAP object, its attributes data types are necessary to change because few data types are not supported by json.
 
 	Therefore, it is converted into other data types which are supported by json.
 	These are the following attributes which are changed:
@@ -331,7 +367,7 @@ def jsonify(ccMapObj):
 def dejsonify(ccMapObj, json_dict=None):
 	"""Change back the data type of attributes in CCMAP object.
 
-	Before loading the CCMAP object, its attributes data types are neccessary to change back.
+	Before loading the CCMAP object, its attributes data types are necessary to change back.
 
 	Therefore, it is converted into original data types as shown in a table (see :meth:`gcMapExplorer.lib.ccmap.jsonify`)
 
@@ -523,7 +559,7 @@ def load_ccmap(infile, workDir=None):
 			os.remove(ccMapObj.path2matrix)
 			raise e
 
-		# Making this obeject as temorary
+		# Making this object as temorary
 		ccMapObj.state = 'temporary'
 	else:
 		ccMapObj.path2matrix = nparrayInFile
@@ -534,7 +570,7 @@ def export_cmap(ccmap, outfile, doNotWriteZeros=True):
 	"""To export ``.ccmap`` as text file
 
 	This function export ``.ccmap`` as coordinate list (COO) format sparse matrix file.
-	In COO format, lists of (row, column, value) as three tab seprated columns are written in output file.
+	In COO format, lists of (row, column, value) as three tab separated columns are written in output file.
 
 	Parameters
 	----------
@@ -566,7 +602,7 @@ def export_cmap(ccmap, outfile, doNotWriteZeros=True):
 		raise e
 
 def checkCCMapObjectOrFile(ccMap, workDir=None):
-	"""Check whether ccmap is a obejct or file
+	"""Check whether ccmap is a object or file
 
 	It can be used to check whether input is a :class:`gcMapExplorer.lib.ccmap.CCMAP`
 	or a ccmap file.
@@ -600,7 +636,7 @@ def checkCCMapObjectOrFile(ccMap, workDir=None):
 		'File' or 'Object'
 
 	"""
-	# Check whether input is a file or a obejct
+	# Check whether input is a file or a object
 	ccmapType = 'Object'
 	ccMapObj = None
 	if not isinstance(ccMap, CCMAP):
@@ -632,7 +668,7 @@ def downSampleCCMap(cmap, level=2, workDir=None):
 	pad_size_outer = int( ( outShapeY * level) - (cmap.shape[0] - 1) )
 	pad_size_inner = int( ( outShapeX * level) - (cmap.shape[1] - 1) )
 
-	# Otput shape
+	# Output shape
 	outputShape = (outShapeX + 1 , outShapeY + 1)
 
 	#rint(pad_size_outer, pad_size_inner, outputShape)
@@ -698,7 +734,7 @@ def downSampleCCMap(cmap, level=2, workDir=None):
 
 	return outCmap
 
-def downSample1D(array, level=2, func='max'):
+def downSample1D(array, level=2, masked_equal=0.0, func='max'):
 	""" Downsample or coarse a one-dimensional array
 	"""
 
@@ -718,7 +754,8 @@ def downSample1D(array, level=2, func='max'):
 	if func =='sum':
 		outputArray[1:] = x_padded.reshape(-1, level).sum(axis=1)
 	elif func =='mean':
-		outputArray[1:] = x_padded.reshape(-1, level).mean(axis=1)
+		new_x = np.ma.masked_equal(x_padded.reshape(-1, level), masked_equal)
+		outputArray[1:] = np.ma.filled( np.ma.mean(new_x, axis=1) )[:]
 	else:
 		outputArray[1:] = x_padded.reshape(-1, level).max(axis=1)
 
@@ -896,7 +933,7 @@ def gen_HiC_svg_plot(ccMapObj, outfile):
 	idx = 0
 	file_data = []
 
-	print("Generating plot segements as svg files ...\n")
+	print("Generating plot segments as svg files ...\n")
 	while(1):
 		outer_loop_finished = False
 		j = 0

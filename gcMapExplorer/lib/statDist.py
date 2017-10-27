@@ -31,6 +31,9 @@ import logging
 from gcMapExplorer.config import getConfig
 from . import ccmap as cmp
 from . import gcmap as gmp
+from . import genomicsDataHandler
+from . import ccmapHelpers
+from . import util
 
 
 # get configuration
@@ -44,10 +47,10 @@ def mdot(v, w):
 	gemm = get_blas_funcs("gemm", [v, w])
 	return gemm(alpha=1., a=v, b=w)
 
-def calculateTransitionProbablityMatrix(A, Out=None, bNoData=None):
-	""" Core function to calculate transition probablity matrix.
+def calculateTransitionProbabilityMatrix(A, Out=None, bNoData=None):
+	""" Core function to calculate transition probability matrix.
 
-	It is a core function to calculate transition probablity matrix.
+	It is a core function to calculate transition probability matrix.
 
 	Parameters
 	----------
@@ -95,13 +98,13 @@ def calculateTransitionProbablityMatrix(A, Out=None, bNoData=None):
 	if toReturn:
 		return Out
 
-def transitionProbablityMatrixForCCMap(ccMap,  outFile=None, percentile_thershold_no_data=None, thershold_data_occup=None):
-	""" To calculate transition probablity matrix.
+def transitionProbabilityMatrixForCCMap(ccMap, outFile=None, percentile_threshold_no_data=None, threshold_data_occup=None, workDir=None):
+	""" To calculate transition probability matrix.
 
-	This method can be used to calculate transition probablity matrix. This is similar to markov-chain transition matrix.
+	This method can be used to calculate transition probability matrix. This is similar to markov-chain transition matrix.
 
 	:note: This transition matrix is not symmetric, because each row represents stochastic row vector,
-		which contains contact probablity of this bin with every other bins and sum of row is always equal to one. See here: |markov chain link|.
+		which contains contact probability of this bin with every other bins and sum of row is always equal to one. See here: |markov chain link|.
 
 	Parameters
 	----------
@@ -111,19 +114,19 @@ def transitionProbablityMatrixForCCMap(ccMap,  outFile=None, percentile_thershol
 	outFile : str
 		Name of output ccmap file, to save directly the map as a ccmap file. In case of this option, ``None`` will return.
 
-	percentile_thershold_no_data : int
+	percentile_threshold_no_data : int
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
-		``percentile_thershold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
+		``percentile_threshold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
 		For example: if this value is 99, those row or columns will be discarded which contains larger than number of zeros (missing data) at 99 percentile.
 
 		To calculate percentile, all blank rows are removed, then in all rows, number of zeros are counted. Afterwards, number of zeros at
-		`percentile_thershold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
+		`percentile_threshold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
 		the whole row and column is assigned to have missing data. This percentile indicates highest numbers of zeros (missing data) in given rows/columns.
 
-	thershold_data_occup : float
+	threshold_data_occup : float
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
 		This ratio is (number of bins with data) / (total number of bins in the given row/column).
-		For example: if `thershold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
+		For example: if `threshold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
 
 		Note that this parameter is suitable for low resolution data because maps are likely to be much less sparse.
 
@@ -142,13 +145,13 @@ def transitionProbablityMatrixForCCMap(ccMap,  outFile=None, percentile_thershol
 	ccMapObj.make_readable()
 
 	bNoData = None
-	if percentile_thershold_no_data is not None or thershold_data_occup is not None or normCCMap.bNoData is None:
-		bNonZeros = cmh.get_nonzeros_index(ccMapObj.matrix, thershold_percentile=percentile_thershold_no_data, thershold_data_occup=thershold_data_occup)
+	if percentile_threshold_no_data is not None or threshold_data_occup is not None or normCCMap.bNoData is None:
+		bNonZeros = ccmapHelpers.get_nonzeros_index(ccMapObj.matrix, threshold_percentile=percentile_threshold_no_data, threshold_data_occup=threshold_data_occup)
 		bNoData = ~bNonZeros
 		normCCMap.bNoData = bNoData
 
-	# Calculate transition probablity
-	calculateTransitionProbablityMatrix(ccMapObj.matrix, normCCMap.bNoData, Out=normCCMap.matrix)
+	# Calculate transition probability
+	calculateTransitionProbabilityMatrix(ccMapObj.matrix, Out=normCCMap.matrix, bNoData=normCCMap.bNoData)
 	ma = np.ma.masked_equal(normCCMap.matrix, 0.0, copy=False)
 	normCCMap.minvalue = ma.min()
 	normCCMap.maxvalue = ma.max()
@@ -170,7 +173,7 @@ def transitionProbablityMatrixForCCMap(ccMap,  outFile=None, percentile_thershol
 		del normCCMap
 		return None
 
-def transitionProbablityMatrixForGCMap(gcMapInputFile, gcMapOutFile, resolution, compression='lzf', workDir=None, logHandler=None):
+def transitionProbabilityMatrixForGCMap(gcMapInputFile, gcMapOutFile, resolution, compression='lzf', percentile_threshold_no_data=None, threshold_data_occup=None, workDir=None, logHandler=None):
 	""" To calculate transition matrices using a gcmap file.
 
 	It can be used to calculate transition matrices (markov-chain) for all maps
@@ -194,6 +197,22 @@ def transitionProbablityMatrixForGCMap(gcMapInputFile, gcMapOutFile, resolution,
 	compression : str
 	    Compression method in output gcmap file. Presently allowed : ``lzf`` for LZF compression and ``gzip`` for GZIP compression.
 
+	percentile_threshold_no_data : int
+		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
+		``percentile_threshold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
+		For example: if this value is 99, those row or columns will be discarded which contains larger than number of zeros (missing data) at 99 percentile.
+
+		To calculate percentile, all blank rows are removed, then in all rows, number of zeros are counted. Afterwards, number of zeros at
+		`percentile_threshold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
+		the whole row and column is assigned to have missing data. This percentile indicates highest numbers of zeros (missing data) in given rows/columns.
+
+	threshold_data_occup : float
+		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
+		This ratio is (number of bins with data) / (total number of bins in the given row/column).
+		For example: if `threshold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
+
+		Note that this parameter is suitable for low resolution data because maps are likely to be much less sparse.
+
 	workDir : str
 		Path to the directory where temporary intermediate files are generated.
 		If ``None``, files are generated in the temporary directory according to the main configuration.
@@ -205,33 +224,53 @@ def transitionProbablityMatrixForGCMap(gcMapInputFile, gcMapOutFile, resolution,
 	gcmap = gmp.GCMAP(gcMapInputFile)
 	gcmap.loadSmallestMap()
 	mapList = gcmap.mapNameList.copy()
-	del gcmap
+
+	minResolution = resolution
 
 	for mapName in mapList:
-		logger.info('Calculating transition matrix for {0}...'.format(mapName))
 
-		ccMap = gmp.loadGCMapAsCCMap(gcMapInputFile, mapName=mapName, resolution=resolution, workDir=workDir)
+		# Iterate over available resolutions
+		gcmap.changeMap(mapName, resolution=minResolution)
+		previousResolution = gcmap.resolution
 
-		try:
-			trProbMap = transitionProbablityMatrixForCCMap(ccMap, thershold_percentile=percentile_thershold_no_data, thershold_data_occup=thershold_data_occup)
+		while True:
+			logger.info('Calculating transition matrix for {0}-{1}...'.format(mapName, previousResolution))
 
-			gmp.addCCMap2GCMap(trProbMap, gcMapOutFile, compression=compression,
-								generateCoarse=True, coarsingMethod='sum',
-								logHandler=logHandler)
+			ccMap = gmp.loadGCMapAsCCMap(gcmap.hdf5, mapName=mapName, resolution=gcmap.resolution, workDir=workDir)
 
-		# In case of program termination, delete the newly created ccmap and raise error
-		except (KeyboardInterrupt, SystemExit) as e:
-			if 'ccMap' in locals():	del ccMap
-			if 'trProbMap' in locals():	del trProbMap
-			raise e
+			try:
+				trProbMap = transitionProbabilityMatrixForCCMap(ccMap,
+																percentile_threshold_no_data=percentile_threshold_no_data,
+																threshold_data_occup=threshold_data_occup,
+																workDir=workDir)
+
+				gmp.addCCMap2GCMap(trProbMap, gcMapOutFile, compression=compression,
+									generateCoarse=False, replaceCMap=False,
+									logHandler=logHandler)
+
+				gcmap.toCoarserResolution()
+				if previousResolution == gcmap.resolution:
+					break
+				else:
+					previousResolution = gcmap.resolution
+
+
+			# In case of program termination, delete the newly created ccmap and raise error
+			except (KeyboardInterrupt, SystemExit) as e:
+				if 'ccMap' in locals():	del ccMap
+				if 'gcmap' in locals():	del gcmap
+				if 'trProbMap' in locals():	del trProbMap
+				raise e
 
 		logger.info('       ... Finished Calculating transition matrix.')
 
 		del ccMap
 		del trProbMap
 
-def statDistrByEigenDecompForCCMap(ccMap, chrom=None, hdf5Handle=None, compression='lzf'):
-	""" Calcualte stationary distribution from a ccmap file or object.
+	del gcmap
+
+def statDistrByEigenDecompForCCMap(ccMap, chrom=None, hdf5Handle=None, compression='lzf', workDir=None):
+	""" Calculate stationary distribution from a ccmap file or object.
 
 	It uses eigendecomposition method to calculate stationary distribution from
 	transition matrix.
@@ -242,7 +281,7 @@ def statDistrByEigenDecompForCCMap(ccMap, chrom=None, hdf5Handle=None, compressi
 		A CCMAP object containing observed contact frequency or a ccmap file
 
 	chrom : str
-		Name of chromosome -- neccessary as used in output HDF5 file.
+		Name of chromosome -- necessary as used in output HDF5 file.
 
 	hdf5Handle : :class:`gcMapExplorer.lib.genomicsDataHandler.HDF5Handler`
 		If it is provided, stationary distribution will be directly added to this file.
@@ -253,6 +292,10 @@ def statDistrByEigenDecompForCCMap(ccMap, chrom=None, hdf5Handle=None, compressi
 	    Compression method in output HDF5 file. Presently allowed : ``lzf``
 		for LZF compression and ``gzip`` for GZIP compression.
 
+	workDir : str
+		Path to the directory where temporary intermediate files are generated.
+		If ``None``, files are generated in the temporary directory according to the main configuration.
+
 	Returns
 	-------
 	sdist : numpy.1darray or ``None``
@@ -261,14 +304,23 @@ def statDistrByEigenDecompForCCMap(ccMap, chrom=None, hdf5Handle=None, compressi
 	"""
 
 	if hdf5Handle is not None and chrom is None:
-		logger.info('No chromosome name provided. Skiping calculation...')
+		logger.info('No chromosome name provided. Skipping calculation...')
 		return None
 
-	# Check whether input is a file or a obejct
+	# Check whether input is a file or a object
 	ccMapObj, ccmapType = cmp.checkCCMapObjectOrFile(ccMap, workDir=workDir)
 	ccMapObj.make_readable()
 
-	sdist = stationaryDistributionByEigenDecomp(ccMapObj.matrix, ccMapObj.bNoData)
+	sdist = None
+	try:
+		sdist = stationaryDistributionByEigenDecomp(ccMapObj.matrix, ccMapObj.bNoData)
+	except(KeyboardInterrupt, SystemExit) as e:
+		raise e
+	except Exception as e:
+		logger.warning('Not able to perform eigendecomposition... Aborting for {0}...'.format(chrom))
+		ccMapObj.make_unreadable()
+		return None
+
 	ccMapObj.make_unreadable()
 
 	# Remove large outliers
@@ -286,11 +338,12 @@ def statDistrByEigenDecompForCCMap(ccMap, chrom=None, hdf5Handle=None, compressi
 		del ccMapObj
 
 	if hdf5Handle is not None:
+		hdf5Handle.open()
 		hdf5Handle.addDataByArray(chrom, resolution, 'maximum', sdist, compression=compression)
 		hdf5Handle.addDataByArray(chrom, resolution, 'average', sdist, compression=compression)
 		hdf5Handle.addDataByArray(chrom, resolution, 'sum', sdist, compression=compression)
 
-		for level in [2, 4, 5, 8, 10, 16, 20, 32]:
+		for level in [2, 4, 5, 8, 10, 16, 20, 32, 64]:
 			maxs = cmp.downSample1D(sdist, level=level, func='max')
 			avgs = cmp.downSample1D(sdist, level=level, func='mean')
 			sums = cmp.downSample1D(sdist, level=level, func='sum')
@@ -300,10 +353,15 @@ def statDistrByEigenDecompForCCMap(ccMap, chrom=None, hdf5Handle=None, compressi
 			hdf5Handle.addDataByArray(chrom, new_resolution, 'average', avgs, compression=compression)
 			hdf5Handle.addDataByArray(chrom, new_resolution, 'sum', sums, compression=compression)
 
+			if sums.shape[0] < 250:
+				break
+
+		hdf5Handle.close()
+
 	else:
 		return sdist
 
-def statDistrByEigenDecompForGCMap(gcMapInputFile, outFile, resolution, compression='lzf', workDir=None):
+def statDistrByEigenDecompForGCMap(gcMapInputFile, outFile, resolution, overwrite=False, compression='lzf', workDir=None):
 	""" Calculate stationary distribution using transition matrices from gcmap file for given resolution.
 
 	It uses eigendecomposition method to calculate stationary distribution from
@@ -337,12 +395,31 @@ def statDistrByEigenDecompForGCMap(gcMapInputFile, outFile, resolution, compress
 	mapList = gcmap.mapNameList.copy()
 	del gcmap
 
-	hdf5Handle = gmlib.genomicsDataHandler.HDF5Handler(outFile, title='Stationary Distribution')
-	hdf5Handle.open()
+	hdf5Handle = genomicsDataHandler.HDF5Handler(outFile, title='Stationary Distribution')
 
 	for mapName in mapList:
 
 		logger.info('Calculating stationary distribution for {0} ...'.format(mapName))
+
+		# Checking for overwrite
+		if overwrite:
+			hdf5Handle.open()
+			if mapName in hdf5Handle.hdf5:
+				logger.info('       ...Stationary distribution already present for {0} !!! Re-calculating... '.format(mapName))
+				hdf5Handle.hdf5.pop(mapName)
+			hdf5Handle.close()
+		else:
+			hdf5Handle.open()
+			if hdf5Handle.hasChromosome(mapName):
+				rlist = hdf5Handle.getResolutionList(mapName)
+				if hdf5Handle.hdf5[mapName][rlist[-1]]['sum'].shape[0] < 1000:
+					hdf5Handle.close()
+					logger.info('       ...Stationary distribution already present for {0} !!! Skipping... '.format(mapName))
+					continue
+				else:
+					hdf5Handle.hdf5.pop(mapName)
+			hdf5Handle.close()
+
 
 		ccMap = gmp.loadGCMapAsCCMap(gcMapInputFile, mapName=mapName, resolution=resolution, workDir=workDir)
 
@@ -351,22 +428,21 @@ def statDistrByEigenDecompForGCMap(gcMapInputFile, outFile, resolution, compress
 
 		except (KeyboardInterrupt, SystemExit) as e:
 			if 'ccMap' in locals():	del ccMap
-			if 'hdf5Handle' in locals():	del hdf5Handle
 			raise e
 
 		logger.info('             ... Finished Calculating stationary distribution.')
 		del ccMap
 
 def stationaryDistributionByEigenDecomp(prob_matrix, bNoData):
-	""" To calculate stationary distribution from probablity transition matrix.
+	""" To calculate stationary distribution from probability transition matrix.
 
-	Stationary distribution is calculated using probablity transition matrix
+	Stationary distribution is calculated using probability transition matrix
 	with eigendecomposition.
 
 	Parameters
 	----------
 	prob_matrix : numpy.memmap or :attr:`gcMapExplorer.lib.ccmap.CCMAP.matrix` or numpy.ndarray
-		Input probablity transition matrix
+		Input probability transition matrix
 	bNoData : numpy.array[bool]
 		1D-array containing ``True`` and ``False`` values. Its size should be
 		equal to input matrix row/column size. Row/Column with ``False`` value
@@ -386,7 +462,7 @@ def stationaryDistributionByEigenDecomp(prob_matrix, bNoData):
 	mshape = matrix.shape
 
 
-	A = MemoryMappedArray(mshape, dtype='float64')
+	A = ccmapHelpers.MemoryMappedArray(mshape, dtype='float64')
 	A.arr[:] = matrix[:]
 
 	# Check if minimum is zero, replace all zeros with minimum value
@@ -423,9 +499,9 @@ def stationaryDistributionByEigenDecomp(prob_matrix, bNoData):
 
 def MatrixMultiplyHDD(A, B, Out=None):
 	bOut = False
-	if type(A) is not MemoryMappedArray:
+	if type(A) is not ccmapHelpers.MemoryMappedArray:
 		raise ValueError ('Not a MemoryMappedArray !!')
-	if type(B) is not MemoryMappedArray:
+	if type(B) is not ccmapHelpers.MemoryMappedArray:
 		raise ValueError ('Not a MemoryMappedArray !!')
 
 	if len(A.arr.shape) == 1:
@@ -467,13 +543,13 @@ def MatrixMultiplyHDD(A, B, Out=None):
 
 	if Out is None:
 		if Am == 1 and Bn == 1:
-			Out = MemoryMappedArray((1, ), dtype=dtype)
+			Out = ccmapHelpers.MemoryMappedArray((1, ), dtype=dtype)
 		elif Am == 1 and Bn > 1:
-			Out = MemoryMappedArray((Bn, ), dtype=dtype)
+			Out = ccmapHelpers.MemoryMappedArray((Bn, ), dtype=dtype)
 		elif Am > 1 and Bn == 1:
-			Out = MemoryMappedArray((Am, ), dtype=dtype)
+			Out = ccmapHelpers.MemoryMappedArray((Am, ), dtype=dtype)
 		else:
-			Out = MemoryMappedArray((Am, Bn), dtype=dtype)
+			Out = ccmapHelpers.MemoryMappedArray((Am, Bn), dtype=dtype)
 	else:
 		bOut = True
 
@@ -499,7 +575,7 @@ def MatrixMultiplyHDD(A, B, Out=None):
 			return Out
 
 def MatrixPowerHDD(M, n, result=None):
-	if type(M) is not MemoryMappedArray:
+	if type(M) is not ccmapHelpers.MemoryMappedArray:
 		raise ValueError ('Not a MemoryMappedArray !!')
 
 	if len(M.arr.shape) != 2 or M.arr.shape[0] != M.arr.shape[1]:
@@ -553,7 +629,7 @@ def MatrixPowerRAM(M, n):
 
 
 	For positive integers `n`, the power is computed by repeated matrix
-	squarings and matrix multiplications. If ``n == 0``, the identity matrix
+	squaring and matrix multiplications. If ``n == 0``, the identity matrix
 	of the same shape as M is returned. If ``n < 0``, the inverse
 	is computed and then raised to the ``abs(n)``.
 
@@ -623,9 +699,9 @@ def CalcStationaryDistributionRAM(orig_matrix, shape, bNonZeros, stop_tol=1e-12,
 	matrix = (orig_matrix[bNonZeros,:])[:,bNonZeros]   # Selected row-column which are not all zeros
 	mshape = matrix.shape
 
-	A = MemoryMappedArray(mshape, dtype='float64')
-	B = MemoryMappedArray(mshape, dtype='float64')
-	C = MemoryMappedArray(mshape, dtype='float64')
+	A = ccmapHelpers.MemoryMappedArray(mshape, dtype='float64')
+	B = ccmapHelpers.MemoryMappedArray(mshape, dtype='float64')
+	C = ccmapHelpers.MemoryMappedArray(mshape, dtype='float64')
 
 	A.arr[:] = matrix[:]
 	B.arr[:] = matrix[:]
@@ -639,7 +715,7 @@ def CalcStationaryDistributionRAM(orig_matrix, shape, bNonZeros, stop_tol=1e-12,
 	c = 1
 	while (tol >= stop_tol):
 		print('Before Iteration: {0}, Tol: {1}' .format(c, tol))
-		tol = LoopStaionaryDistributionRAM(matrix, A, B, C, mshape, c, 60)
+		tol = LoopStationaryDistributionRAM(matrix, A, B, C, mshape, c, 60)
 		c += 60
 		print('After Iteration: {0}, Tol: {1}' .format(c, tol))
 
@@ -672,10 +748,10 @@ def CalcStationaryDistributionHDD(orig_matrix, shape, bNonZeros, stop_tol=1e-12,
 	matrix = (orig_matrix[bNonZeros,:])[:,bNonZeros]   # Selected row-column which are not all zeros
 	mshape = matrix.shape
 
-	MA = MemoryMappedArray(mshape, dtype='float64')
-	A = MemoryMappedArray(mshape, dtype='float64')
-	B = MemoryMappedArray(mshape, dtype='float64')
-	C = MemoryMappedArray(mshape, dtype='float64')
+	MA = ccmapHelpers.MemoryMappedArray(mshape, dtype='float64')
+	A = ccmapHelpers.MemoryMappedArray(mshape, dtype='float64')
+	B = ccmapHelpers.MemoryMappedArray(mshape, dtype='float64')
+	C = ccmapHelpers.MemoryMappedArray(mshape, dtype='float64')
 
 	MA.arr[:] = matrix[:]
 	A.arr[:] = matrix[:]
@@ -690,7 +766,7 @@ def CalcStationaryDistributionHDD(orig_matrix, shape, bNonZeros, stop_tol=1e-12,
 	c = 1
 	while (tol >= stop_tol):
 		print('Before Iteration: {0}, Tol: {1}' .format(c, tol))
-		tol = LoopStaionaryDistributionHDD(MA, A, B, C, mshape, c, 10)
+		tol = LoopStationaryDistributionHDD(MA, A, B, C, mshape, c, 10)
 		c += 10
 		print('After Iteration: {0}, Tol: {1}' .format(c, tol))
 		if prev_tol == tol:
@@ -718,7 +794,7 @@ def CalcStationaryDistributionHDD(orig_matrix, shape, bNonZeros, stop_tol=1e-12,
 
 	return vector
 
-def LoopStaionaryDistributionRAM(matrix, A, B, C, mshape, c, nc):
+def LoopStationaryDistributionRAM(matrix, A, B, C, mshape, c, nc):
 	if c==1:
 		A.arr[:] = MatrixPowerRAM(matrix, nc-1)[:]
 	else:
@@ -733,7 +809,7 @@ def LoopStaionaryDistributionRAM(matrix, A, B, C, mshape, c, nc):
 
 	return tol
 
-def LoopStaionaryDistributionHDD(MA, A, B, C, mshape, c, nc):
+def LoopStationaryDistributionHDD(MA, A, B, C, mshape, c, nc):
 	if c==1:
 		MatrixPowerHDD(MA, nc-1, result=A)
 	else:

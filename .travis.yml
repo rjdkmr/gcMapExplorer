@@ -158,7 +158,6 @@ after_success:
     echo "index-servers ="                             >> ~/.pypirc
     echo "    pypi"                                    >> ~/.pypirc
     echo "[pypi]"                                      >> ~/.pypirc
-    echo "repository=https://pypi.python.org/pypi"     >> ~/.pypirc
     echo "username=rjdkmr"                             >> ~/.pypirc
     echo "password=$PYPIPASSWORD"                      >> ~/.pypirc
 

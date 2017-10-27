@@ -31,26 +31,29 @@ logging.basicConfig(level=logging.INFO)
 
 gui_tools =      ['browser', 'cmapImporter', 'cmapNormalizer', 'h5Converter']
 convert_tools =  ['coo2cmap', 'pairCoo2cmap', 'homer2cmap', 'bc2cmap', 'bigwig2h5', 'wig2h5', 'bed2h5', 'encode2h5']
-norm_tools =     ['normKR', 'normIC', 'normMCFS']
+norm_tools =     ['normKR', 'normVC', 'normIC', 'normMCFS']
 analysis_tools = ['corrBWcmaps']
+utility_tools = ['config']
 
 def main():
     options = {'browser':'Interactive Browser for genomic contact maps',
                'cmapImporter':'Interface to import contact maps and datasets',
                'cmapNormalizer' : 'Interface to normalize contact maps',
-               'h5Converter' : 'Convert bigWig/wig/bed file to browser compaitable h5 format',
+               'h5Converter' : 'Convert bigWig/wig/bed file to browser compatible h5 format',
                'coo2cmap':'Import COO sparse matrix format to ccmap or gcmap',
                'pairCoo2cmap': 'Import map from files similar to paired sparse matrix Coordinate (COO) format',
                'homer2cmap':'Import HOMER Hi-C interaction matrix to ccmap or gcmap',
                'bc2cmap': 'Import Bin-Contact format files to ccmap or gcmap',
-               'bigwig2h5': 'Import a bigWig file to browser compaitable h5 format',
-               'wig2h5': 'Import a wig file to browser compaitable h5 format',
-               'bed2h5' : 'Import a bed file to browser compaitable h5 format',
+               'bigwig2h5': 'Import a bigWig file to browser compatible h5 format',
+               'wig2h5': 'Import a wig file to browser compatible h5 format',
+               'bed2h5' : 'Import a bed file to browser compatible h5 format',
                'encode2h5' : 'Download and convert datasets from ENCODE project',
                'normKR' : 'Normalization using Knight-Ruiz matrix balancing',
+               'normVC' : 'Normalization using Vanilla-Coverage method',
                'normIC' : 'Normalization using Iterative Correction',
                'normMCFS' : 'Normalization by Median Contact Frequency Scaling',
-               'corrBWcmaps' : 'Calculate correlation between contact maps' }
+               'corrBWcmaps' : 'Calculate correlation between contact maps',
+               'config': 'To print configuration file and clean scratch directory'}
 
     if len(sys.argv)<=1:
         show_help(options)
@@ -59,6 +62,10 @@ def main():
         print(' ERROR: "{0}" is not an accepted option.\n' .format(sys.argv[1]))
         show_help(options)
         sys.exit(-1)
+
+    if sys.argv[1] == 'config':
+        from .clui import config
+        config.main()
 
     if sys.argv[1] == 'browser':
         from .gui import browser
@@ -112,6 +119,10 @@ def main():
         from .clui import normKR
         normKR.main()
 
+    if sys.argv[1] == 'normVC':
+        from .clui import normVC
+        normVC.main()
+
     if sys.argv[1] == 'normIC':
         from .clui import normIC
         normIC.main()
@@ -123,9 +134,6 @@ def main():
     if sys.argv[1] == 'corrBWcmaps':
         from .clui import corrBWcmaps
         corrBWcmaps.main()
-
-    # And at the end clean scratch directory, currently only remove .tmp and .npy file
-    cleanScratch()
 
 def show_help(options):
     print(' ==============================')
@@ -157,8 +165,13 @@ def show_help(options):
     for tool in analysis_tools:
         print('\t{0} : {1}\n'.format(tool, options[tool]))
 
-    print(' ==============================')
+    print('\n-------------------------')
+    print(' Utility')
+    print('-------------------------')
+    for tool in utility_tools:
+        print('\t{0} : {1}\n'.format(tool, options[tool]))
 
+    print(' ==============================')
 
 if __name__=="__main__":
     main()

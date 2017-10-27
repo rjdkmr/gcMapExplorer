@@ -115,6 +115,8 @@ normalizer module
 		normalizer.normalizeGCMapByIC
 		normalizer.normalizeCCMapByMCFS
 		normalizer.normalizeGCMapByMCFS
+		normalizer.normalizeCCMapByVCNorm
+		normalizer.normalizeGCMapByVCNorm
 
 
 cmstats module
@@ -128,16 +130,20 @@ cmstats module
 corrMatrix module
 ~~~~~~~~~~~~~~~~~
 .. autosummary::
-    corrMatrix.calculateCorrMatrix
+		corrMatrix.calculateCorrMatrix
+		corrMatrix.calculateCovMatrix
+		corrMatrix.calculateCorrelation
+		corrMatrix.calculateCovariance
+    corrMatrix.calculateCorrMatrixForCCMap
 		corrMatrix.calculateCorrMatrixForGCMaps
 
 
 statDist module
 ~~~~~~~~~~~~~~~
 .. autosummary::
-    statDist.calculateTransitionProbablityMatrix
-    statDist.transitionProbablityMatrixForCCMap
-    statDist.transitionProbablityMatrixForGCMap
+    statDist.calculateTransitionProbabilityMatrix
+    statDist.transitionProbabilityMatrixForCCMap
+    statDist.transitionProbabilityMatrixForGCMap
     statDist.statDistrByEigenDecompForCCMap
     statDist.statDistrByEigenDecompForGCMap
     statDist.stationaryDistributionByEigenDecomp
@@ -174,6 +180,6 @@ genomicsDataHandler module
 		genomicsDataHandler.TempNumpyArrayFiles.updateArraysByBigWig
 		genomicsDataHandler.TempNumpyArrayFiles.updateArraysByChromSize
 		genomicsDataHandler.TempNumpyArrayFiles.addChromSizeInfo
-		genomicsDataHandler.TempNumpyArrayFiles.genrateAllTempNumpyFiles
+		genomicsDataHandler.TempNumpyArrayFiles.generateAllTempNumpyFiles
 		genomicsDataHandler.TempNumpyArrayFiles.generateTempNumpyFile
 		genomicsDataHandler.TempNumpyArrayFiles.fillAllArraysWithZeros

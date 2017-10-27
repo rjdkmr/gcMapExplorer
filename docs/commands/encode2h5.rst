@@ -51,7 +51,7 @@ encode2h5
           d. signal-<date>-<Experiment accession>-<File accessions>.h5
 
       Note that name of cell-line is not included here. Therefore, use the
-      directory name as a identfiers for cell-lines or species. The Experiment
+      directory name as a identifiers for cell-lines or species. The Experiment
       and File accession can be used to back-track about the dataset on ENCODE
       website.
 
@@ -81,7 +81,7 @@ encode2h5
   Presently, six methods are implemented:
   1) min    -> Minimum value
   2) max    -> Maximum value
-  3) amean  -> Arithmatic mean or average
+  3) amean  -> Arithmetic mean or average
   4) hmean  -> Harmonic mean
   5) gmean  -> Geometric mean
   6) median -> Median
@@ -131,7 +131,7 @@ encode2h5
   -b2w bigWigToWig, --bigWigToWig bigWigToWig
                         Path to bigWigToWig tool.
 
-                        This is not neccessary when bigWigToWig path is already set using gcMapExplorer
+                        This is not necessary when bigWigToWig path is already set using gcMapExplorer
                         configure utility.
 
                         It can be downloaded from http://hgdownload.cse.ucsc.edu/admin/exe/
@@ -143,7 +143,7 @@ encode2h5
   -binfo bigWigInfo, --bigWigInfo bigWigInfo
                          Path to bigWigInfo tool.
 
-                        This is not neccessary when bigWigInfo path is already set using gcMapExplorer
+                        This is not necessary when bigWigInfo path is already set using gcMapExplorer
                         configure utility.
 
                         It can be downloaded from http://hgdownload.cse.ucsc.edu/admin/exe/
@@ -157,7 +157,7 @@ encode2h5
                         '4kb', '5kb', '8kb', '10kb', '20kb', '40kb', '80kb', '100kb', '160kb','200kb',
                         '320kb', '500kb', '640kb',  and '1mb'.
 
-                        Resolutions should be provided in comma seprated values. For Example:
+                        Resolutions should be provided in comma separated values. For Example:
                         -r "25kb, 50kb, 75kb"
 
   -dm "List of downsampling method", --downsample-method "List of downsampling method"

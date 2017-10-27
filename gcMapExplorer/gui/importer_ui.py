@@ -49,7 +49,7 @@ def main():
     app.exec_()
     app.exit()
 
-class cooMatFormatTabWidgetbHelper:
+class cooMatFormatTabWidgetHelper:
     """ Helper class containing all member-functions related to COO matrix format tab-widget
     """
 
@@ -89,7 +89,7 @@ class cooMatFormatTabWidgetbHelper:
         self.cooMatOutDIrLineEdit.editingFinished.connect( lambda: checkDirExist(self.cooMatOutDIrLineEdit, self) )
 
     def cooMatSetLabelsToCells(self, row, xlabel=None, ylabel=None):
-        """Convineint function to show xlabel and ylabel to table
+        """Convenient function to show xlabel and ylabel to table
         It is called several times below.
         """
 
@@ -115,7 +115,7 @@ class cooMatFormatTabWidgetbHelper:
     def cooMatInputFileCellChanged(self, row, col):
         """When user write a input file name, automatically try to choose Labels
         """
-        # Nothing to do when enterd on second column
+        # Nothing to do when entered on second column
         if col != 0:    return
         self.cooMatSetLabelsToCells(row)
 
@@ -340,7 +340,7 @@ class cooMatFormatTabWidgetbHelper:
             options['gcmap'] = True
             options['fileGCMap'] = '"{0}"'.format(fileGCMap)
             options['compression'] = str( self.cooMatGCMapCompressCBox.currentText() ).lower()
-            options['coarsingMethod'] = str( self.cooMatGCMapDownsampleCBox.currentText() ).lower()
+            options['coarseningMethod'] = str( self.cooMatGCMapDownsampleCBox.currentText() ).lower()
 
         self.cooMatrixConstructCommand(options)
 
@@ -382,7 +382,7 @@ class cooMatFormatTabWidgetbHelper:
         if opts['gcmap']:
             command += ' -gcm ' + opts['fileGCMap']
             command += ' -cmeth ' + opts['compression']
-            command += ' -dmeth ' + opts['coarsingMethod']
+            command += ' -dmeth ' + opts['coarseningMethod']
 
         command += ' -mt ' + opts['mapType']
         command += ' -wd ' + opts['workDir']
@@ -510,7 +510,7 @@ class homerFormatTabWidgetHelper:
             options['gcmap'] = True
             options['fileGCMap'] = '"{0}"'.format(fileGCMap)
             options['compression'] = str( self.homerGCMapCompressCBox.currentText() ).lower()
-            options['coarsingMethod'] = str( self.homerGCMapDownsampleCBox.currentText() ).lower()
+            options['coarseningMethod'] = str( self.homerGCMapDownsampleCBox.currentText() ).lower()
 
         self.homerConstructCommand(options)
 
@@ -528,7 +528,7 @@ class homerFormatTabWidgetHelper:
         if opts['gcmap']:
             command += ' -gcm ' + opts['fileGCMap']
             command += ' -cmeth ' + opts['compression']
-            command += ' -dmeth ' + opts['coarsingMethod']
+            command += ' -dmeth ' + opts['coarseningMethod']
 
         command += ' -wd ' + opts['workDir']
 
@@ -675,7 +675,7 @@ class binContactFormatTabWidgetHelper:
             options['gcmap'] = True
             options['fileGCMap'] = '"{0}"'.format(fileGCMap)
             options['compression'] = str( self.binContactGCMapCompressCBox.currentText() ).lower()
-            options['coarsingMethod'] = str( self.binContactGCMapDownsampleCBox.currentText() ).lower()
+            options['coarseningMethod'] = str( self.binContactGCMapDownsampleCBox.currentText() ).lower()
 
         self.binContactConstructCommand(options)
 
@@ -694,7 +694,7 @@ class binContactFormatTabWidgetHelper:
         if opts['gcmap']:
             command += ' -gcm ' + opts['fileGCMap']
             command += ' -cmeth ' + opts['compression']
-            command += ' -dmeth ' + opts['coarsingMethod']
+            command += ' -dmeth ' + opts['coarseningMethod']
 
         command += ' -wd ' + opts['workDir']
 
@@ -843,9 +843,9 @@ class pairCooMatFormatTabWidgetHelper:
 # Main Window Of Importer
 pathToThisUI = os.path.join(PathToUIs, 'importer.ui')
 Ui_ImporterWindow, ImporterWindowBase = loadUiType(pathToThisUI)
-class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow, cooMatFormatTabWidgetbHelper,
-                    homerFormatTabWidgetHelper, binContactFormatTabWidgetHelper,
-                    pairCooMatFormatTabWidgetHelper):
+class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow, cooMatFormatTabWidgetHelper,
+                     homerFormatTabWidgetHelper, binContactFormatTabWidgetHelper,
+                     pairCooMatFormatTabWidgetHelper):
     def __init__(self):
         super(ImporterWindow, self).__init__()
         self.setupUi(self)
@@ -855,7 +855,7 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow, cooMatFormatTabWidge
         for tabbar in tabbars:
             tabbar.hide()
 
-        # Resize hight and reduce size of log text box
+        # Resize height and reduce size of log text box
         self.resize(self.width(), 680)
         self.splitter.setSizes([500, 180])
 

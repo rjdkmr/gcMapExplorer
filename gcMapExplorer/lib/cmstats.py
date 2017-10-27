@@ -42,7 +42,7 @@ def correlateCMaps(ccMapObjOne, ccMapObjTwo, ignore_triangular=True, diagonal_of
 	"""To calculate correlation between two Hi-C maps
 
 	This function can be used to calculate either Pearson or Spearman rank-order correlation
-	between two Hi-C maps. It also ignore lower-trangular matrix with diagnonal offset to avoid duplicate and large values.
+	between two Hi-C maps. It also ignore lower-triangular matrix with diagnonal offset to avoid duplicate and large values.
 
 	Parameters
 	----------
@@ -244,7 +244,7 @@ def correlateGCMaps(gcmapOne, gcmapTwo, outFile=None, blockSize=None, slideStepS
 	"""To calculate correlation between common Hi-C maps from two gcmap files
 
 	This function can be used to calculate either Pearson or Spearman rank-order correlation between common maps present in two gcmap files.
-	It also ignore lower-trangular matrix with diagnonal offset to avoid duplicate and large values.
+	It also ignore lower-triangular matrix with diagonal offset to avoid duplicate and large values.
 
 	.. note:: If block-wise correlation calculation will be initiated by ``blockSize`` option, a ``outFile`` and ``name`` is also
 			required for further processing. The block-wise correlation will stored in output HDF5 format file.
@@ -392,7 +392,7 @@ def correlateCMapsBinWise(ccMapObjOne, ccMapObjTwo, corrType='pearson', cutoffPe
 	"""To calculate correlation between two Hi-C maps
 
 	This function can be used to calculate either Pearson or Spearman rank-order correlation
-	between two Hi-C maps. It also ignore lower-trangular matrix with diagnonal offset to avoid duplicate and large values.
+	between two Hi-C maps. It also ignore lower-triangular matrix with diagonal offset to avoid duplicate and large values.
 
 
 	Parameters
@@ -519,8 +519,8 @@ def correlateCMapsBinWise(ccMapObjOne, ccMapObjTwo, corrType='pearson', cutoffPe
 	return corr, centers
 
 
-def getAvgContactByDistance(ccmaps, stats='median', removeOutliers=False, outliersThershold=3.5):
-	"""To calcualte average contact as a function of distance
+def getAvgContactByDistance(ccmaps, stats='median', removeOutliers=False, outliersThreshold=3.5):
+	"""To calculate average contact as a function of distance
 
 	Parameters
 	----------
@@ -535,7 +535,7 @@ def getAvgContactByDistance(ccmaps, stats='median', removeOutliers=False, outlie
 		If ``True``, outliers will be removed before calculating input
 		statistics.
 
-	outliersThershold : float
+	outliersThreshold : float
 		The modified z-score to use as a threshold. Observations with
 		a modified z-score (based on the median absolute deviation) greater
 		than this value will be classified as outliers.
@@ -582,7 +582,7 @@ def getAvgContactByDistance(ccmaps, stats='median', removeOutliers=False, outlie
 			notOutlierIndex = None
 			outliersCount = 0
 			if removeOutliers:
-				outliers = util.detectOutliers1D(data, thresh=outliersThershold)
+				outliers = util.detectOutliers1D(data, thresh=outliersThreshold)
 				outliersCount = np.sum(outliers)
 				notOutlierIndex = np.nonzero(~outliers)
 

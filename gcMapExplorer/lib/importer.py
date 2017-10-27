@@ -41,7 +41,7 @@ class CooMatrixHandler:
 
     Two types of coordinates are accepted:
         * with ``coordinate='real'`` pair of absolute binned locations on chromosome
-        * with ``coordinate='index'`` row and column index of matrix. index **should** always start from zero for absoulte beginning of chromosome.
+        * with ``coordinate='index'`` row and column index of matrix. index **should** always start from zero for absolute beginning of chromosome.
           e.g. for 10kb, 0-10000 should have index of zero, 10000-20000 have index of one. If this is file format, resolution should be provided explicitly.
 
     .. warning::
@@ -99,7 +99,7 @@ class CooMatrixHandler:
     outputFileList : str
         List of Output files
     compressType : str
-        Format of compressed file. It could be etiher ``.tar`` or ``.zip`` or ``None``
+        Format of compressed file. It could be either ``.tar`` or ``.zip`` or ``None``
     compressHandle : ZipFile or TarFile
         An object to handle compressed file. It could be `ZipFile <https://docs.python.org/3/library/zipfile.html#zipfile-objects>`_ or
         `TarFile <https://docs.python.org/3/library/tarfile.html#tarfile-objects>`_ instance depending on compressed format.
@@ -146,7 +146,7 @@ class CooMatrixHandler:
         # map type
         self.mapType = mapType
 
-        # Checking corrdinate type: index or real location
+        # Checking coordinate type: index or real location
         if coordinate == 'real':
             pass
         elif coordinate == 'index':
@@ -214,7 +214,7 @@ class CooMatrixHandler:
 
         """
         inputType = None
-        # Three porabable type of inputs 'Text' 'Text in Archive' 'Archive'
+        # Three probable type of inputs 'Text' 'Text in Archive' 'Archive'
         if inputFiles is not None and compressedFile is not None:
             inputType = 'Text in Archive'
         elif inputFiles is not None and compressedFile is None:
@@ -269,7 +269,7 @@ class CooMatrixHandler:
     def _read_a_map_text_file(self, filename):
         """ Generate CCMAP object from a text file with column format --- i  j  value
 
-        To generate new CCMAP oject from a input text file. The file should contain three column where first and second column indicate
+        To generate new CCMAP object from a input text file. The file should contain three column where first and second column indicate
         location on the chromosome and third column indicate the contact frequency
 
         Parameters
@@ -519,7 +519,7 @@ class CooMatrixHandler:
                 raise e
 
     def save_gcmap(self, outputFile, xlabels=None, ylabels=None,
-                    coarsingMethod='sum', compression='lzf'):
+                   coarseningMethod='sum', compression='lzf'):
         """To Save all Hi-C maps as a gcmap file
 
         This function reads input files one by one and save it as a ``.gcmap``
@@ -536,7 +536,7 @@ class CooMatrixHandler:
             Name of the data along y-axis or list of names of the data for
             respective input files. if it is ``None``, ylabels will be same as
             xlabels.
-        coarsingMethod : str
+        coarseningMethod : str
             Method of downsampling. Three accepted methods are ``sum``: sum all
             values, ``mean``: Average of all values and ``max``: Maximum of
             all values.
@@ -573,7 +573,7 @@ class CooMatrixHandler:
                     gmp.addCCMap2GCMap(ccmap, outputFile,
                                        compression = compression,
                                        generateCoarse = True,
-                                       coarsingMethod = coarsingMethod)
+                                       coarseningMethod = coarseningMethod)
 
                     del ccmap
                 else:
@@ -588,7 +588,7 @@ class CooMatrixHandler:
 class PairCooMatrixHandler:
     """To import ccmap from files similar to paired sparse matrix Coordinate (COO) format
 
-    This format is very similar to COO format with addiotional infromation of chromosome. Therefore,
+    This format is very similar to COO format with additional information of chromosome. Therefore,
     maps for all chromosome could be contained in a single file.
 
     This type of format appeared with following publication:
@@ -673,7 +673,7 @@ class PairCooMatrixHandler:
             self.logger.addHandler(logHandler)
         self.logger.setLevel(logging.INFO)
 
-    def setGCMapOptions(self, compression='lzf', generateCoarse=True, coarsingMethod='sum', replaceCMap=True):
+    def setGCMapOptions(self, compression='lzf', generateCoarse=True, coarseningMethod='sum', replaceCMap=True):
         """ Set options for output gcmap file
 
         Parameters
@@ -681,20 +681,20 @@ class PairCooMatrixHandler:
         compression : str
             Compression method. Presently allowed : ``lzf`` for LZF compression and ``gzip`` for GZIP compression.
         generateCoarse : bool
-            Also generates all coarser maps where resolutions will be coarsed by a factor of two, consequetively.
+            Also generates all coarser maps where resolutions will be coarsen by a factor of two, consecutively.
             e.g.: In case of 10 kb input resolution, downsampled maps of ``20kb``, ``40kb``, ``80kb``, ``160kb``, ``320kb`` etc.
-            will be generated untill, map size is less than 500.
-        coarsingMethod : str
+            will be generated until, map size is less than 500.
+        coarseningMethod : str
             Method of downsampling. Three accepted methods are ``sum``: sum all values, ``mean``: Average of all values
             and ``max``: Maximum of all values.
         replaceCMap : bool
-            Replace entire old ccmap data including resolutions and coarsed data.
+            Replace entire old ccmap data including resolutions and coarsened data.
 
         """
         self.gcmapOutOptions = dict()
         self.gcmapOutOptions['compression'] = compression
         self.gcmapOutOptions['generateCoarse'] = generateCoarse
-        self.gcmapOutOptions['coarsingMethod'] = coarsingMethod
+        self.gcmapOutOptions['coarseningMethod'] = coarseningMethod
         self.gcmapOutOptions['replaceCMap'] = replaceCMap
 
     def _convertProcessedValues(self, i, j, value, chrom):
@@ -731,12 +731,12 @@ class PairCooMatrixHandler:
 
         compression = self.gcmapOutOptions['compression']
         generateCoarse = self.gcmapOutOptions['generateCoarse']
-        coarsingMethod = self.gcmapOutOptions['coarsingMethod']
+        coarseningMethod = self.gcmapOutOptions['coarseningMethod']
         replaceCMap = self.gcmapOutOptions['replaceCMap']
         gmp.addCCMap2GCMap(ccmap, self.gcmapOut,
                                 compression=compression,
                                 generateCoarse=generateCoarse,
-                                coarsingMethod=coarsingMethod,
+                                coarseningMethod=coarseningMethod,
                                 replaceCMap=replaceCMap,
                                 logHandler=self.logHandler)
 
@@ -745,7 +745,7 @@ class PairCooMatrixHandler:
 
         Read the input file, process the data, and convert it to ccmap
         or gcmap file. For output gcmap, :meth:`PairCooMatrixHandler.setGCMapOptions`
-        should be called to set the neccessary options.
+        should be called to set the necessary options.
         """
         # Check if gcmap output is given and gcmap options are set
         if self.gcmapOutOptions is None and self.gcmapOut is not None:
@@ -790,7 +790,7 @@ class HomerInputHandler:
     """To import ccmap from Hi-C maps generated by HOMER
 
     HOMER package generates the `Hi-C interaction matrices in text file <http://homer.salk.edu/homer/interactions/HiCmatrices.html>`_. This Hi-C interaction file can be imported using this class.
-    HOMER format interaction matrix file may contain data for all the chromsomes while this class separatly read and save matrix of each chromosome.
+    HOMER format interaction matrix file may contain data for all the chromosomes while this class separately read and save matrix of each chromosome.
 
     To Instantiate this class, three scenarios are possible:
         * ``Text in Archive``: Both a list of input files and a compressed file is given. It means look for input files in compressed file.
@@ -815,7 +815,7 @@ class HomerInputHandler:
     inputCompressedFile : str
         Name of input compressed file. It could be ``None`` when not provided.
     compressType : str
-        Format of compressed file. It could be etiher ``.tar`` or ``.zip`` or ``None``
+        Format of compressed file. It could be either ``.tar`` or ``.zip`` or ``None``
     compressHandle : ZipFile or TarFile
         An object to handle compressed file. It could be `ZipFile <https://docs.python.org/3/library/zipfile.html#zipfile-objects>`_ or
         `TarFile <https://docs.python.org/3/library/tarfile.html#tarfile-objects>`_ instance depending on compressed format.
@@ -902,7 +902,7 @@ class HomerInputHandler:
 
         """
         inputType = None
-        # Three porabable type of inputs 'Text' 'Text in Archive' 'Archive'
+        # Three probable type of inputs 'Text' 'Text in Archive' 'Archive'
         if inputFiles is not None and compressedFile is not None:
             inputType = 'Text in Archive'
         elif inputFiles is not None and compressedFile is None:
@@ -1142,7 +1142,7 @@ class HomerInputHandler:
         outline = ' '
         for chrm in self.chromList:
             outline = outline + "\n                              " + chrm
-        self.logger.info(" Following chromsomes found in input files: {0}" .format(outline))
+        self.logger.info(" Following chromosomes found in input files: {0}" .format(outline))
 
     def _getChromName(self, chrm):
         """Generate chromosome name
@@ -1247,7 +1247,7 @@ class HomerInputHandler:
             self._removeTemporaryOutputFiles()
             raise e
 
-    def save_gcmap(self, outputFile, coarsingMethod='sum', compression='lzf'):
+    def save_gcmap(self, outputFile, coarseningMethod='sum', compression='lzf'):
         """To Save all Hi-C maps as a gcmap file
 
         This function reads input files one by one and save it as a ``.gcmap``
@@ -1257,7 +1257,7 @@ class HomerInputHandler:
         ----------
         outputFile : str
             Name of a output gcmap file.
-        coarsingMethod : str
+        coarseningMethod : str
             Method of downsampling. Three accepted methods are ``sum``: sum all
             values, ``mean``: Average of all values and ``max``: Maximum of
             all values.
@@ -1276,10 +1276,10 @@ class HomerInputHandler:
 
             reader = CooMatrixHandler(inputFiles, resolution=self.resolution)
             reader.save_gcmap(outputFile,
-                                xlabels=self.chromList,
-                                ylabels=self.chromList,
-                                coarsingMethod=coarsingMethod,
-                                compression=compression)
+                              xlabels=self.chromList,
+                              ylabels=self.chromList,
+                              coarseningMethod=coarseningMethod,
+                              compression=compression)
 
         except (KeyboardInterrupt, SystemExit) as e:
             self._removeTemporaryOutputFiles()
@@ -1595,7 +1595,7 @@ class BinsNContactFilesHandler:
 
             cmp.save_ccmap(self.ccmaps[key], fullOutPath, compress=True)
 
-    def save_gcmap(self, outputFile, coarsingMethod='sum', compression='lzf'):
+    def save_gcmap(self, outputFile, coarseningMethod='sum', compression='lzf'):
         """To Save all Hi-C maps as a gcmap file
 
         This function reads input files one by one and save it as a ``.gcmap``
@@ -1605,7 +1605,7 @@ class BinsNContactFilesHandler:
         ----------
         outputFile : str
             Name of a output gcmap file.
-        coarsingMethod : str
+        coarseningMethod : str
             Method of downsampling. Three accepted methods are ``sum``: sum all
             values, ``mean``: Average of all values and ``max``: Maximum of
             all values.
@@ -1621,8 +1621,8 @@ class BinsNContactFilesHandler:
         resolution = util.binsizeToResolution(self.binsize)
         for key in self.ccmaps:
             gmp.addCCMap2GCMap(self.ccmaps[key], outputFile,
-                                compression=compression,
-                                coarsingMethod=coarsingMethod)
+                               compression=compression,
+                               coarseningMethod=coarseningMethod)
 
 
 def gen_map_from_locations_value(i, j, value, resolution=None, mapType='intra', workDir=None, logHandler=None):

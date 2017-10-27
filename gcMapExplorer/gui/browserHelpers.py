@@ -123,7 +123,7 @@ class GCMapSelectorDialog(gcmapSelectorDialogBase, Ui_gcmapSelectorDialog):
         # Set icon for browse file
         self.browseFileButton.setIcon( self.style().standardIcon(QStyle.SP_DirOpenIcon) )
 
-        # Connnecting widget to function
+        # Connecting widget to function
         self.fileNameLineEdit.editingFinished.connect( self.checkInputFile )
 
         self.mapListWidget.itemClicked.connect( self.displayResolutionList )
@@ -353,7 +353,7 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
         mplFontPath = os.path.join(mplDataPath, 'fonts')
         mplTtfFontPath = os.path.join(mplFontPath, 'ttf')
 
-        # Buinding ttf files list
+        # Building ttf files list
         mplTtfList = []
         for f in os.listdir(mplTtfFontPath):
             if f.endswith('.ttf'):
@@ -366,7 +366,7 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
         qtFontNameListQtype = self.qtFontDatabase.families()
         qtFontNameList =  [ str(qtFont) for qtFont in qtFontNameListQtype ]
 
-        # Comapring and adding matplotlib font to qt font database
+        # Comparing and adding matplotlib font to qt font database
         for i in range(len(mplFontNameList)):
             matched = False
             for qtFont in qtFontNameList:
@@ -391,7 +391,7 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
         # Setting X label in tab widget
         self.xLabelTitleLineEdit.setText(self.axesProps.xLabel['Text'])
 
-        # Setting x label postion in Show Label combo box
+        # Setting x label position in Show Label combo box
         if self.axesProps.xLabel['Show Label'] == 'bottom':
             self.xLabelShowLabelCBox.setCurrentIndex(0)
         if self.axesProps.xLabel['Show Label'] == 'top':
@@ -421,7 +421,7 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
         if self.axesProps.xLabel['Font Size'] != int( self.xLabelFontSizeCBox.currentText() ):
             self.axes.get_xaxis().get_label().set_fontsize( int( self.xLabelFontSizeCBox.currentText() ) )
 
-        # Check whether font name is changed in tab-widget and then chenge it in plot
+        # Check whether font name is changed in tab-widget and then change it in plot
         qfont = self.xLabelFontNameCBox.currentFont()
         if self.is_font_exist_in_mpl(str(qfont.family())):
             if self.axesProps.xLabel['Font Name'] != str(qfont.family()):
@@ -432,7 +432,7 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
             self.xLabelFontNameCBox.setCurrentFont(qfont)
             self.axes.get_xaxis().get_label().set_fontname(str(qfont.family()))
 
-        # Check whether x-lable position is changed in widget and then change it
+        # Check whether x-label position is changed in widget and then change it
         if self.xLabelShowLabelCBox.currentIndex() == 0:
             self.axes.get_xaxis().get_label().set_visible(True)
             self.axes.get_xaxis().set_label_position('bottom')
@@ -451,7 +451,7 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
         # Setting Y label in tab widget
         self.yLabelTitleLineEdit.setText(self.axesProps.yLabel['Text'])
 
-        # Setting Y label postion in Show Label combo box
+        # Setting Y label position in Show Label combo box
         if self.axesProps.yLabel['Show Label'] == 'left':
             self.yLabelShowLabelCBox.setCurrentIndex(0)
         if self.axesProps.yLabel['Show Label'] == 'right':
@@ -481,7 +481,7 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
         if self.axesProps.yLabel['Font Size'] != int( self.yLabelFontSizeCBox.currentText() ):
             self.axes.get_yaxis().get_label().set_fontsize( int( self.yLabelFontSizeCBox.currentText() ) )
 
-        # Check whether font name is changed in tab-widget and then chenge it in plot
+        # Check whether font name is changed in tab-widget and then change it in plot
         qfont = self.yLabelFontNameCBox.currentFont()
         if self.is_font_exist_in_mpl(str(qfont.family())):
             if self.axesProps.yLabel['Font Name'] != str(qfont.family()):
@@ -492,7 +492,7 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
             self.yLabelFontNameCBox.setCurrentFont(qfont)
             self.axes.get_yaxis().get_label().set_fontname(str(qfont.family()))
 
-        # Check whether y-lable position is changed in widget and then change it
+        # Check whether y-label position is changed in widget and then change it
         if self.yLabelShowLabelCBox.currentIndex() == 0:
             self.axes.get_yaxis().get_label().set_visible(True)
             self.axes.get_yaxis().set_label_position('left')
@@ -625,7 +625,7 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
             label.set_rotation( int( self.xTickLabelRotationCBox.currentText() ) )
 
 
-        # Check whether font name is changed in tab-widget and then chenge it in plot
+        # Check whether font name is changed in tab-widget and then change it in plot
         qfont = self.xTickFontNameCBox.currentFont()
         if self.is_font_exist_in_mpl(str(qfont.family())):
             for label in labels:
@@ -715,7 +715,7 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
                     tick.tick2On = False
 
     def displayYTickLabelPropsOnTabWidget(self):
-        # Display tick label positionx
+        # Display tick label position
         if self.axesProps.yTickLabel['Label Position'] == 'left':
             self.yTickShowTickLabelsCBox.setCurrentIndex(0)
         if self.axesProps.yTickLabel['Label Position'] == 'right':
@@ -834,7 +834,7 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
             label.set_rotation( int( self.yTickLabelRotationCBox.currentText() ) )
 
 
-        # Check whether font name is changed in tab-widget and then chenge it in plot
+        # Check whether font name is changed in tab-widget and then change it in plot
         qfont = self.yTickFontNameCBox.currentFont()
         if self.is_font_exist_in_mpl(str(qfont.family())):
             for label in labels:
@@ -868,7 +868,7 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
                 tickline.set_markeredgewidth( float( self.yTickMajorTickWidthLineEdit.text()) )
 
 
-        # If minor ticks are enabled, show them and reset their postions according to major ticks
+        # If minor ticks are enabled, show them and reset their positions according to major ticks
         if self.yTickShowMinorTicksCBox.currentIndex() != 0:
 
             # Setting minor locator
@@ -977,8 +977,8 @@ class DialogGenomicsDataSelector(QDialogGenomicsDataSelectorBase, Ui_DialogGenom
         self.requestedBinsize = requestedBinsize
         self.resolutions = None
         self.dataNames = None
-        self.coarse_methods_name = { 'min':'Minimum', 'max':'Maximum', 'median':'Median', 'amean':'Arithmatic Mean', 'gmean':'Geometric Mean', 'hmean':'Harmonic Mean' }
-        self.coarse_methods_name_r = { 'Minimum':'min', 'Maximum':'max', 'Median':'median', 'Arithmatic Mean':'amean', 'Geometric Mean':'gmean', 'Harmonic Mean':'hmean' }
+        self.coarse_methods_name = { 'min':'Minimum', 'max':'Maximum', 'median':'Median', 'amean':'Arithmetic Mean', 'gmean':'Geometric Mean', 'hmean':'Harmonic Mean' }
+        self.coarse_methods_name_r = { 'Minimum':'min', 'Maximum':'max', 'Median':'median', 'Arithmetic Mean':'amean', 'Geometric Mean':'gmean', 'Harmonic Mean':'hmean' }
         self.selected_data = None
         self.whereToPlot = None
 
@@ -1003,7 +1003,7 @@ class DialogGenomicsDataSelector(QDialogGenomicsDataSelectorBase, Ui_DialogGenom
         self.openAbortButton.clicked.connect(self.on_button_clicked)
 
     def setChromosome(self, chromosome):
-        """ Set chromsome in list widget
+        """ Set chromosome in list widget
         """
         if self.hdf5Handle.hasChromosome(chromosome):
             self.chromNameListWidget.setCurrentItem( self.chromNameListWidget.findItems(chromosome, Qt.MatchExactly)[0] )
@@ -1219,7 +1219,7 @@ class DialogCorrelationBetweenMaps(QDialogCorrelationMapsBase, Ui_DialogCorrelat
         # Set default working directory
         self.setDefaultWorkingDirectory()
 
-        # Set loogger handler to a new type
+        # Set logger handler to a new type
         self.loggerHandler = guiHelpers.pyQtLogHandler()
         self.loggerHandler.messageEmitted.connect( self.loggerPlainTextEdit.appendPlainText ) # Connect loggerHandler to log textbox
 
@@ -1285,7 +1285,7 @@ class DialogCorrelationBetweenMaps(QDialogCorrelationMapsBase, Ui_DialogCorrelat
         if workDir and os.path.isdir(workDir):
             self.workDir = workDir
         else:
-            msgBox = QMessageBox(QMessageBox.Warning, 'Warning', 'Directoy: {0} not found!!'.format(workDir), QMessageBox.Ok, self)
+            msgBox = QMessageBox(QMessageBox.Warning, 'Warning', 'Directory: {0} not found!!'.format(workDir), QMessageBox.Ok, self)
             msgBox.exec_()
             msgBox.close()
             self.workDirLineEdit.setText( self.workDir )
@@ -1452,10 +1452,10 @@ class DialogCorrelationBetweenMaps(QDialogCorrelationMapsBase, Ui_DialogCorrelat
         # Uncheck the calculate button
         self.calculateButton.setChecked(False)
 
-        # If thread is still alive, particulary when calculation is properly finished but not terminated abruptly
+        # If thread is still alive, particularly when calculation is properly finished but not terminated abruptly
         if self.thread is not None:
 
-            # Write results to ouput text box
+            # Write results to output text box
             corr, aux = self.thread.results
             if self.blockSize is None:
                 self.outputTextEdit.appendPlainText('Correlation: {0}'.format(corr))
@@ -1521,7 +1521,7 @@ class AxesProperties:
         self.yTickLocations = yTickLocations
         self.yTickLabelTexts = yTickLabelTexts
 
-        # Initialize axes proeprties dictionary
+        # Initialize axes properties dictionary
         self.xLabel = self.init_xlabel_dict()
         self.yLabel = self.init_yLabel_dict()
         self.xTickLabel = self.init_xTickLabel_dict()
@@ -1615,11 +1615,11 @@ class AxesProperties:
         if self.xTickLabelTexts is None:
             self.axes.set_xticklabels(self.axes.get_xticks())
         else:
-            # Check whther ticks locations and tick labels are compaitable
+            # Check whether ticks locations and tick labels are compatible
             if len(self.xTickLocations) != len(self.xTickLabelTexts):
                 raise AssertionError ('Number of x-axis locations you provided do not match with number of xticklabels')
 
-            # Retrive indices of tick labels corresponding to ticks and make list of labels
+            # Retrieve indices of tick labels corresponding to ticks and make list of labels
             xticks = self.axes.get_xticks()
             ticklabels = []
             for xtick in xticks:
@@ -1663,11 +1663,11 @@ class AxesProperties:
         if self.yTickLabelTexts is None:
             self.axes.set_yticklabels(self.axes.get_yticks())
         else:
-            # Check whther ticks locations and tick labels are compaitable
+            # Check whether ticks locations and tick labels are compatible
             if len(self.yTickLocations) != len(self.yTickLabelTexts):
                 raise AssertionError ('Number of y-axis locations do not match with number of yticklabels')
 
-            # Retrive indices of tick labels corresponding to ticks and make list of labels
+            # Retrieve indices of tick labels corresponding to ticks and make list of labels
             yticks = self.axes.get_yticks()
             ticklabels = []
             for ytick in yticks:
@@ -2058,7 +2058,7 @@ class DialogUserColorMap(DialogUserColorMapBase, Ui_DialogUserColorMap):
         """
 
         self.standardColorMaps = None
-        """ Contain lsit of standard color maps """
+        """ Contain list of standard color maps """
 
         self.userColorMaps = dict()
         """ Dictionary of user defined color maps. It is used to reload table
@@ -2427,7 +2427,7 @@ class DialogUserColorMap(DialogUserColorMapBase, Ui_DialogUserColorMap):
             self.loadColorInfoToTable(colorInfo)  # Load new table
 
     def loadColorInfoToTable(self, colorInfo):
-        """ Load color information from dictonary to table widget
+        """ Load color information from dictionary to table widget
         """
         # Set name
         self.cmapNameLineEdit.setText(colorInfo['name'])

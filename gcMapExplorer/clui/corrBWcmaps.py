@@ -36,7 +36,7 @@ description = \
 """To calculate overall/block-wise correlation between contact maps
 ===================================================================
 
-This tool can be used to calculate correlation betweem two contact maps.
+This tool can be used to calculate correlation between two contact maps.
 
 With option "-bs/--block-size", it calculates correlation along the blocks of
 input size. Without this option, it calculates correlation between entire maps.
@@ -69,7 +69,7 @@ slideStepSizeHelp = \
 
 nameHelp = \
 """ Name of output data
-When results are written in h5 file, a name is neccessary to label the data.
+When results are written in h5 file, a name is necessary to label the data.
 The correlation results will be stored with this name in h5 file given with
 "-o/--output" option.
 
@@ -83,7 +83,7 @@ output h5 file.
 
 
 ignore_triangular_help = \
-"""To NOT ignore upper traingle of the map.
+"""To NOT ignore upper triangle of the map.
 Intra-chromosomal contact maps are symmetric, therefore, during correlation
 calculation, by default, only one side of the diagonal is considered.
 To consider the whole map use this option.
@@ -93,9 +93,9 @@ To consider the whole map use this option.
 cutoffPercentileHelp = \
 """To ignore bins that are below this percentile.
 The maps contains large numbers of low contact frequency. This frequencies
-might not be signficant and inclusion in correlation calculation may affect the
+might not be significant and inclusion in correlation calculation may affect the
 correlation value. Therefore, this option can be used discard these lower
-frquencies using percentile cutoff.
+frequencies using percentile cutoff.
 
 """
 
@@ -132,7 +132,7 @@ def main():
     extOne = os.path.splitext(os.path.basename(inputOne))[-1]
     extTwo = os.path.splitext(os.path.basename(inputTwo))[-1]
     if extOne != extTwo:
-        msg = 'Input file format appears to be different. Use input files with same foramt.\n'
+        msg = 'Input file format appears to be different. Use input files with same format.\n'
         showErrorAndExit(parser, msg)
 
     # gcmap or ccmap
@@ -160,7 +160,7 @@ def main():
 
     # Check if outfile is given
     if args.outFile is None and args.blockSize is not None:
-        showErrorAndExit(parser, 'No ouput file is given!!!\n')
+        showErrorAndExit(parser, 'No output file is given!!!\n')
 
     # If out file given, store name
     outFile = None
@@ -257,7 +257,7 @@ def parseArguments():
                         dest='inputOne', help=inputOneHelp)
 
     parser.add_argument('-i2', '--input-two', action='store',
-                        type=argparse.FileType('r'), metavar='input2.gmcap',
+                        type=argparse.FileType('r'), metavar='input2.gcmap',
                         dest='inputTwo', help=inputTwoHelp)
 
     parser.add_argument('-bs', '--block-size', action='store', type=str,
@@ -268,7 +268,7 @@ def parseArguments():
                         metavar=1, dest='slideStepSize', default=1,
                         help=slideStepSizeHelp)
 
-    parser.add_argument('-o', '--ouput', action='store',
+    parser.add_argument('-o', '--output', action='store',
                         type=argparse.FileType('a'), metavar='output.h5',
                         dest='outFile', help=outFileHelp)
 

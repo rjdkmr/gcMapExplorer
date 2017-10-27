@@ -153,26 +153,26 @@ class MemoryMappedArray:
 		if os.path.isfile(self.path2matrix):
 			os.remove(self.path2matrix)
 
-def get_nonzeros_index(matrix, thershold_percentile=None, thershold_data_occup=None):
+def get_nonzeros_index(matrix, threshold_percentile=None, threshold_data_occup=None, filterByDiagonal=False):
 	"""To get a numpy array of bool values for all rows/columns which have **NO** missing data
 
 	Parameters
 	----------
 	matrix : numpy.memmap or :attr:`gcMapExplorer.lib.ccmap.CCMAP.matrix`
 		Input matrix
-	percentile_thershold_no_data : int
+	percentile_threshold_no_data : int
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
-		``percentile_thershold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
+		``percentile_threshold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
 		For example: if this value is 99, those row or columns will be discarded which contains larger than number of zeros (missing data) at 99 percentile.
 
 		To calculate percentile, all blank rows are removed, then in all rows, number of zeros are counted. Afterwards, number of zeros at
-		`percentile_thershold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
+		`percentile_threshold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
 		the whole row and column is assigned to have missing data. This percentile indicates highest numbers of zeros (missing data) in given rows/columns.
 
-	thershold_data_occup : float
+	threshold_data_occup : float
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
 		This ratio is (number of bins with data) / (total number of bins in the given row/column).
-		For example: if `thershold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
+		For example: if `threshold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
 
 		Note that this parameter is suitable for low resolution data because maps are likely to be much less sparse.
 
@@ -180,8 +180,8 @@ def get_nonzeros_index(matrix, thershold_percentile=None, thershold_data_occup=N
 	-------
 	bData : numpy.array[bool]
 		1D-array containing ``True`` and ``False`` values.
-		* If ``True``: row/column has data above the thershold
-		* If ``False``: row/column has no data under the thershold
+		* If ``True``: row/column has data above the threshold
+		* If ``False``: row/column has no data under the threshold
 	"""
 	bData = np.empty(shape=matrix.shape[0], dtype='bool')
 	mx = matrix.shape[0]
@@ -193,64 +193,71 @@ def get_nonzeros_index(matrix, thershold_percentile=None, thershold_data_occup=N
 			bData[i] = False
 			# Although whole column/row is zero, count of zero taken as zero
 			zero_count.append(0)
+		elif filterByDiagonal and matrix[i][i] == 0:
+			bData[i] = False
+			zero_count.append(0)
 		else:
 			bData[i] = True
-			zero_count.append(np.nonzero( matrix[i] == 0 )[0].shape[0])
+			zero_count.append((matrix[i] == 0).sum())
 
 
 	zero_count = np.asarray(zero_count)
 
-	if thershold_percentile is not None and thershold_data_occup is not None:
-		raise AssertionError("Both 'thershold_percentile' and 'thershold_count_ratio' cannot be used simultaneously!")
+	if threshold_percentile is not None and threshold_data_occup is not None:
+		raise AssertionError("Both 'threshold_percentile' and 'threshold_count_ratio' cannot be used simultaneously!")
 
-	# Make false if number of zeros is less than thershold
-	if thershold_percentile is not None:
-		percentile = np.percentile(zero_count[np.nonzero(zero_count != 0)], thershold_percentile)
+	# Make false if number of zeros is less than threshold
+	if threshold_percentile is not None:
+		percentile = np.percentile(zero_count[zero_count != 0], threshold_percentile)
+		# print( (zero_count==0).sum(), zero_count.shape, percentile,  np.amin(zero_count[zero_count > 0]), np.amax(zero_count))
 		for i in range(mx):
 			if bData[i]:
-				if zero_count[i] >= percentile:
+				# zero_count contains zero value if whole whole column/row is zero, see above
+				# However, other rows still count these zeros because of symmetry
+				# Therefore, to ignore this zeros, it has to be compensated.
+				if ( zero_count[i] - (zero_count==0).sum() ) >= percentile:
 					bData[i] = False
 					#print(i, zero_count[i], percentile)
 
-	# Make false if number of zeros is less than thershold
-	if thershold_data_occup is not None:
+	# Make false if number of zeros is less than threshold
+	if threshold_data_occup is not None:
 		for i in range(mx):
 			if bData[i]:
-				if zero_count[i]/mx >=  (1.0 - thershold_data_occup):
+				if zero_count[i]/mx >=  (1.0 - threshold_data_occup):
 					bData[i] = False
-					#print(i, count[i], real_data, thershold_percentile)
+					#print(i, count[i], real_data, threshold_percentile)
 
 	bData = np.asarray(bData)
 
-	length = np.nonzero( bData == True )[0].shape[0]
+	length = bData.sum()
 	if length == 0:
-		if thershold_percentile is not None:
-			raise ValueError("All rows contain zero values!!! Try increasing 'thershold_percentile' value or do not use it.")
-		if thershold_data_occup is not None:
-			raise ValueError("All rows contain zero values!!! Try decreasing 'thershold_data_occup' value or do not use it.")
+		if threshold_percentile is not None:
+			raise ValueError("All rows contain zero values!!! Try increasing 'threshold_percentile' value or do not use it.")
+		if threshold_data_occup is not None:
+			raise ValueError("All rows contain zero values!!! Try decreasing 'threshold_data_occup' value or do not use it.")
 
 	return bData
 
-def remove_zeros(matrix, thershold_percentile=None, thershold_data_occup=None, workDir=None):
+def remove_zeros(matrix, threshold_percentile=None, threshold_data_occup=None, workDir=None):
 	"""To remove rows/columns with missing data (zero values)
 
 	Parameters
 	----------
 	matrix : numpy.memmap or :attr:`gcMapExplorer.lib.ccmap.CCMAP.matrix`
 		Input matrix
-	percentile_thershold_no_data : int
+	percentile_threshold_no_data : int
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
-		``percentile_thershold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
+		``percentile_threshold_no_data`` should be between 1 and 100. This options discard the rows and columns which are above this percentile.
 		For example: if this value is 99, those row or columns will be discarded which contains larger than number of zeros (missing data) at 99 percentile.
 
 		To calculate percentile, all blank rows are removed, then in all rows, number of zeros are counted. Afterwards, number of zeros at
-		`percentile_thershold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
+		`percentile_threshold_no_data` percentile is obtained. In next step, if a row contain number of zeros larger than this percentile value,
 		the whole row and column is assigned to have missing data. This percentile indicates highest numbers of zeros (missing data) in given rows/columns.
 
-	thershold_data_occup : float
+	threshold_data_occup : float
 		It can be used to filter the map, where rows/columns with largest numbers of missing data can be discarded.
 		This ratio is (number of bins with data) / (total number of bins in the given row/column).
-		For example: if `thershold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
+		For example: if `threshold_data_occup = 0.8`, then all rows containing more than 20\% of missing data will be discarded.
 
 		Note that this parameter is suitable for low resolution data because maps are likely to be much less sparse.
 
@@ -264,8 +271,8 @@ def remove_zeros(matrix, thershold_percentile=None, thershold_data_occup=None, w
 		:class:`MemoryMappedArray` instance containing new truncated array as memory mapped file
 	bNoData : numpy.array[bool]
 		1D-array containing ``True`` and ``False`` values.
-		* If ``True``: row/column has no data under the thershold
-		* If ``False``: row/column has data above the thershold
+		* If ``True``: row/column has no data under the threshold
+		* If ``False``: row/column has data above the threshold
 
 	"""
 
@@ -273,9 +280,9 @@ def remove_zeros(matrix, thershold_percentile=None, thershold_data_occup=None, w
 	mx = matrix.shape[0]
 	my = matrix.shape[1]
 
-	bData = get_nonzeros_index(matrix, thershold_percentile=thershold_percentile, thershold_data_occup=thershold_data_occup)
+	bData = get_nonzeros_index(matrix, threshold_percentile=threshold_percentile, threshold_data_occup=threshold_data_occup)
 
-	length = np.nonzero( bData == True )[0].shape[0]
+	length = bData.sum()
 	A = MemoryMappedArray((length, length),  workDir=workDir, dtype='float64')
 
 	ci = -1

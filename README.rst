@@ -39,13 +39,14 @@ Features
 * `Normalization of contact maps`_ by
     * **Iterative Correction** (IC)
     * **Knight-Ruiz Matrix Balancing** (KR)
+    * **Vanilla-Coverage** (VC)
     * **Distance-Frequency**
 
 * A **new file format** based on HDF5 for `genome contact map`_ and `genomic track datasets`_.
     * **Portable**, **platform independent** and can be read through C/C++, JAVA, Python and R programming language.
     * **Very fast to read** - fast browsing of contact maps and genomic datasets
 
-* Another file format for `chormosomal contact map <http://gcmapexplorer.readthedocs.io/en/latest/about_ccmap_file.html>`_
+* Another file format for `chromosomal contact map <http://gcmapexplorer.readthedocs.io/en/latest/about_ccmap_file.html>`_
   - much faster than above format to read/write but not compact. Suitable for performing calculations.
 * `A GUI interface and commands <http://gcmapexplorer.readthedocs.io/en/latest/about_gcmap_file.html#convert-hi-c-data-to-gcmap>`_
   to convert Coordinate Sparse, Pair Coordinate Sparse, HOMER Interaction matrix, Bin-Contact formats into the new gcmap and ccmap formats.
@@ -147,6 +148,9 @@ Run ``gcMapExplorer`` command on terminal to get list of all sub-commands.
     * - `normKR <http://gcmapexplorer.readthedocs.io/en/latest/commands/normKR.html>`_
       - Normalization using Knight-Ruiz matrix balancing
 
+    * - `normVC <http://gcmapexplorer.readthedocs.io/en/latest/commands/normVC.html>`_
+      - Normalization using Vanilla-Coverage method
+
     * - `normIC <http://gcmapexplorer.readthedocs.io/en/latest/commands/normIC.html>`_
       - Normalization using Iterative Correction
 
@@ -165,10 +169,22 @@ Run ``gcMapExplorer`` command on terminal to get list of all sub-commands.
       - Calculate correlation between contact maps
 
 
+.. list-table:: Configuration utility
+    :widths: 1, 4
+    :header-rows: 1
+
+    * - Command
+      - Function
+
+
+    * - `config <http://gcmapexplorer.readthedocs.io/en/latest/commands/config.html>`_
+      - To print configuration file and clean scratch directory
+
+
 Command help
 ------------
 Run ``gcMapExplorer <sub-commands> -h`` command.
 
 For example:
-	* ``gcMapExplorer normKR -h``
-	* ``gcMapExplorer coo2cmap -h``
+    * ``gcMapExplorer normKR -h``
+    * ``gcMapExplorer coo2cmap -h``

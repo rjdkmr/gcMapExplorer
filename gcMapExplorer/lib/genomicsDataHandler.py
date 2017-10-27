@@ -24,6 +24,7 @@ import numpy as np
 from scipy import stats as spstats
 import re
 import os
+import time
 import copy
 import shlex
 import shutil
@@ -53,7 +54,7 @@ def downloadFile(url, output):
 
     Returns
     -------
-    sucess : bool
+    success : bool
         If downloaded successfully ``True`` otherwise ``False``
     """
     try:
@@ -78,23 +79,23 @@ def check_resolution_list(resolutions):
     return new_resolutions
 
 def check_coarsening_method(methods):
-    acepted_methods = ['min', 'max', 'amean', 'hmean', 'gmean', 'median']
+    accepted_methods = ['min', 'max', 'amean', 'hmean', 'gmean', 'median']
     if methods is not None:
         for method in methods:
-            if method not in acepted_methods:
+            if method not in accepted_methods:
                 raise ValueError( ' Coarsening method {0} is not implemented..\
-                \n Use these: {1}'.format(method, acepted_methods) )
+                \n Use these: {1}'.format(method, accepted_methods) )
 
         return methods
     else:
-        return acepted_methods
+        return accepted_methods
 
 class TempNumpyArrayFiles:
     """To handle temporary numpy array files
 
     To convert a Wig file to hdf5 file, data are parsed, and further stored temporarily in these memory-mapped numpy array files.
     Use of numpy arrays avoid dependency from storing chromosome location/coordinates because array index is used as the location/coordinates.
-    Additionaly, chromosome could be very large and to store these arrays could be memory expensive, these arrays are stored as binary files on the disk.
+    Additionally, chromosome could be very large and to store these arrays could be memory expensive, these arrays are stored as binary files on the disk.
 
     .. note::
         These generated files are either automatically deleted after execution of script or by deleting [``del``] :class:`TempNumpyArrayFiles` instance.
@@ -256,7 +257,7 @@ class TempNumpyArrayFiles:
 
         return chromSizeInfo
 
-    def genrateAllTempNumpyFiles(self):
+    def generateAllTempNumpyFiles(self):
         """Generate all memory mapped numpy array files
 
         It is used to generate all memory mapped numpy array files using the :attr:`TempNumpyArrayFiles.chromSizeInfo` dictionary.
@@ -331,7 +332,7 @@ class TempNumpyArrayFiles:
             os.close(fd)     # Close file, error in windows OS
             self.logger.info(' Generating temporary numpy array file [{0}] for {1} ...' .format(fname, key))
 
-            size = self.chromSizeInfo[key] + 1        # Be careful: added one to easiliy handle real locations, zeroth index is dummy, dont use zeroth location
+            size = self.chromSizeInfo[key] + 1        # Be careful: added one to easily handle real locations, zeroth index is dummy, dont use zeroth location
             np.save(fname, np.zeros(size, dtype=np.float))
             npy = np.load(fname, mmap_mode='r+')
 
@@ -366,7 +367,7 @@ class HDF5Handler:
           HDF5 ──────────────────────────> title
             ├──────── chr1
             │           ├───── 1kb
-            │           │        ├──────── amean  ( Arithmatic mean) (type: 1D Numpy Array)
+            │           │        ├──────── amean  ( Arithmetic mean) (type: 1D Numpy Array)
             │           │        ├──────── median ( Median value   ) (type: 1D Numpy Array)
             │           │        ├──────── hmean  ( Harmonic mean  ) (type: 1D Numpy Array)
             │           │        ├──────── gmean  ( Geometric mean ) (type: 1D Numpy Array)
@@ -374,7 +375,7 @@ class HDF5Handler:
             │           │        └──────── max    ( Maximum value  ) (type: 1D Numpy Array)
             │           │
             │           ├────  5kb
-            │           │        ├──────── amean  ( Arithmatic mean) (type: 1D Numpy Array)
+            │           │        ├──────── amean  ( Arithmetic mean) (type: 1D Numpy Array)
             │           │        ├──────── median ( Median value   ) (type: 1D Numpy Array)
             │           │        ├──────── hmean  ( Harmonic mean  ) (type: 1D Numpy Array)
             │           │        ├──────── gmean  ( Geometric mean ) (type: 1D Numpy Array)
@@ -385,7 +386,7 @@ class HDF5Handler:
             │
             ├──────── chr2
             │           ├───── 1kb
-            │           │        ├──────── amean  ( Arithmatic mean) (type: 1D Numpy Array)
+            │           │        ├──────── amean  ( Arithmetic mean) (type: 1D Numpy Array)
             │           │        ├──────── median ( Median value   ) (type: 1D Numpy Array)
             │           │        ├──────── hmean  ( Harmonic mean  ) (type: 1D Numpy Array)
             │           │        ├──────── gmean  ( Geometric mean ) (type: 1D Numpy Array)
@@ -427,17 +428,20 @@ class HDF5Handler:
     --------
     .. code-block:: python
 
-        from hiCMapAnalyze import genomicsDataHandler as gdh
+        from gcMapExplorer import lib as gmlib
         import numpy as np
 
         # Load available file
-        hdf5Hand = gdh.HDF5Handler('test.h5')
+        hdf5Hand = gmlib.genomicsDataHandler.HDF5Handler('abcxyz.h5')
 
-        # Build the data structure, this is an essential step to retrieve the data easiliy as shown below
+        # Open the file
+        hdf5Hand.open()
+
+        # Build the data structure
         hdf5Hand.buildDataTree()
 
         # Print shape and maximum value of chr1->1kb->mean array
-        print(hdf5Hand.data['chr1']['1kb']['mean'].shape, np.amax(hdf5Hand.data['chr1']['1kb']['mean']))
+        print(hdf5Hand.data['chr1']['1kb']['amean'].shape, np.amax(hdf5Hand.data['chr1']['1kb']['mean']))
 
 
     """
@@ -531,7 +535,7 @@ class HDF5Handler:
 
         Returns
         -------
-        gotChromsome : bool
+        gotChromosome : bool
             If queried chromosome present in file ``True`` otherwise ``False``.
 
         """
@@ -539,11 +543,11 @@ class HDF5Handler:
         if self.hdf5 is None:
             self.open()
 
-        gotChromsome = False
+        gotChromosome = False
         if chrom in self.hdf5:
-            gotChromsome = True
+            gotChromosome = True
 
-        return gotChromsome
+        return gotChromosome
 
 
     def getResolutionList(self, chrom, dataName=None):
@@ -579,6 +583,10 @@ class HDF5Handler:
         else:
             raise KeyError(' Chromosome [{0}] not found in [{1}] file...' .format(chrom, self.filename))
 
+        binsizes = list(map(util.resolutionToBinsize, resolutionList))
+        binsizes = np.sort(binsizes)
+        resolutionList = list(map(util.binsizeToResolution, binsizes))
+
         return resolutionList
 
     def hasResolution(self, chrom, resolution, dataName=None):
@@ -596,7 +604,7 @@ class HDF5Handler:
         Returns
         -------
         gotResolution : bool
-            If queried resolution of given chromsome present in file ``True``
+            If queried resolution of given chromosome present in file ``True``
             otherwise ``False``.
 
         """
@@ -612,7 +620,7 @@ class HDF5Handler:
         return gotResolution
 
     def getDataNameList(self, chrom, resolution):
-        """ List of all available arrays by respecitve coarse method name for given chromosome and resolution
+        """ List of all available arrays by respective coarse method name for given chromosome and resolution
 
         Parameters
         ----------
@@ -662,7 +670,7 @@ class HDF5Handler:
         Returns
         -------
         gotDataName : bool
-            If queried data in given chromsome at given resolution is
+            If queried data in given chromosome at given resolution is
             present in file ``True`` otherwise ``False``.
 
         """
@@ -703,7 +711,7 @@ class HDF5Handler:
         Chrom : str
             Chromosome Name
         resolution : str
-            Reslution of data
+            Resolution of data
         data_name : str
             Name of data.
         value_array : numpy.ndarray
@@ -770,7 +778,7 @@ class BigWigHandler:
         If it is not present in configuration file, the input path **should**
         be provided. It will be stored in configuration file for later use.
     WigFileNames : str
-        List of Wig file names, either autmoatically generated or given by user
+        List of Wig file names, either automatically generated or given by user
     chromName : str
         Name of input target chromosome. If this is provided, only this chromosome
         data is extracted and stored in h5 file.
@@ -987,13 +995,13 @@ class BigWigHandler:
     def getBigWigInfo(self):
         """Retrieve chromosome names and their sizes
 
-        BigWigInfo progrom is executed on all listed bigWig files and
-        chromosomes name with respecitve size is stored in
+        BigWigInfo program is executed on all listed bigWig files and
+        chromosomes name with respective size is stored in
         :attr:`BigWigHandler.chromSizeInfo` variable.
         From the several listed bigWig files, only largest size of chromosomes
         are considered.
 
-        If :attr:`BigWigHandler.chromName` is provided, only target chromsome
+        If :attr:`BigWigHandler.chromName` is provided, only target chromosome
         information is kept in :attr:`BigWigHandler.chromSizeInfo` dictionary.
 
         """
@@ -1128,7 +1136,7 @@ class BigWigHandler:
 
             * ``'min'``    -> Minimum value
             * ``'max'``    -> Maximum value
-            * ``'amean'``  -> Arithmatic mean or average
+            * ``'amean'``  -> Arithmetic mean or average
             * ``'hmean'``  -> Harmonic mean
             * ``'gmean'``  -> Geometric mean
             * ``'median'`` -> Median
@@ -1273,7 +1281,7 @@ class WigHandler:
 
         if self.chromSizeInfo is None:
             if len(self.WigFileNames) > 1:
-                raise NotImplementedError('Presently only coversion for single wig file is implemented!!')
+                raise NotImplementedError('Presently only conversion for single wig file is implemented!!')
 
             if self.indexFile is not None:
                 self._loadChromSizeAndIndex()
@@ -1500,7 +1508,7 @@ class WigHandler:
             to coarser resolutions. Presently, five methods are implemented.
             * ``'min'``    -> Minimum value
             * ``'max'``    -> Maximum value
-            * ``'amean'``  -> Arithmatic mean or average
+            * ``'amean'``  -> Arithmetic mean or average
             * ``'hmean'``  -> Harmonic mean
             * ``'gmean'``  -> Geometric mean
             * ``'median'`` -> Median
@@ -1526,14 +1534,19 @@ class WigHandler:
         # Writing to hdf5 aur appending to dictionary to return
         self.logger.info(' Writing output file [{0}] ...' .format(hdf5Out.filename))
 
-        for Chrom in self.chromSizeInfo:
-            if self.chromName is not None and self.chromName != Chrom:
-                continue
-            for res in resolutions:
-                if keep_original:
-                    hdf5Out.addDataByArray(Chrom, '1b', 'Original', self.tmpNumpyArrayFiles.arrays[Chrom][:], compression='gzip')
-                for coarsening_method in check_coarsening_method(coarsening_methods):
-                    hdf5Out.addDataByArray(Chrom, res, coarsening_method, self._PerformDataCoarsening(Chrom, res, coarsening_method), compression=compression )
+        try:
+            for Chrom in self.chromSizeInfo:
+                if self.chromName is not None and self.chromName != Chrom:
+                    continue
+                for res in resolutions:
+                    if keep_original:
+                        hdf5Out.addDataByArray(Chrom, '1b', 'Original', self.tmpNumpyArrayFiles.arrays[Chrom][:], compression='gzip')
+                    for coarsening_method in check_coarsening_method(coarsening_methods):
+                        hdf5Out.addDataByArray(Chrom, res, coarsening_method, self._PerformDataCoarsening(Chrom, res, coarsening_method), compression=compression )
+        except (KeyboardInterrupt, SystemExit) as e:
+            if toCloseHdfOut:
+                hdf5Out.close()
+            raise e
 
         self.logger.info(' \t\t ... Finished writing output file [{0}] ' .format(hdf5Out.filename))
         if toCloseHdfOut:
@@ -1723,7 +1736,7 @@ class WigHandler:
 
             * ``'min'``    -> Minimum value
             * ``'max'``    -> Maximum value
-            * ``'amean'``  -> Arithmatic mean or average
+            * ``'amean'``  -> Arithmetic mean or average
             * ``'hmean'``  -> Harmonic mean
             * ``'gmean'``  -> Geometric mean
             * ``'median'`` -> Median
@@ -2123,7 +2136,7 @@ class BEDHandler:
 
         if self.chromSizeInfo is None:
             if len(self.bedFileNames) > 1:
-                raise NotImplementedError('Presently only coversion for single bed file is implemented!!')
+                raise NotImplementedError('Presently only conversion for single bed file is implemented!!')
 
             if self.indexFile is not None:
                 self._loadChromSizeAndIndex()
@@ -2223,7 +2236,7 @@ class BEDHandler:
         location_list : list of int
             List of locations for given chromosome
         value_list : list of float
-            List of values for respecitve chromosome location
+            List of values for respective chromosome location
 
         """
 
@@ -2277,7 +2290,7 @@ class BEDHandler:
 
             * ``'min'``    -> Minimum value
             * ``'max'``    -> Maximum value
-            * ``'amean'``  -> Arithmatic mean or average
+            * ``'amean'``  -> Arithmetic mean or average
             * ``'hmean'``  -> Harmonic mean
             * ``'gmean'``  -> Geometric mean
             * ``'median'`` -> Median
@@ -2305,14 +2318,19 @@ class BEDHandler:
         # Writing to hdf5 aur appending to dictionary to return
         self.logger.info(' Writing output file [{0}] ...' .format(hdf5Out.filename))
 
-        for Chrom in self.chromSizeInfo:
-            if self.chromName is not None and self.chromName != Chrom:
-                continue
-            for res in resolutions:
-                if keep_original:
-                    hdf5Out.addDataByArray(Chrom, '1b', 'Original', self.tmpNumpyArrayFiles.arrays[Chrom][:], compression='gzip')
-                for coarsening_method in check_coarsening_method(coarsening_methods):
-                    hdf5Out.addDataByArray(Chrom, res, coarsening_method, self._PerformDataCoarsening(Chrom, res, coarsening_method), compression=compression )
+        try:
+            for Chrom in self.chromSizeInfo:
+                if self.chromName is not None and self.chromName != Chrom:
+                    continue
+                for res in resolutions:
+                    if keep_original:
+                        hdf5Out.addDataByArray(Chrom, '1b', 'Original', self.tmpNumpyArrayFiles.arrays[Chrom][:], compression='gzip')
+                    for coarsening_method in check_coarsening_method(coarsening_methods):
+                        hdf5Out.addDataByArray(Chrom, res, coarsening_method, self._PerformDataCoarsening(Chrom, res, coarsening_method), compression=compression )
+        except (KeyboardInterrupt, SystemExit) as e:
+            if toCloseHdfOut:
+                hdf5Out.close()
+                raise e
 
         self.logger.info(' \t\t ... Finished writing output file [{0}] ' .format(hdf5Out.filename))
         if toCloseHdfOut:
@@ -2450,7 +2468,7 @@ class BEDHandler:
 
             * ``'min'``    -> Minimum value
             * ``'max'``    -> Maximum value
-            * ``'amean'``  -> Arithmatic mean or average
+            * ``'amean'``  -> Arithmetic mean or average
             * ``'hmean'``  -> Harmonic mean
             * ``'gmean'``  -> Geometric mean
             * ``'median'`` -> Median
@@ -2518,7 +2536,7 @@ class BEDHandler:
 
         """
         if len(self.bedFileNames) > 1:
-            raise NotImplementedError('Presently only coversion for single wig file is implemented!!')
+            raise NotImplementedError('Presently only conversion for single wig file is implemented!!')
 
         self.chromName = chromName
         self.isBedParsed = False           # Reset Wig Parsing flag
@@ -2546,7 +2564,7 @@ class BEDHandler:
 
         .. warning::
             **Private method**. Use it at your own risk. It is used internally
-            durng initialization and in :meth:`BEDHandler.setChromosome`.
+            during initialization and in :meth:`BEDHandler.setChromosome`.
 
 
 
@@ -2717,7 +2735,7 @@ class EncodeDatasetsConverter:
         be provided. It will be stored in configuration file for later use.
     metafile : str
         Name of metafile downloaded from ENCODE website. It is automatically
-        downlaoded from input file. It contains all the meta-data required
+        downloaded from input file. It contains all the meta-data required
         for processing.
 
     metaData = list of dictionary
@@ -2752,7 +2770,7 @@ class EncodeDatasetsConverter:
 
     def __init__(self, inputFile, assembly, methodToCombine='mean', pathTobigWigToWig=None, pathTobigWigInfo=None, workDir=None):
         self.inputFile = inputFile
-        self.assembely = assembly
+        self.assembly = assembly
         self.metafile = None
         self.metaData = None
         self.indexes = None
@@ -2996,7 +3014,7 @@ class EncodeDatasetsConverter:
         with open(self.metafile) as csvfile:
             reader = csv.DictReader(csvfile, delimiter='\t')
             for row in reader:
-                if row['File format'] == 'bigWig' and row['Assembly'] == self.assembely:
+                if row['File format'] == 'bigWig' and row['Assembly'] == self.assembly:
 
                     # Skipping if assay is not implemented
                     if row['Assay'] not in self._implementedAssays:
@@ -3114,7 +3132,7 @@ class EncodeDatasetsConverter:
 
         return
 
-    def saveAsH5(self, outDir, resolutions=None, coarsening_methods=None, compression='lzf', keep_original=False):
+    def saveAsH5(self, outDir, resolutions=None, retryDownload=5, coarsening_methods=None, compression='lzf', keep_original=False):
         """Download the files and convert to gcMapExplorer compatible hdf5 file.
 
         Name of output files:
@@ -3165,13 +3183,16 @@ class EncodeDatasetsConverter:
 
             For Example: use ``resolutions=['25kb', '50kb', '75kb']`` to add
             additional 25kb, 50kb and 75kb resolution data.
+        retryDownload : int
+            Try to download the bigWig files with this many attempt. The time
+            gap between each attempt is two seconds.
         coarsening_methods : list of str
             Methods to coarse or downsample the data for converting from 1-base
             to coarser resolutions. Presently, five methods are implemented.
 
             * ``'min'``    -> Minimum value
             * ``'max'``    -> Maximum value
-            * ``'amean'``  -> Arithmatic mean or average
+            * ``'amean'``  -> Arithmetic mean or average
             * ``'hmean'``  -> Harmonic mean
             * ``'gmean'``  -> Geometric mean
             * ``'median'`` -> Median
@@ -3218,12 +3239,23 @@ class EncodeDatasetsConverter:
 
             # Download the file
             downloadSuccess = True
+            downloadAttempted = 0
             for midx in idx:
                 self.logger.info(' Downloading file from  {0}...'.format(self.metaData[midx]['url']))
-                if not downloadFile(self.metaData[midx]['url'], self._bigWigFiles[midx]):
-                    self.logger.warning('Not able to download: {0} '.format(self.metaData[midx]['url']))
-                    downloadSuccess = False
+                while not downloadFile(self.metaData[midx]['url'], self._bigWigFiles[midx]):
+                    if downloadAttempted > retryDownload:
+                        downloadSuccess = False
+                        # Break while loop here
+                        break
+                    downloadAttempted += 1
+                    self.logger.warning(' Not able to download!!! Retrying - {0}...'.format(downloadAttempted))
+                    time.sleep(2.0) # Sleep for one second and retry
+
+                # Break for loop here
+                if not downloadSuccess:
+                    self.logger.warning(' Not able to download {0} after {1} attempts.'.format(self.metaData[midx]['url'],retryDownload))
                     break
+
             if not downloadSuccess:
                 continue
             self.logger.info('                ... Finished Downloading.')
@@ -3326,11 +3358,11 @@ class TextFileHandler:
         Size of array required to built
     binsize : int
         Size of bins expected in input file. If ``binsize = None``, binsize will be determined from the files, however, it is good to give
-        expected binsize to check whther expected binsize match with binsize present in input text file.
+        expected binsize to check whether expected binsize match with binsize present in input text file.
     title : str
         Title of the input data
     workDir : str
-        Directory where temporary files will be generated. If ``None``, defualt temporary directory of the respective OS will be used.
+        Directory where temporary files will be generated. If ``None``, default temporary directory of the respective OS will be used.
 
 
     """
@@ -3378,7 +3410,7 @@ class TextFileHandler:
         os.close(fd)     # Close file, error in windows OS
         self.logger.info(' Generating temporary numpy array file [{0}] ...' .format(fname))
 
-        size = self.shape + 1        # Be careful: added one to easiliy handle real locations, zeroth index is dummy, dont use zeroth location
+        size = self.shape + 1        # Be careful: added one to easily handle real locations, zeroth index is dummy, dont use zeroth location
         np.save(fname, np.zeros(size, dtype=np.float))
         self.data = np.load(fname, mmap_mode='r+')
         self.tmpNumpyFileName = fname

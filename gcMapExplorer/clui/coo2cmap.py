@@ -49,8 +49,8 @@ on chromosome and third column is the respective value:
 20100000        20300000        40.0
 
 NOTE that, above location is real value. However, with -idx/--index option,
-these two same column willbe considered as index value. index should always
-start from zero for absoulte beginning of chromosome.e.g. for 10kb, 0-10000
+these two same column will be considered as index value. index should always
+start from zero for absolute beginning of chromosome.e.g. for 10kb, 0-10000
 should have index of zero, 10000-20000 have index of one. If this is file
 format,resolution should be provided with -r/--resolution option.
 
@@ -107,7 +107,7 @@ ccmapSuffixHelp = \
 """ Use this to convert all contact maps to ccmap format files. Provide suffix
 of ccmap file names with this option and it will enable the conversion.
 
-Ouput ccmap file name is generated outmatically as follows;
+Output ccmap file name is generated automatically as follows;
 if xlabel is not equal to ylabel: <xlabel>_<ylabel>_<suffix>.ccmap
 else: <xlabel>_<suffix>.ccmap
 
@@ -137,7 +137,7 @@ intended to use with -gcm/--gcmap option. Three accepted methods are
         max  : Maximum of values.
 
 This option generates all coarser maps where resolutions will be coarsened by
-a factor of two, consequetively. e.g.: In case of 10 kb input resolution,
+a factor of two, consecutively. e.g.: In case of 10 kb input resolution,
 downsampled maps of "20kb", "40kb", "80kb", "160kb", "320kb" etc. will be
 generated until, map size is less than 500.
 
@@ -180,7 +180,7 @@ def main():
 
     # Check for scratch directory
     if not os.path.isdir(args.workDir):
-        showErrorAndExit(parser, '\nScratch Dirctory "{0}" not found !!!\n'.format(args.workDir))
+        showErrorAndExit(parser, '\nScratch Directory "{0}" not found !!!\n'.format(args.workDir))
 
     cooReader = gmlib.importer.CooMatrixHandler(inputFiles,
                                                 inputCompressed,
@@ -216,8 +216,8 @@ def main():
         cooReader.save_ccmaps(outputFileList, xlabels=xlabels, ylabels=ylabels)
     elif args.fileGCMap is not None:
         cooReader.save_gcmap(args.fileGCMap, xlabels=xlabels, ylabels=ylabels,
-                                coarsingMethod=args.coarsingMethod,
-                                compression=args.compression)
+                             coarseningMethod=args.coarsingMethod,
+                             compression=args.compression)
     else:
         pass
 
@@ -261,7 +261,7 @@ def parseArguments():
                         help='Data compression method in gcmap file.\n')
 
     parser.add_argument('-dmeth', '--downsample-method', action='store',
-                        dest='coarsingMethod', metavar='sum',
+                        dest='coarseningMethod', metavar='sum',
                         choices=['max', 'mean', 'sum'], default='sum',
                         help=downsampleMethodHelp)
 

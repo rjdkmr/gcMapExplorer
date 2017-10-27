@@ -9,7 +9,7 @@
   TempNumpyArrayFiles.updateArraysByBigWig
   TempNumpyArrayFiles.updateArraysByChromSize
   TempNumpyArrayFiles.addChromSizeInfo
-  TempNumpyArrayFiles.genrateAllTempNumpyFiles
+  TempNumpyArrayFiles.generateAllTempNumpyFiles
   TempNumpyArrayFiles.generateTempNumpyFile
   TempNumpyArrayFiles.fillAllArraysWithZeros
 

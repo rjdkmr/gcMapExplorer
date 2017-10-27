@@ -84,7 +84,7 @@
           <x>0</x>
           <y>0</y>
           <width>604</width>
-          <height>504</height>
+          <height>567</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -100,7 +100,7 @@
            <item>
             <widget class="QComboBox" name="methodCBox">
              <property name="whatsThis">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Select a Method for Normalization&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;1) &lt;span style=&quot; font-weight:600;&quot;&gt;Knight-Riuz Matrix Balancing:&lt;/span&gt; It is a fast algorithm to normalize a symmetric matrix. A doubly stochastic matrix is obatined after this normalization. In this matrix, sum of rows and columns are equal to one. For more details, see &lt;a href=&quot;http://dx.doi.org/10.1093/imanum/drs019&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;publication&lt;/span&gt;&lt;/a&gt;: http://dx.doi.org/10.1093/imanum/drs019.&lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;2) &lt;span style=&quot; font-weight:600;&quot;&gt;Iterative Correction:&lt;/span&gt; This method normalize the raw contact map by removing biases from experimental procedure. For more details, see this &lt;a href=&quot;http://dx.doi.org/10.1038/nmeth.2148&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;publication&lt;/span&gt;&lt;/a&gt;: http://dx.doi.org/10.1038/nmeth.2148.&lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;3) &lt;span style=&quot; font-weight:600;&quot;&gt;Median/Mean Contact Frequency Scaling&lt;/span&gt;: This method can be used to normalize contact map using Median contact values for particular distance between two locations/coordinates. At first, Median distance contact frequency for each distance is calculated. Subsequently, the observed contact frequency is divided by median contact frequency obtained for distance between the two locations.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Select a Method for Normalization&lt;/span&gt;&lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;1) &lt;span style=&quot; font-weight:600;&quot;&gt;Knight-Riuz Matrix Balancing:&lt;/span&gt; It is a fast algorithm to normalize a symmetric matrix. A doubly stochastic matrix is obatined after this normalization. In this matrix, sum of rows and columns are equal to one. For more details, see &lt;a href=&quot;http://dx.doi.org/10.1093/imanum/drs019&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;publication&lt;/span&gt;&lt;/a&gt;: http://dx.doi.org/10.1093/imanum/drs019.&lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;2) &lt;span style=&quot; font-weight:600;&quot;&gt;Iterative Correction:&lt;/span&gt; This method normalize the raw contact map by removing biases from experimental procedure. For more details, see this &lt;a href=&quot;http://dx.doi.org/10.1038/nmeth.2148&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;publication&lt;/span&gt;&lt;/a&gt;: http://dx.doi.org/10.1038/nmeth.2148.&lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;3) &lt;span style=&quot; font-weight:600;&quot;&gt;Median/Mean Contact Frequency Scaling&lt;/span&gt;: This method can be used to normalize contact map using Median contact values for particular distance between two locations/coordinates. At first, Median distance contact frequency for each distance is calculated. Subsequently, the observed contact frequency is divided by median contact frequency obtained for distance between the two locations.&lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;4) &lt;span style=&quot; font-weight:600;&quot;&gt;Vanilla-Coverage&lt;/span&gt;: This method was first used for inter-chromosomal map. Later it was used for intra-chromosomal map by `&lt;a href=&quot;http://dx.doi.org/10.1016/j.cell.2014.11.021&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Rao et al., 2014&lt;/span&gt;&lt;/a&gt; : http://dx.doi.org/10.1016/j.cell.2014.11.021. This is a simple method where at first each element is divided by sum of respective row and subsequebtly divided by sum of respective column. For more details, see this &lt;a href=&quot;https://doi.org/10.1126/science.1181369&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;publication&lt;/span&gt;&lt;/a&gt;: https://doi.org/10.1126/science.1181369.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="sizeAdjustPolicy">
               <enum>QComboBox::AdjustToContents</enum>
@@ -118,6 +118,11 @@
              <item>
               <property name="text">
                <string>Median Contact Frequency Scaling</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Vanilla-Coverage</string>
               </property>
              </item>
             </widget>
@@ -652,6 +657,74 @@
                    </widget>
                   </item>
                   <item>
+                   <widget class="Line" name="line_7">
+                    <property name="orientation">
+                     <enum>Qt::Vertical</enum>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="specOptsMcfsSTypeQLabel">
+                    <property name="text">
+                     <string>Scaling Type:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="specOptsMcfsSTypeCBox">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Observed/Expected or Observed-Expected&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="whatsThis">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Here &lt;span style=&quot; font-weight:600;&quot;&gt;O&lt;/span&gt; denotes Observed and &lt;span style=&quot; font-weight:600;&quot;&gt;E&lt;/span&gt; denotes Expected. &lt;/p&gt;&lt;p&gt;In case of 'O/E', Observed/Expected will be calculated while &lt;/p&gt;&lt;p&gt;(Observed - Expected) will be calculated for 'O-E'.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>O/E</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>O-E</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="Line" name="line_8">
+                    <property name="orientation">
+                     <enum>Qt::Vertical</enum>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLabel" name="specOptsMcfsScaleInputQLabel">
+                    <property name="text">
+                     <string>Scale Input:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QComboBox" name="specOptsMcfsScaleInputCBox">
+                    <property name="toolTip">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Scale up the input map by a constant value.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <property name="whatsThis">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Scale up the input map by multiplying it with constant value. This constant value is precision of minimum value multiplied by 10. This scale up changes the minimum value to a integer value and accordingly whole map is changed. It is beneficial when input map contains very small value as generated from KR normalization.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    </property>
+                    <item>
+                     <property name="text">
+                      <string>No</string>
+                     </property>
+                    </item>
+                    <item>
+                     <property name="text">
+                      <string>Yes</string>
+                     </property>
+                    </item>
+                   </widget>
+                  </item>
+                  <item>
                    <spacer name="specOptsMcfsStatsHSpacer">
                     <property name="orientation">
                      <enum>Qt::Horizontal</enum>
@@ -665,6 +738,53 @@
                    </spacer>
                   </item>
                  </layout>
+                </item>
+               </layout>
+              </widget>
+              <widget class="QWidget" name="specOptsVcovTab">
+               <attribute name="title">
+                <string>4</string>
+               </attribute>
+               <layout class="QHBoxLayout" name="horizontalLayout_3">
+                <item>
+                 <widget class="QLabel" name="specOptsVcovTabSqrtQLabel">
+                  <property name="text">
+                   <string>Square-Root:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="specOptsVcovTabSqrtCBox">
+                  <property name="toolTip">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Square-root of the vanilla-coverage normalized map.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                  <property name="whatsThis">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Square-root of the vanilla-coverage normalized map.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                  </property>
+                  <item>
+                   <property name="text">
+                    <string>Disable</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Enable</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="specOptsVcovSpacer">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
                 </item>
                </layout>
               </widget>
@@ -706,7 +826,7 @@
               <item>
                <widget class="QLabel" name="vminQLabel">
                 <property name="text">
-                 <string>Minimum Thershold Value:</string>
+                 <string>Minimum Threshold Value:</string>
                 </property>
                </widget>
               </item>
@@ -719,11 +839,10 @@
                  </size>
                 </property>
                 <property name="toolTip">
-                 <string>Minimum thershold value for normalization.</string>
+                 <string>Minimum threshold value for normalization.</string>
                 </property>
                 <property name="whatsThis">
-                 <string>Minimum thershold value for normalization. If contact frequency is less than or equal to this thershold value, this value is discarded during normalization.
-</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Minimum threshold value for normalization. If contact frequency is less than or equal to this threshold value, this value is discarded during normalization.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                </widget>
               </item>
@@ -756,11 +875,10 @@
                  </size>
                 </property>
                 <property name="toolTip">
-                 <string>Maximum thershold value for normalization.</string>
+                 <string>Maximum threshold value for normalization.</string>
                 </property>
                 <property name="whatsThis">
-                 <string>Maximum thershold value for normalization. If contact frequency is greater than or equal to this thershold value,
-this value is discarded during normalization.</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Maximum threshold value for normalization. If contact frequency is greater than or equal to this threshold value,&lt;/p&gt;&lt;p&gt;this value is discarded during normalization.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                </widget>
               </item>
@@ -815,14 +933,14 @@ this value is discarded during normalization.</string>
               <item row="2" column="0">
                <widget class="QLabel" name="genOptsPtndLabel">
                 <property name="text">
-                 <string>Percentile Thershold for Missing Data:</string>
+                 <string>Percentile Threshold for Missing Data:</string>
                 </property>
                </widget>
               </item>
               <item row="3" column="0">
                <widget class="QLabel" name="genOptsTdoLabel">
                 <property name="text">
-                 <string>Fraction Thershold for Data Occupancy:</string>
+                 <string>Fraction Threshold for Data Occupancy:</string>
                 </property>
                </widget>
               </item>

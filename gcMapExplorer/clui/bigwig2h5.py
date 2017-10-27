@@ -66,7 +66,7 @@ Downsampling/Coarsening method
 Presently, six methods are implemented:
 1) min    -> Minimum value
 2) max    -> Maximum value
-3) amean  -> Arithmatic mean or average
+3) amean  -> Arithmetic mean or average
 4) hmean  -> Harmonic mean
 5) gmean  -> Geometric mean
 6) median -> Median
@@ -90,7 +90,7 @@ inputFileHelp = \
 bigWigToWigHelp = \
 """Path to bigWigToWig tool.
 
-This is not neccessary when bigWigToWig path is already set using gcMapExplorer
+This is not necessary when bigWigToWig path is already set using gcMapExplorer
 configure utility.
 
 It can be downloaded from http://hgdownload.cse.ucsc.edu/admin/exe/
@@ -104,7 +104,7 @@ be provided. It will be stored in configuration file for later use.
 bigWigInfoHelp = \
 """ Path to bigWigInfo tool.
 
-This is not neccessary when bigWigInfo path is already set using gcMapExplorer
+This is not necessary when bigWigInfo path is already set using gcMapExplorer
 configure utility.
 
 It can be downloaded from http://hgdownload.cse.ucsc.edu/admin/exe/
@@ -120,7 +120,7 @@ resolutionHelp = \
 '4kb', '5kb', '8kb', '10kb', '20kb', '40kb', '80kb', '100kb', '160kb','200kb',
 '320kb', '500kb', '640kb',  and '1mb'.
 
-Resolutions should be provided in comma seprated values. For Example:
+Resolutions should be provided in comma separated values. For Example:
 -r "25kb, 50kb, 75kb"
 
 """
@@ -202,7 +202,7 @@ def main():
 
     # Check for scratch directory
     if not os.path.isdir(args.workDir):
-        showErrorAndExit(parser, '\nScratch Dirctory "{0}" not found !!!\n'.format(args.workDir))
+        showErrorAndExit(parser, '\nScratch Directory "{0}" not found !!!\n'.format(args.workDir))
 
     # Main conversion start here
     bigwig = gmlib.genomicsDataHandler.BigWigHandler(inputBigWigFile,

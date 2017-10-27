@@ -24,10 +24,10 @@ Genomic contact map can be of different resolutions, and therefore, resolution
 of corresponding genomic track datasets should match during the visualization/analysis.
 Therefore, genomic dataset need to be downsampled or coarsened. However,
 there are several possible methods for downsampling that can be suitable for
-different purposes. Therefore, we have implmented six different methods as
+different purposes. Therefore, we have implemented six different methods as
 follows,
 
-* Arithmatic mean
+* Arithmetic mean
 * Geometric mean
 * Harmonic mean
 * Median
@@ -48,7 +48,7 @@ Format: ``/<Chromosome>/<Resolution>/<1D Numpy Array>``
   HDF5 ──────────────────────────> title
     ├──────── chr1
     │           ├───── 1kb
-    │           │        ├──────── amean  ( Arithmatic mean) (type: 1D Array)
+    │           │        ├──────── amean  ( Arithmetic mean) (type: 1D Array)
     │           │        ├──────── median ( Median value   ) (type: 1D Array)
     │           │        ├──────── hmean  ( Harmonic mean  ) (type: 1D Array)
     │           │        ├──────── gmean  ( Geometric mean ) (type: 1D Array)
@@ -56,7 +56,7 @@ Format: ``/<Chromosome>/<Resolution>/<1D Numpy Array>``
     │           │        └──────── max    ( Maximum value  ) (type: 1D Array)
     │           │
     │           ├────  5kb
-    │           │        ├──────── amean  ( Arithmatic mean) (type: 1D Array)
+    │           │        ├──────── amean  ( Arithmetic mean) (type: 1D Array)
     │           │        ├──────── median ( Median value   ) (type: 1D Array)
     │           │        ├──────── hmean  ( Harmonic mean  ) (type: 1D Array)
     │           │        ├──────── gmean  ( Geometric mean ) (type: 1D Array)
@@ -67,7 +67,7 @@ Format: ``/<Chromosome>/<Resolution>/<1D Numpy Array>``
     │
     ├──────── chr2
     │           ├───── 1kb
-    │           │        ├──────── amean  ( Arithmatic mean) (type: 1D Array)
+    │           │        ├──────── amean  ( Arithmetic mean) (type: 1D Array)
     │           │        ├──────── median ( Median value   ) (type: 1D Array)
     │           │        ├──────── hmean  ( Harmonic mean  ) (type: 1D Array)
     │           │        ├──────── gmean  ( Geometric mean ) (type: 1D Array)
@@ -93,11 +93,11 @@ By default, |lzf| is used to compress arrays. This method is very fast, and allo
 the reading.
 
 .. Warning::
-    |lzf| method is only avaiable through **Python h5py** module, and
+    |lzf| method is only available through **Python h5py** module, and
     therefore, this file cannot be read by another programming language through
     standard library.
 
-    For portablity, use GZIP compression method, which is available in standard
+    For portability, use GZIP compression method, which is available in standard
     HDF5 library.
 
 

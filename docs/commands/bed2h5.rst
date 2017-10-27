@@ -28,7 +28,7 @@ bed2h5
   Presently, six methods are implemented:
   1) min    -> Minimum value
   2) max    -> Maximum value
-  3) amean  -> Arithmatic mean or average
+  3) amean  -> Arithmetic mean or average
   4) hmean  -> Harmonic mean
   5) gmean  -> Geometric mean
   6) median -> Median
@@ -78,7 +78,7 @@ bed2h5
                         '4kb', '5kb', '8kb', '10kb', '20kb', '40kb', '80kb', '100kb', '160kb','200kb',
                         '320kb', '500kb', '640kb',  and '1mb'.
 
-                        Resolutions should be provided in comma seprated values. For Example:
+                        Resolutions should be provided in comma separated values. For Example:
                         -r "25kb, 50kb, 75kb"
 
   -dm "List of downsampling method", --downsample-method "List of downsampling method"
@@ -111,7 +111,7 @@ bed2h5
                         Index file in json format.
                         A file in json format containing indices (position in bed file) and sizes of
                         chromosomes. If this file is not present and given as input, a new file will be
-                        generated. If this file is present, indices andsizes will be taken from this
+                        generated. If this file is present, indices and sizes will be taken from this
                         file. If index and size of input chromosome is not present in json file, these
                         will be determined from bed file and stored in same json file. This file could
                         be very helpful in case when same bed file has to be read many times because

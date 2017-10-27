@@ -31,7 +31,7 @@ Add a genomic track dataset
 ---------------------------
 Click on ``File`` -> ``Add genomic dataset to ...`` and select the contact map
 for which new dataset is need to be added. A new window will appear where user
-may select a compaitable file by clicking on ``Open`` button. Afterwards,
+may select a compatible file by clicking on ``Open`` button. Afterwards,
 different box will appear depending on the input file format.
 
 * `h5 file <about_h5_file.html>`_: User is prompted to select the dataset.
@@ -43,7 +43,7 @@ different box will appear depending on the input file format.
         Select genomic track dataset
 
 
-  By default, the gemoic track is added at the bottom of map. However, one can
+  By default, the genomic track is added at the bottom of map. However, one can
   select ``top`` in the above dialog box to plot the track at the top of the
   contact map.
 
@@ -115,7 +115,7 @@ appear to modify the marker settings.
 User defined colormap
 ---------------------
 Although several colormap is already included in the browser. One may generate
-own colormap and later modify it using the implmented option. To open this, click
+own colormap and later modify it using the implemented option. To open this, click
 on ``Edit`` -> ``Add/Modify colormap``.
 
 .. figure:: images/colormap_dialog.png
@@ -130,7 +130,7 @@ can be saved as a text file for later use.
 Modify Axis Properties
 ----------------------
 Properties of both X and Y axis are highly customizable. User may customize
-most of the proerties such as font, tick-lengths, axis-labels etc. To open
+most of the properties such as font, tick-lengths, axis-labels etc. To open
 this box, right click on plot and choose the axis properties.
 
 .. figure:: images/axis.png

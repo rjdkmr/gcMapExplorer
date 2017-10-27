@@ -33,6 +33,7 @@ Features
 * `Normalization of contact maps <http://gcmapexplorer.readthedocs.io/en/latest/cmapNormalization.html>`_ by
     * **Iterative Correction** (IC)
     * **Knight-Ruiz Matrix Balancing** (KR)
+    * **Vanilla-Coverage** (VC)
     * **Distance-Frequency**
 
 * A **new file format** based on HDF5 for `genome contact map <http://gcmapexplorer.readthedocs.io/en/latest/about_gcmap_file.html>`_
@@ -41,7 +42,7 @@ Features
     * **Portable**, **platform independent** and can be read through C/C++, JAVA, Python and R programming language.
     * **Very fast to read** - fast browsing of contact maps and genomic datasets
 
-* Another file format for `chormosomal contact map <http://gcmapexplorer.readthedocs.io/en/latest/about_ccmap_file.html>`_
+* Another file format for `chromosomal contact map <http://gcmapexplorer.readthedocs.io/en/latest/about_ccmap_file.html>`_
   - much faster than above format to read/write but not compact. Suitable for performing calculations.
 * `A GUI interface and commands <http://gcmapexplorer.readthedocs.io/en/latest/about_gcmap_file.html#convert-hi-c-data-to-gcmap>`_
   to convert Coordinate Sparse, Pair Coordinate Sparse, HOMER Interaction matrix, Bin-Contact formats into the new gcmap and ccmap formats.

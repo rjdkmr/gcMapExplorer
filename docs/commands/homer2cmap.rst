@@ -29,7 +29,7 @@ Usage:
                          Use this to convert all contact maps to ccmaps file. Provide suffix of
                         ccmap file names with this option and it will enable the conversion.
                         
-                        Ouput ccmap file name is generated outmatically as follows;
+                        Output ccmap file name is generated automatically as follows;
                         <chromosome>_<resolution>_<suffix>.ccmap
                         
                         Note that -od/--out-dir option is also required because all ccmaps will be
@@ -52,7 +52,7 @@ Usage:
                                 max  : Maximum of values.
                         
                         This option generates all coarser maps where resolutions will be coarsened by
-                        a factor of two, consequetively. e.g.: In case of 10 kb input resolution,
+                        a factor of two, consecutively. e.g.: In case of 10 kb input resolution,
                         downsampled maps of "20kb", "40kb", "80kb", "160kb", "320kb" etc. will be
                         generated until, map size is less than 500.
                         

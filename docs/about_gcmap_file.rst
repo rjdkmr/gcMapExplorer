@@ -86,8 +86,8 @@ By default, |lzf| is used to compress arrays. This method is very fast, and allo
 However, the size reduction is moderate in comparison with GZIP compression method.
 
 .. Warning::
-  |lzf| method is only avaiable through **Python h5py** module, and therefore, this file cannot be read by another programming language through standard library.
-  For portablity, use GZIP compression method, which is available in standard HDF5 library.
+  |lzf| method is only available through **Python h5py** module, and therefore, this file cannot be read by another programming language through standard library.
+  For portability, use GZIP compression method, which is available in standard HDF5 library.
 
 
 Portability and Readability

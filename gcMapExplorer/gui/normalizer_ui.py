@@ -243,7 +243,7 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
         return True
 
     def isKrToleranceValid(self):
-        """ Check if KR tolreance is given properly.
+        """ Check if KR tolerance is given properly.
 
         * if tolerance < 1e-12 : Value is too small
         * if no tolerance : Need it
@@ -319,7 +319,7 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
         """
 
         # Name of command
-        programs = ['normKR', 'normIC', 'normMCFS']
+        programs = ['normKR', 'normIC', 'normMCFS', 'normVC']
         program = programs[self.methodCBox.currentIndex()]
 
         cmdDict = dict()
@@ -432,13 +432,26 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
         # Options related to MCFS
         if program == 'normMCFS':
             cmdDict['-s'] = str( self.specOptsMcfsStatsCBox.currentText() ).lower()
+            cmdDict['-st'] = str( self.specOptsMcfsSTypeCBox.currentText() ).lower()
+
+            cidx = self.specOptsMcfsScaleInputCBox.currentIndex()
+            if cidx == 1:
+                cmdDict['-sui'] = '-sui'
 
             # Construct the command
             self.constructMcfsCommand(cmdDict)
 
+        # Options related to normVC
+        if program == 'normVC':
+            cidx = self.specOptsVcovTabSqrtCBox.currentIndex()
+            if cidx == 1:
+                cmdDict['-sq'] = '-sq'
+
+            # Construct the command
+            self.constructMcfsCommand(cmdDict)
 
     def constructKrCommand(self, cmdDict):
-        """ Construc normKI command
+        """ Construct normKI command
         """
         command = ' normKR '
         command += ' -i ' + cmdDict['-i']
@@ -496,7 +509,7 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
         command += ' -fi ' + cmdDict['-fi']
         command += ' -o ' + cmdDict['-o']
         command += ' -fo ' + cmdDict['-fo']
-        command += ' -s ' + str(cmdDict['-s'])
+
         if '-vmin' in cmdDict:
             command += ' -vmin ' + str(cmdDict['-vmin'])
         if '-vmax' in cmdDict:
@@ -509,12 +522,44 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
         if '-tdo' in cmdDict:
             command += ' -tdo ' + str(cmdDict['-tdo'])
 
+        command += ' -s ' + str(cmdDict['-s'])
+        command += ' -st ' + str(cmdDict['-st'])
+        if '-su' in cmdDict:
+            command += ' -su '
+
+        self.command = command
+
+    def constructVanillaCovCommand(self, cmdDict):
+        """ Construct normVC command
+        """
+        command = ' normVC '
+        command += ' -i ' + cmdDict['-i']
+        command += ' -fi ' + cmdDict['-fi']
+        command += ' -o ' + cmdDict['-o']
+        command += ' -fo ' + cmdDict['-fo']
+
+        if '-vmin' in cmdDict:
+            command += ' -vmin ' + str(cmdDict['-vmin'])
+        if '-vmax' in cmdDict:
+            command += ' -vmax ' + str(cmdDict['-vmax'])
+        if '-cmeth' in cmdDict:
+            command += ' -cmeth ' + cmdDict['-cmeth']
+        command += ' -wd ' + cmdDict['-wd']
+        if '-ptnd' in cmdDict:
+            command += ' -ptnd ' + str(cmdDict['-ptnd'])
+        if '-tdo' in cmdDict:
+            command += ' -tdo ' + str(cmdDict['-tdo'])
+
+        if '-sq' in cmdDict:
+            command += ' -sq '
+
         self.command = command
 
     def runCommand(self):
         self.command = None
         self.readAndConstructCommand()
-        if self.command is None:  return
+        if self.command is None:
+            return
         self.startProcess(self.command, self.executeStartButton)
 
     def startProcess(self, command, button):

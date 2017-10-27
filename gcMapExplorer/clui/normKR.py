@@ -37,7 +37,7 @@ description = \
 ===============================================================
 
 The Knight-Ruiz (KR) matrix balancing is a fast algorithm to normalize a
-symmetric matrix. A doubly stochastic matrix is obatined after this
+symmetric matrix. A doubly stochastic matrix is obtained after this
 normalization. In this matrix, sum of rows and columns are equal to one.
 
 For more details, see publication: http://dx.doi.org/10.1093/imanum/drs019
@@ -64,7 +64,7 @@ inputFileFormatHelp = \
 outputFileHelp = \
 """ Output ccmap or gcmap file.
 
-When input file is ccmap, ouput file can be gcmap. However, when a input file
+When input file is ccmap, output file can be gcmap. However, when a input file
 is gcmap, output file will be only in gcmap.
 
 """
@@ -72,7 +72,7 @@ is gcmap, output file will be only in gcmap.
 outputFileFormatHelp = \
 """ Output format: 'ccmap' or 'gcmap'.
 
-When input file is ccmap, ouput file can be gcmap. However, when a input file
+When input file is ccmap, output file can be gcmap. However, when a input file
 is gcmap, output file will be only in gcmap.
 
 """
@@ -88,15 +88,15 @@ This option is ONLY VALID when input file is in ccmap format.
 """
 
 vminHelp = \
-""" Minimum thershold value for normalization.
-If contact frequency is less than or equal to this thershold value,
+""" Minimum threshold value for normalization.
+If contact frequency is less than or equal to this threshold value,
 this value is discarded during normalization.
 
 """
 
 vmaxHelp = \
-""" Maximum thershold value for normalization.
-If contact frequency is greater than or equal to this thershold value,
+""" Maximum threshold value for normalization.
+If contact frequency is greater than or equal to this threshold value,
 this value is discarded during normalization.
 
 """
@@ -110,11 +110,11 @@ gcmap format.
 """
 tolHelp = \
 """ Tolerance for matrix balancing.
-Smaller tolreance increases accuracy in sums of rows and columns.
+Smaller tolerance increases accuracy in sums of rows and columns.
 
 """
 
-percentile_thershold_no_data_help = \
+percentile_threshold_no_data_help = \
 """ It can be used to filter the map, where rows/columns with largest numbers
 of missing data can be discarded. Its value should be between 1 and 100.
 This options discard the rows and columns which are above this percentile.
@@ -130,7 +130,7 @@ rows/columns.
 
 """
 
-thershold_data_occup_help = \
+threshold_data_occup_help = \
 """ It can be used to filter the map, where rows/columns with largest numbers
 of missing data can be discarded.This ratio is:
   (number of bins with data) / (total number of bins in the given row/column)
@@ -182,26 +182,26 @@ def main():
         msg = 'With gcmap input format, output format should be gcmap format.'
         showErrorAndExit(parser, msg)
 
-    if args.percentile_thershold_no_data is not None and args.thershold_data_occup is not None:
+    if args.percentile_threshold_no_data is not None and args.threshold_data_occup is not None:
         msg = 'Both Percentile and Fraction filters cannot be used simultaneously!!'
         showErrorAndExit(parser, msg)
 
     if args.inputFileFormat == 'gcmap' and args.mapSizeCeilingForMemory is None:
-        msg = 'Provide Map Size Celing value for memory! \n See -mscm/--map-size-ceiling-for-memory option.'
+        msg = 'Provide Map Size Ceiling value for memory! \n See -mscm/--map-size-ceiling-for-memory option.'
         showErrorAndExit(parser, msg)
 
     if args.outputFileFormat == 'ccmap' and args.inputFileFormat == 'ccmap':
         gmlib.normalizer.normalizeCCMapByKR(args.inputFile, memory=args.memory, tol=args.tol,
                                             vmin=args.vmin, vmax=args.vmax, outFile=args.outputFile,
-                                            percentile_thershold_no_data=args.percentile_thershold_no_data,
-                                            thershold_data_occup=args.thershold_data_occup,
+                                            percentile_threshold_no_data=args.percentile_threshold_no_data,
+                                            threshold_data_occup=args.threshold_data_occup,
                                             workDir=args.workDir)
 
     if args.outputFileFormat == 'gcmap' and args.inputFileFormat == 'ccmap':
         norm_ccmap = gmlib.normalizer.normalizeCCMapByKR(args.inputFile, memory=args.memory, tol=args.tol,
                                             vmin=args.vmin, vmax=args.vmax,
-                                            percentile_thershold_no_data=args.percentile_thershold_no_data,
-                                            thershold_data_occup=args.thershold_data_occup,
+                                            percentile_threshold_no_data=args.percentile_threshold_no_data,
+                                            threshold_data_occup=args.threshold_data_occup,
                                             workDir=args.workDir)
         gmlib.gcmap.addCCMap2GCMap(norm_ccmap, args.outputFile, compression=args.compression)
 
@@ -210,8 +210,8 @@ def main():
         gmlib.normalizer.normalizeGCMapByKR(args.inputFile, args.outputFile,
                                             mapSizeCeilingForMemory=args.mapSizeCeilingForMemory,
                                             tol=args.tol, vmin=args.vmin, vmax=args.vmax,
-                                            percentile_thershold_no_data=args.percentile_thershold_no_data,
-                                            thershold_data_occup=args.thershold_data_occup,
+                                            percentile_threshold_no_data=args.percentile_threshold_no_data,
+                                            threshold_data_occup=args.threshold_data_occup,
                                             workDir=args.workDir)
 
     print(citation)
@@ -263,15 +263,15 @@ def parseArguments():
                         type = int,
                         help=mapSizeCeilingForMemoryHelp)
 
-    parser.add_argument('-ptnd', '--percentile-thershold-no-data', action='store',
-                        dest='percentile_thershold_no_data', metavar=99,
+    parser.add_argument('-ptnd', '--percentile-threshold-no-data', action='store',
+                        dest='percentile_threshold_no_data', metavar=99,
                         type = float,
-                        help=percentile_thershold_no_data_help)
+                        help=percentile_threshold_no_data_help)
 
-    parser.add_argument('-tdo', '--thershold-data-occupancy', action='store',
-                        dest='thershold_data_occup', metavar=0.8,
+    parser.add_argument('-tdo', '--threshold-data-occupancy', action='store',
+                        dest='threshold_data_occup', metavar=0.8,
                         type = float,
-                        help=thershold_data_occup_help)
+                        help=threshold_data_occup_help)
 
     parser.add_argument('-cmeth', '--compression-method', action='store',
                         dest='compression', metavar='lzf',

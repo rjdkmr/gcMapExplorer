@@ -59,7 +59,7 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
         super(DialogOther1DFormatLoader, self).__init__(parent=parent)
         self.setupUi(self)
 
-        # Resize hight and reduce size of log text box
+        # Resize height and reduce size of log text box
         self.resize(self.width(), 600)
         self.splitter.setSizes([460, 140])
         self.command = None
@@ -146,7 +146,7 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
             except:
                 pass
 
-    def connet2Hide(self):
+    def connect2Hide(self):
         """ When opened from browser, hide dialog on close
         """
         try:
@@ -238,7 +238,7 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
     def checkScratchDirectory(self, fromButton=False):
         """ Check whether scratch directory is provided correctly in the
         line edit.
-        Return: None or scracth directory name
+        Return: None or scratch directory name
         """
         if (self.scrollArea.focusWidget() is  not self.scratchDirButton) or (fromButton):
             checkDirExist(self.scratchDirLineEdit, self)
@@ -379,7 +379,7 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
             return
 
 
-        # In case if there is no remove buttone make checked False.
+        # In case if there is no remove button make checked False.
         # Do not save file in scratch directory
         if not hasattr(self, 'h5RemoveRadioButton'):
             checked = False
@@ -393,7 +393,7 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
             self.h5FileLineEdit.setFocus()
             return
 
-        # If Revome button is checked, then check if scratch directory
+        # If Remove button is checked, then check if scratch directory
         # is not same to output directory
         # This is done only in case remove button is present
         if hasattr(self, 'h5RemoveRadioButton'):
@@ -424,7 +424,7 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
 
     def checkResolutions(self):
         """ Check resolutions inputs.
-        Rerturn resolutions list or None
+        Return resolutions list or None
         """
         rInList = self.resolutionLineEdit.text()
         rlist = []
@@ -645,7 +645,7 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
         self.logOutputPlainTextEdit.clear()
 
     def writeLogOutputFromProcess(self):
-        """ Doverting process output to log box
+        """Converting process output to log box
         """
         if self.process is None:
             return
@@ -680,7 +680,7 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
         self.accepted.connect( lambda : self.loadDataToBrowser(browser, gpa) )
 
     def disconnectFromAccepted(self):
-        """ disconnect accpted
+        """ disconnect accepted
         """
         try:
             self.accepted.disconnect()
@@ -699,7 +699,7 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
 
         browser.loadDataToPlot(gpa)
 
-    def connectoToBrowseMapChanger(self, browser, newMapName):
+    def connectToBrowseMapChanger(self, browser, newMapName):
         """ Connect accepted to browser map changer
         """
         self.accepted.connect( lambda : browser.changeMapNames(newMapName) )

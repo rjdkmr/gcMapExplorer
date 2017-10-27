@@ -6,8 +6,8 @@ It contains functions that handle configuration of gcMapExplorer. gcMapExplorer
 uses some default settings and options. This can be read and changed through
 these modules.
 
-Configuraion file structure
----------------------------
+Configuration file structure
+----------------------------
 
 ::
 
@@ -56,7 +56,7 @@ Summary
     updateConfig
     getConfig
     printConfig
-		cleanScratch
+    cleanScratch
 
 .. automodule:: gcMapExplorer.config
-	:members: updateConfig, getConfig, printConfig, cleanScratch
+    :members: updateConfig, getConfig, printConfig, cleanScratch

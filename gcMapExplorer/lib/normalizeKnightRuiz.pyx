@@ -35,8 +35,8 @@ dtype_npBINarray = 'float32'
 class KnightRuizNorm:
 	"""A modified Knight-Ruiz algorithm for matrix balancing
 
-	The original ported Knight-Ruiz algorithm is modifed to implement the normalization using both memory/RAM and disk.
-	It allows the normalization of small Hi-C maps to huge maps that could not be accomodated in RAM.
+	The original ported Knight-Ruiz algorithm is modified to implement the normalization using both memory/RAM and disk.
+	It allows the normalization of small Hi-C maps to huge maps that could not be accommodated in RAM.
 
 	Parameters
 	----------
@@ -75,7 +75,7 @@ class KnightRuizNorm:
 		# x, x0, e, v, rk, y, Z, w, p, ap :     vector shape(n, 1) : [ [value] [value] [value] [value] ... ... ... [value] ]
 		# rho_km1, rout, rold, innertol, alpha :  scalar shape(1 ,1) : [[value]]
 
-		# Dummy Initialazation of x, x0, e, v, rk, y, Z, w, p, ap
+		# Dummy Initialization of x, x0, e, v, rk, y, Z, w, p, ap
 
 		self.x = None
 		self.x0 = None
@@ -294,7 +294,7 @@ class KnightRuizNorm:
 		self.n = A.shape[0]                                                             # n = size(A,1)
 		self.e = cmh.MemoryMappedArray((self.n, 1), fill=1.0,  workDir=self.workDir,  dtype='float64')                            # e = ones(n,1)
 
-		# Dummy Initialazation of x, x0, e, v, rk, y, Z, w, p, ap
+		# Dummy Initialization of x, x0, e, v, rk, y, Z, w, p, ap
 		self.x = cmh.MemoryMappedArray((self.n, 1), workDir=self.workDir,  dtype='float64')
 		self.x0 = cmh.MemoryMappedArray((self.n, 1),  workDir=self.workDir, dtype='float64')
 		self.v = cmh.MemoryMappedArray((self.n, 1),  workDir=self.workDir, dtype='float64')

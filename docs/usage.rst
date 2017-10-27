@@ -94,6 +94,9 @@ Run ``gcMapExplorer`` command on terminal to get list of all sub-commands.
     * - `normKR <http://gcmapexplorer.readthedocs.io/en/latest/commands/normKR.html>`_
       - Normalization using Knight-Ruiz matrix balancing
 
+    * - `normVC <http://gcmapexplorer.readthedocs.io/en/latest/commands/normVC.html>`_
+      - Normalization using Vanilla-Coverage method
+
     * - `normIC <http://gcmapexplorer.readthedocs.io/en/latest/commands/normIC.html>`_
       - Normalization using Iterative Correction
 
@@ -102,15 +105,27 @@ Run ``gcMapExplorer`` command on terminal to get list of all sub-commands.
 
 
 .. list-table:: Commands for Analysis
-  	:widths: 1, 4
-  	:header-rows: 1
+    :widths: 1, 4
+    :header-rows: 1
 
-  	* - Command
-    	  - Function
+    * - Command
+      - Function
 
 
-  	* - corrBWcmaps
-  	  - Calculate correlation between contact maps
+    * - corrBWcmaps
+      - Calculate correlation between contact maps
+
+
+.. list-table:: Configuration utility
+    :widths: 1, 4
+    :header-rows: 1
+
+    * - Command
+      - Function
+
+
+    * - `config <http://gcmapexplorer.readthedocs.io/en/latest/commands/config.html>`_
+      - To print configuration file and clean scratch directory
 
 
 Command help
@@ -118,5 +133,5 @@ Command help
 Run ``gcMapExplorer <sub-commands> -h`` command.
 
 For example:
-	* ``gcMapExplorer normKR -h``
-	* ``gcMapExplorer coo2cmap -h``
+    * ``gcMapExplorer normKR -h``
+    * ``gcMapExplorer coo2cmap -h``

@@ -176,8 +176,9 @@ def cleanScratch():
                 continue
             basename = os.path.basename(f)
             base = os.path.splitext(basename)[0]
-            if base in ["gcx"]:
+            if "gcx" in base:
                 try:
+                    print(' Removing File: {0}'.format(f))
                     os.remove(f)
                 except IOError:
                     pass

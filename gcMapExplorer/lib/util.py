@@ -67,7 +67,7 @@ def locate_significant_digit_after_decimal(value):
 	location = 0
 	base = 0
 	while( base <=0 ):
-		base = int( value * 10 ** location  )
+		base = int( abs(value) * 10 ** location  )
 		location = location + 1
 
 	return location-1
@@ -77,10 +77,11 @@ def kth_diag_indices(k, a):
 
 	Parameters
 	----------
-	k : numpy.ndarray
-		Input numpy 2D array
-	a : int
+	k : int
 		Diagonal offset
+
+	a : numpy.ndarray
+		Input numpy 2D array
 
 	Returns
 	-------
@@ -137,42 +138,40 @@ def detectOutliers1D(points, thresh=3.5):
 	return modified_z_score > thresh
 
 def detectOutliersMasked1D(points, thresh=3.5):
-    """Returns a masked array where outliers are masked with preserved input mask.
+	"""Returns a masked array where outliers are masked with preserved input mask.
 
-    Parameters
-    ----------
-    points : numpy.ma.ndarray
-    	An numobservations by numdimensions array of observations
+	Parameters
+	----------
+	points : numpy.ma.ndarray
+		An numobservations by numdimensions array of observations
 
-    thresh : float
-    	The modified z-score to use as a threshold. Observations with
-        a modified z-score (based on the median absolute deviation) greater
-        than this value will be classified as outliers.
+	thresh : float
+		The modified z-score to use as a threshold. Observations with
+	    a modified z-score (based on the median absolute deviation) greater
+	    than this value will be classified as outliers.
 
-    Returns
-    -------
-    maskArray : numpy.ma.ndarray
-    	A numobservations-length masked array.
+	Returns
+	-------
+	maskArray : numpy.ma.ndarray
+		A numobservations-length masked array.
 
-    References
-    ----------
-        Boris Iglewicz and David Hoaglin (1993), "Volume 16: How to Detect and
-        Handle Outliers", The ASQC Basic References in Quality Control:
-        Statistical Techniques, Edward F. Mykytka, Ph.D., Editor.
+	References
+	----------
+	    Boris Iglewicz and David Hoaglin (1993), "Volume 16: How to Detect and
+	    Handle Outliers", The ASQC Basic References in Quality Control:
+	    Statistical Techniques, Edward F. Mykytka, Ph.D., Editor.
 
-    """
+	"""
 
-    if len(points.shape) == 1:
-        points = points[:,None]
+	inputPoint = points.compressed().copy()
+	idx = detectOutliers1D(inputPoint, thresh=thresh)
+	inputPoint[idx] = 0.0
 
-    median = np.ma.median(points, axis=0)
-    diff = np.ma.sum((points - median)**2, axis=-1)
-    diff = np.ma.sqrt(diff)
-    med_abs_deviation = np.ma.median(diff)
+	result = np.zeros(points.shape, dtype=points.dtype)
+	result[~points.mask] = inputPoint[:]
+	result = np.ma.masked_values(result, 0.0)
 
-    modified_z_score = 0.6745 * diff / med_abs_deviation
-
-    return np.ma.masked_where(modified_z_score > thresh, points[:,0])
+	return result
 
 def resolutionToBinsize(resolution):
 	"""Return the bin size from the resolution unit

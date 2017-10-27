@@ -41,7 +41,7 @@ These expected values could be either Median or Average contact values
 for particular distance between two locations/coordinates. At first,
 Median/Average distance contact frequency for each distance is calculated.
 Subsequently, the observed contact frequency is either divided ('o/e') or
-substracted ('o-e') by median/average contact frequency obtained for
+subtracted ('o-e') by median/average contact frequency obtained for
 distance between the two locations.
 
 =================================================
@@ -62,7 +62,7 @@ inputFileFormatHelp = \
 outputFileHelp = \
 """ Output ccmap or gcmap file.
 
-When input file is ccmap, ouput file can be gcmap. However, when a input file
+When input file is ccmap, output file can be gcmap. However, when a input file
 is gcmap, output file will be only in gcmap.
 
 """
@@ -70,7 +70,7 @@ is gcmap, output file will be only in gcmap.
 outputFileFormatHelp = \
 """ Input format: 'ccmap' or 'gcmap'.
 
-When input file is ccmap, ouput file can be gcmap. However, when a input file
+When input file is ccmap, output file can be gcmap. However, when a input file
 is gcmap, output file will be only in gcmap.
 
 """
@@ -82,15 +82,15 @@ It may be either “mean” or “median”. By default, it is “median”.
 """
 
 vminHelp = \
-""" Minimum thershold value for normalization.
-If contact frequency is less than or equal to this thershold value,
+""" Minimum threshold value for normalization.
+If contact frequency is less than or equal to this threshold value,
 this value is discarded during normalization.
 
 """
 
 vmaxHelp = \
-""" Maximum thershold value for normalization.
-If contact frequency is greater than or equal to this thershold value,
+""" Maximum threshold value for normalization.
+If contact frequency is greater than or equal to this threshold value,
 this value is discarded during normalization.
 
 """
@@ -103,7 +103,15 @@ will be calculated for 'o-e'.
 
 """
 
-percentile_thershold_no_data_help = \
+scaleUpInputHelp = \
+"""Scale up the input map by multiplying it with constant value. This constant
+value is precision of minimum value multiplied by 10. This scale up changes
+the minimum value to a integer value and accordingly whole map is changed.
+It is beneficial when input map contains very small value as generated from KR
+normalization.
+"""
+
+percentile_threshold_no_data_help = \
 """ It can be used to filter the map, where rows/columns with largest numbers
 of missing data can be discarded. Its value should be between 1 and 100.
 This options discard the rows and columns which are above this percentile.
@@ -119,7 +127,7 @@ rows/columns.
 
 """
 
-thershold_data_occup_help = \
+threshold_data_occup_help = \
 """ It can be used to filter the map, where rows/columns with largest numbers
 of missing data can be discarded.This ratio is:
   (number of bins with data) / (total number of bins in the given row/column)
@@ -160,22 +168,24 @@ def main():
         msg = 'With gcmap input format, output format should be gcmap format.'
         showErrorAndExit(parser, msg)
 
-    if args.percentile_thershold_no_data is not None and args.thershold_data_occup is not None:
+    if args.percentile_threshold_no_data is not None and args.threshold_data_occup is not None:
         msg = 'Both Percentile and Fraction filters cannot be used simultaneously!!'
         showErrorAndExit(parser, msg)
 
     if args.outputFileFormat == 'ccmap' and args.inputFileFormat == 'ccmap':
         gmlib.normalizer.normalizeCCMapByMCFS(args.inputFile, stats=args.stats, outFile=args.outputFile,
                                             vmin=args.vmin, vmax=args.vmax, stype=args.stype,
-                                            percentile_thershold_no_data=args.percentile_thershold_no_data,
-                                            thershold_data_occup=args.thershold_data_occup,
+                                            scaleUpInput=args.scaleUpInput,
+                                            percentile_threshold_no_data=args.percentile_threshold_no_data,
+                                            threshold_data_occup=args.threshold_data_occup,
                                             workDir=args.workDir)
 
     if args.outputFileFormat == 'gcmap' and args.inputFileFormat == 'ccmap':
         norm_ccmap = gmlib.normalizer.normalizeCCMapByMCFS(args.inputFile, stats=args.stats,
                                             vmin=args.vmin, vmax=args.vmax, stype=args.stype,
-                                            percentile_thershold_no_data=args.percentile_thershold_no_data,
-                                            thershold_data_occup=args.thershold_data_occup,
+                                            scaleUpInput=args.scaleUpInput,
+                                            percentile_threshold_no_data=args.percentile_threshold_no_data,
+                                            threshold_data_occup=args.threshold_data_occup,
                                             workDir=args.workDir)
         gmlib.gcmap.addCCMap2GCMap(norm_ccmap, args.outputFile, compression=args.compression)
 
@@ -183,8 +193,9 @@ def main():
     if args.outputFileFormat == 'gcmap' and args.inputFileFormat == 'gcmap':
         gmlib.normalizer.normalizeGCMapByMCFS(args.inputFile, args.outputFile,
                                             stats=args.stats, vmin=args.vmin, vmax=args.vmax, stype=args.stype,
-                                            percentile_thershold_no_data=args.percentile_thershold_no_data,
-                                            thershold_data_occup=args.thershold_data_occup,
+                                            scaleUpInput=args.scaleUpInput,
+                                            percentile_threshold_no_data=args.percentile_threshold_no_data,
+                                            threshold_data_occup=args.threshold_data_occup,
                                             compression=args.compression,
                                             workDir=args.workDir)
 
@@ -229,15 +240,19 @@ def parseArguments():
                         choices=['o/e', 'o-e'], default='o/e',
                         help=stypeHelp)
 
-    parser.add_argument('-ptnd', '--percentile-thershold-no-data', action='store',
-                        dest='percentile_thershold_no_data', metavar=99,
-                        type = float,
-                        help=percentile_thershold_no_data_help)
+    parser.add_argument('-sui', '--scale-up-input', action='store_true',
+                        dest='scaleUpInput', default=False,
+                        help=scaleUpInputHelp)
 
-    parser.add_argument('-tdo', '--thershold-data-occupancy', action='store',
-                        dest='thershold_data_occup', metavar=0.8,
+    parser.add_argument('-ptnd', '--percentile-threshold-no-data', action='store',
+                        dest='percentile_threshold_no_data', metavar=99,
                         type = float,
-                        help=thershold_data_occup_help)
+                        help=percentile_threshold_no_data_help)
+
+    parser.add_argument('-tdo', '--threshold-data-occupancy', action='store',
+                        dest='threshold_data_occup', metavar=0.8,
+                        type = float,
+                        help=threshold_data_occup_help)
 
     parser.add_argument('-cmeth', '--compression-method', action='store',
                         dest='compression', metavar='lzf',

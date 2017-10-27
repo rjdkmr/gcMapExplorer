@@ -125,3 +125,31 @@ To update the gcMapExplorer package use following command:
 
 ``--upgrade`` flag is used to update the package and ``--no-deps`` prevents
 update of dependent packages like numpy, scipy, matplotlib etc.
+
+
+Configuring gcMapExplorer
+-------------------------
+
+Presently two types of global options are required.
+    * Scratch Directory to dump intermediate temporary files
+    * Location to ``bigWigInfo`` and ``bigWigToWig`` tool
+
+These options are stored in a configuration file. During first use of gcMapExplorer, Scratch Directory is set to
+by default temporary directory depending on OS. Location to external tools can be set by either manually opening and
+editing configuration file or through ``gcMapExplorer`` Python module (see below).
+
+For quick look to configuration file and cleaning scratch directory, ``gcMapExplorer config`` command can be used:
+
+.. toctree::
+    :maxdepth: 1
+
+    config : To print configuration file and clean scratch directory <commands/config>
+
+
+
+Configuration using ``gcMapExplorer`` Python modules:
+
+* Print configuration file: :meth:`gcMapExplorer.config.printConfig`
+* Get configuration as dictionary: :meth:`gcMapExplorer.config.getConfig`
+* Update configuration file: :meth:`gcMapExplorer.config.updateConfig`
+* Clean scratch directory: :meth:`gcMapExplorer.config.cleanScratch`

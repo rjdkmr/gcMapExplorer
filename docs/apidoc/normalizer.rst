@@ -14,7 +14,9 @@ normalizer module
 		normalizer.normalizeGCMapByIC
 		normalizer.normalizeCCMapByMCFS
 		normalizer.normalizeGCMapByMCFS
+		normalizer.normalizeCCMapByVCNorm
+		normalizer.normalizeGCMapByVCNorm
 
 
 .. automodule:: gcMapExplorer.lib.normalizer
-	:members: NormalizeKnightRuizOriginal, normalizeCCMapByKR, normalizeGCMapByKR, normalizeCCMapByIC, normalizeGCMapByIC, normalizeCCMapByMCFS, normalizeGCMapByMCFS
+	:members:

@@ -6,7 +6,11 @@ corrMatrix module
 
 .. autosummary::
     corrMatrix.calculateCorrMatrix
+    corrMatrix.calculateCovMatrix
+    corrMatrix.calculateCorrelation
+    corrMatrix.calculateCovariance
+    corrMatrix.calculateCorrMatrixForCCMap
     corrMatrix.calculateCorrMatrixForGCMaps
 
 .. automodule:: gcMapExplorer.lib.corrMatrix
-	:members: calculateCorrMatrix, calculateCorrMatrixForGCMaps
+	:members: calculateCorrMatrix, calculateCovMatrix, calculateCorrelation, calculateCovariance, calculateCorrMatrixForCCMap, calculateCorrMatrixForGCMaps

@@ -37,7 +37,7 @@ class GCMAP:
     """To access Genome wide contact map.
 
     It is similar to :class:`gcMapExplorer.lib.ccmap.CCMAP` and contains same attributes.
-    Therefore, both :class:`gcMapExplorer.lib.ccmap.CCMAP` and ``GCMAP`` can be used in same way to accesss attributes.
+    Therefore, both :class:`gcMapExplorer.lib.ccmap.CCMAP` and ``GCMAP`` can be used in same way to access attributes.
     It also contains additional attributes because it uses HDF5 file to read the maps on demand.
 
     Structure of gcmap file:
@@ -361,7 +361,7 @@ class GCMAP:
         Returns
         -------
         success : bool
-            If change was successfu ``True`` otherwise ``False``.
+            If change was successful ``True`` otherwise ``False``.
 
         """
 
@@ -381,7 +381,7 @@ class GCMAP:
         Returns
         -------
         success : bool
-            If change was successfu ``True`` otherwise ``False``.
+            If change was successful ``True`` otherwise ``False``.
 
         """
 
@@ -648,7 +648,7 @@ class GCMAP:
         """Downsample recursively and store the maps
 
         It Downsample the maps and automatically add it to same input ``gcmap`` file.
-        Downsampling works recursively, and downsampled maps are generated untill map has a size of less than 500.
+        Downsampling works recursively, and downsampled maps are generated until map has a size of less than 500.
 
         Parameters
         ----------
@@ -790,7 +790,7 @@ def loadGCMapAsCCMap(filename, mapName=None, chromAtX=None, chromAtY=None, resol
     return cmap
 
 
-def addCCMap2GCMap(cmap, filename, scaleoffset=None, compression='lzf', generateCoarse=True, coarsingMethod='sum', replaceCMap=True, logHandler=None):
+def addCCMap2GCMap(cmap, filename, scaleoffset=None, compression='lzf', generateCoarse=True, coarseningMethod='sum', replaceCMap=True, logHandler=None):
     """ Add :class:`gcMapExplorer.lib.ccmap.CCMAP` to a gcmap file
 
     Parameters
@@ -808,14 +808,14 @@ def addCCMap2GCMap(cmap, filename, scaleoffset=None, compression='lzf', generate
     compression : str
         Compression method. Presently allowed : ``lzf`` for LZF compression and ``gzip`` for GZIP compression.
     generateCoarse : bool
-        Also generates all coarser maps where resolutions will be coarsed by a factor of two, consequetively.
+        Also generates all coarser maps where resolutions will be coarsen by a factor of two, consecutively.
         e.g.: In case of 10 kb input resolution, downsampled maps of ``20kb``, ``40kb``, ``80kb``, ``160kb``, ``320kb`` etc.
-        will be generated untill, map size is less than 500.
-    coarsingMethod : str
+        will be generated until, map size is less than 500.
+    coarseningMethod : str
         Method of downsampling. Three accepted methods are ``sum``: sum all values, ``mean``: Average of all values
         and ``max``: Maximum of all values.
     replaceCMap : bool
-        Replace entire old ccmap data including resolutions and coarsed data.
+        Replace entire old ccmap data including resolutions and coarsen data.
 
     Returns
     -------
@@ -897,7 +897,7 @@ def addCCMap2GCMap(cmap, filename, scaleoffset=None, compression='lzf', generate
                 group.pop(resolution+'-bNoData')
             group.create_dataset(resolution+'-bNoData', cmap.bNoData.shape, dtype=cmap.bNoData.dtype, data=cmap.bNoData, chunks=True, compression=compression, shuffle=True)
 
-        # Get minimum value othar than zero
+        # Get minimum value other than zero
         if cmap.minvalue == 0:
             ma = np.ma.masked_equal(cmap.matrix, 0.0, copy=False)
             cmap.minvalue = ma.min()
@@ -915,7 +915,7 @@ def addCCMap2GCMap(cmap, filename, scaleoffset=None, compression='lzf', generate
         if generateCoarse:
             logger.info(' Generating downsampled maps for [{0}] ...'.format(groupName))
             gcmap = GCMAP(hdf5, mapName=groupName)
-            gcmap.performDownSampling(method=coarsingMethod)
+            gcmap.performDownSampling(method=coarseningMethod)
             del gcmap
             logger.info('     ... Finished downsampling for [{0}] ...'.format(groupName))
 
