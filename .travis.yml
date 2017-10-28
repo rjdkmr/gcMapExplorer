@@ -127,7 +127,7 @@ before_install:
           ;;
       esac
 
-      export CC=/usr/local/bin/gcc
+      export CC=gcc
 
       # brew install pyqt5 --with-python3
     fi
@@ -135,7 +135,7 @@ before_install:
 install:
   - |
     if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
-      export CC=/usr/local/bin/gcc
+      export CC=gcc
     fi
     pip install --upgrade pip
     pip install --upgrade wheel
