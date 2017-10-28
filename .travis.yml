@@ -93,7 +93,7 @@ before_install:
 
     else
       brew update
-      brew install gcc@5 --without-multilib
+      brew install gcc5 --without-multilib
       brew install pyenv
       eval "$(pyenv init -)"
 
