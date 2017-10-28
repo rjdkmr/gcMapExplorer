@@ -1,4 +1,4 @@
-normKR - Normalization by Vanilla-Coverage
+normVC - Normalization by Vanilla-Coverage
 ------------------------------------------
 
 This method was first used for inter-chromosomal map. Later it was used for

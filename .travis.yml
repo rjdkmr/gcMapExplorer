@@ -93,6 +93,7 @@ before_install:
 
     else
       brew update
+      brew install gcc --without-multilib
       brew install pyenv
       eval "$(pyenv init -)"
 
@@ -125,11 +126,17 @@ before_install:
           python --version
           ;;
       esac
+
+      export CC=/usr/local/bin/gcc
+
       # brew install pyqt5 --with-python3
     fi
 
 install:
   - |
+    if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
+      export CC=/usr/local/bin/gcc
+    fi
     pip install --upgrade pip
     pip install --upgrade wheel
     pip install --upgrade setuptools
