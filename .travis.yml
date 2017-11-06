@@ -84,9 +84,11 @@ before_install:
 
       # Install patchelf
       pushd builds
-      curl -L -o patchelf-0.9.tar.gz https://nixos.org/releases/patchelf/patchelf-0.9/patchelf-0.9.tar.gz
-      tar -zxvf patchelf-0.9.tar.gz
-      pushd patchelf-0.9
+      git clone https://github.com/NixOS/patchelf
+      #curl -L -o patchelf-0.9.tar.gz https://nixos.org/releases/patchelf/patchelf-0.9/patchelf-0.9.tar.gz
+      #tar -zxvf patchelf-0.9.tar.gz
+      pushd patchelf
+      ./bootstrap.sh
       ./configure && make && sudo make install
       popd
       popd
