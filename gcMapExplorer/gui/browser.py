@@ -120,11 +120,11 @@ class GenomicDataSetSubPlotHelper:
         if path[0]:
             file_extension = os.path.splitext(path[0])[1]
 
-            if self.hiCmapAxes[idx].genmoicPlotAxes is None:
-                self.hiCmapAxes[idx].genmoicPlotAxes = []
+            if self.hiCmapAxes[idx].genomicPlotAxes is None:
+                self.hiCmapAxes[idx].genomicPlotAxes = []
 
             # Instantiate GenomicDataPlotAxis
-            gpa = GenomicDataPlotAxis( len(self.hiCmapAxes[idx].genmoicPlotAxes),  self.hiCmapAxes[idx])
+            gpa = GenomicDataPlotAxis( len(self.hiCmapAxes[idx].genomicPlotAxes),  self.hiCmapAxes[idx])
 
             if file_extension in ['.h5', '.hdf5']:
                 # Open dialogbox so user can select a dataset
@@ -150,13 +150,13 @@ class GenomicDataSetSubPlotHelper:
 
 
             # Append GenomicDataPlotAxis to list
-            self.hiCmapAxes[idx].genmoicPlotAxes.append(gpa)
+            self.hiCmapAxes[idx].genomicPlotAxes.append(gpa)
 
             # Getting upper-most and lower-most plot
             if gpa.plotLocation == 'top':
-                self.hiCmapAxes[idx].upperMostGenmoicPlotAxes = gpa.index
+                self.hiCmapAxes[idx].upperMostGenomicPlotAxes = gpa.index
             if gpa.plotLocation == 'bottom':
-                self.hiCmapAxes[idx].lowerMostGenmoicPlotAxes = gpa.index
+                self.hiCmapAxes[idx].lowerMostGenomicPlotAxes = gpa.index
 
             # Tight layout at start and then turn off it
             self.figure.set_tight_layout(True)
@@ -171,7 +171,7 @@ class GenomicDataSetSubPlotHelper:
             self.figure.set_tight_layout(False)
 
             # make active the GUI options
-            self.makeGenomicSupPlotOptionsActive(idx, self.hiCmapAxes[idx].genmoicPlotAxes[-1].index)
+            self.makeGenomicSupPlotOptionsActive(idx, self.hiCmapAxes[idx].genomicPlotAxes[-1].index)
 
             # Get horizontal and vertical space between subplots
             self.get_horizontal_vertical_space_from_figure()
@@ -188,18 +188,18 @@ class GenomicDataSetSubPlotHelper:
         self.genomicDataSubPlotOptionsGBox.setEnabled(True)
 
         # If genomic dataset is plotted for first time, initialize spinbox and slider value
-        if self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yscaleSpinbox is None:
-            self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yscaleSpinbox = self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].ylimit[1]
-        if self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yscaleSlider is None:
-            self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yscaleSlider = 99
+        if self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yscaleSpinbox is None:
+            self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yscaleSpinbox = self.hiCmapAxes[hidx].genomicPlotAxes[gidx].ylimit[1]
+        if self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yscaleSlider is None:
+            self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yscaleSlider = 99
 
         # Because, all GUI widget are linked to plotting, internal change in their states trigger all the connected methods.
         # All plottings are already done, so turn off the plotting.
         self.hiCmapAxes[hidx].doNotPlot = True
 
-        minvalue = self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yScaleSteps[0]
-        maxvalue = self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yScaleSteps[-1]
-        dstep = self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yScaleSteps[1] - self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yScaleSteps[0]
+        minvalue = self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yScaleSteps[0]
+        maxvalue = self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yScaleSteps[-1]
+        dstep = self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yScaleSteps[1] - self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yScaleSteps[0]
 
         # Change maximum and minimum value
         self.genomicDataYScalingMinLineEdit.setText(str(minvalue))
@@ -210,13 +210,13 @@ class GenomicDataSetSubPlotHelper:
         self.genomicDataYScalingSpinBox.setSingleStep(dstep)
 
         # change spinbox and slider value
-        self.genomicDataYScalingSlider.setValue(self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yscaleSlider)
-        self.genomicDataYScalingSpinBox.setValue(self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yscaleSpinbox)
+        self.genomicDataYScalingSlider.setValue(self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yscaleSlider)
+        self.genomicDataYScalingSpinBox.setValue(self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yscaleSpinbox)
 
         self.hiCmapAxes[hidx].doNotPlot = False
 
         # Change color and linewidth
-        color = self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].plotColor
+        color = self.hiCmapAxes[hidx].genomicPlotAxes[gidx].plotColor
         style = 'background-color: rgb({0}, {1}, {2});'.format(int(color[0]*255), int(color[1]*255), int(color[2]*255))
         self.genomicDataColorButton.setStyleSheet(style)
 
@@ -236,8 +236,8 @@ class GenomicDataSetSubPlotHelper:
         hidx = self.ActiveHiCmapAxis
         if self.hiCmapAxes[hidx].image is None: return hidx, gidx
 
-        if self.hiCmapAxes[hidx].genmoicPlotAxes is not None:
-            for gax in self.hiCmapAxes[hidx].genmoicPlotAxes:
+        if self.hiCmapAxes[hidx].genomicPlotAxes is not None:
+            for gax in self.hiCmapAxes[hidx].genomicPlotAxes:
                 if gax.treeWidgetItem is self.axisTreeWidget.currentItem():
                     gidx = gax.index
                     break
@@ -262,8 +262,8 @@ class GenomicDataSetSubPlotHelper:
 
         # Get value from slider
         sidx = self.genomicDataYScalingSlider.value()
-        ylimUpper = self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yScaleSteps[sidx]
-        ylimLower = self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yScaleSteps[0]
+        ylimUpper = self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yScaleSteps[sidx]
+        ylimLower = self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yScaleSteps[0]
 
         # To prevent plotting when user slides slider at the lowest value
         if ylimLower == ylimUpper:  return
@@ -272,12 +272,12 @@ class GenomicDataSetSubPlotHelper:
         if ylimUpper != self.genomicDataYScalingSpinBox.value():
             self.genomicDataYScalingSpinBox.setValue(ylimUpper)
 
-        # set upper and lower ylimt for plot, here plot is also updated, see: ylimit.setter
-        self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].ylimit = (ylimLower, ylimUpper)
+        # set upper and lower ylimit for plot, here plot is also updated, see: ylimit.setter
+        self.hiCmapAxes[hidx].genomicPlotAxes[gidx].ylimit = (ylimLower, ylimUpper)
 
         # Save current values from slider and spinbox
-        self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yscaleSlider = sidx
-        self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yscaleSpinbox = ylimUpper
+        self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yscaleSlider = sidx
+        self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yscaleSpinbox = ylimUpper
 
         # Redraw everything
         self.canvas.draw()
@@ -301,7 +301,7 @@ class GenomicDataSetSubPlotHelper:
         if self.hiCmapAxes[hidx].doNotPlot: return
 
         # Determine value for slider for current spinbox value
-        idx = ( np.abs(self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yScaleSteps - self.genomicDataYScalingSpinBox.value() )).argmin()
+        idx = ( np.abs(self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yScaleSteps - self.genomicDataYScalingSpinBox.value() )).argmin()
 
         # If determined value is not equal to present value, set slider value.
         # By setting slider value, plot is automatically updated and redrawn.
@@ -333,8 +333,8 @@ class GenomicDataSetSubPlotHelper:
         upperLimit = float( self.genomicDataYScalingMaxLineEdit.text() )
 
         # To get previous lower and upper limit already used in plot
-        prev_lowerLimit = self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yScaleSteps[0]
-        prev_upperLimit = self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yScaleSteps[-1]
+        prev_lowerLimit = self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yScaleSteps[0]
+        prev_upperLimit = self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yScaleSteps[-1]
 
         # When user make a mistake, so resetting  the upper and lower limits
         if lowerLimit >= upperLimit:
@@ -352,22 +352,22 @@ class GenomicDataSetSubPlotHelper:
             msgBox.exec_()
 
             # Revert the values in both boxes
-            self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].doNotPlot = True
+            self.hiCmapAxes[hidx].genomicPlotAxes[gidx].doNotPlot = True
             self.genomicDataYScalingMinLineEdit.setText(str(prev_lowerLimit))
             self.genomicDataYScalingMaxLineEdit.setText(str(prev_upperLimit))
-            self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].doNotPlot = False
+            self.hiCmapAxes[hidx].genomicPlotAxes[gidx].doNotPlot = False
             return
 
         # Update y-scale steps for plots
-        self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yScaleSteps = (lowerLimit, upperLimit)
+        self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yScaleSteps = (lowerLimit, upperLimit)
 
         # New delta-step
-        dstep = self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yScaleSteps[1] - self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yScaleSteps[0]
+        dstep = self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yScaleSteps[1] - self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yScaleSteps[0]
 
         # New range for spin-box and delta-step
         self.genomicDataYScalingSpinBox.setRange(lowerLimit, upperLimit)
         self.genomicDataYScalingSpinBox.setSingleStep(dstep)
-        self.genomicDataYScalingSpinBox.setDecimals(self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yticksDecimals+1)
+        self.genomicDataYScalingSpinBox.setDecimals(self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yticksDecimals+1)
 
         # If user changes only lower limit, spinbox connected method is called because spinbox holds only upper limit
         if prev_lowerLimit != lowerLimit:
@@ -388,12 +388,12 @@ class GenomicDataSetSubPlotHelper:
         if gidx is None:    return
 
         # Remember, by setting y-scale steps to None actually changes steps to original. See @yScaleSteps.setter
-        self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yScaleSteps = None
+        self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yScaleSteps = None
 
         # Determine new upper and lower limit, and delta-step value
-        lowerLimit = self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yScaleSteps[0]
-        upperLimit = self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yScaleSteps[-1]
-        dstep = self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yScaleSteps[1] - self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].yScaleSteps[0]
+        lowerLimit = self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yScaleSteps[0]
+        upperLimit = self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yScaleSteps[-1]
+        dstep = self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yScaleSteps[1] - self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yScaleSteps[0]
 
         # Change range and delta-step of spinbox
         self.genomicDataYScalingSpinBox.setRange(lowerLimit, upperLimit)
@@ -425,15 +425,15 @@ class GenomicDataSetSubPlotHelper:
 
         if self.hiCmapAxes[hidx].doNotPlot: return
 
-        if self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].dataArray is None:  return
+        if self.hiCmapAxes[hidx].genomicPlotAxes[gidx].dataArray is None:  return
 
-        dataArray = self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].dataArray
+        dataArray = self.hiCmapAxes[hidx].genomicPlotAxes[gidx].dataArray
 
-        if value not in self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].percentileValues:
+        if value not in self.hiCmapAxes[hidx].genomicPlotAxes[gidx].percentileValues:
             percentile = np.percentile(dataArray[dataArray[:] != 0 ], value)
-            self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].percentileValues[value] = percentile
+            self.hiCmapAxes[hidx].genomicPlotAxes[gidx].percentileValues[value] = percentile
         else:
-            percentile = self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].percentileValues[value]
+            percentile = self.hiCmapAxes[hidx].genomicPlotAxes[gidx].percentileValues[value]
 
         self.percentileValueLineEdit.setText(str(percentile))
 
@@ -450,7 +450,7 @@ class GenomicDataSetSubPlotHelper:
         if gidx is None:    return
 
         # Convert RGB tuple to QColor, QColor range from 0 to 255 while matplotlib color range from 0 to 1.
-        color = self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].plotColor
+        color = self.hiCmapAxes[hidx].genomicPlotAxes[gidx].plotColor
         qcolor = QColor.fromRgb( int(color[0]*255), int(color[1]*255), int(color[2]*255), 255 )
 
         # QColorDialog open here
@@ -464,8 +464,8 @@ class GenomicDataSetSubPlotHelper:
             newColor = (pickedColor.red()/255, pickedColor.green()/255, pickedColor.blue()/255)
 
             # Update color and plot
-            self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].plotColor = newColor
-            self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].updatePlot()
+            self.hiCmapAxes[hidx].genomicPlotAxes[gidx].plotColor = newColor
+            self.hiCmapAxes[hidx].genomicPlotAxes[gidx].updatePlot()
             self.canvas.draw()
 
             # Set background color of button
@@ -485,15 +485,15 @@ class GenomicDataSetSubPlotHelper:
         if hidx is None:    return
         if gidx is None:    return
 
-        self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].plotLineWidth = width
-        self.hiCmapAxes[hidx].genmoicPlotAxes[gidx].updatePlot()
+        self.hiCmapAxes[hidx].genomicPlotAxes[gidx].plotLineWidth = width
+        self.hiCmapAxes[hidx].genomicPlotAxes[gidx].updatePlot()
         self.canvas.draw()
 
     def get_subplot_obj_axis_under_mouse_mpl(self, event):
         if self.hiCmapAxes is not None:
             for hax in self.hiCmapAxes:
-                if hax.genmoicPlotAxes is not None:
-                    for gax in hax.genmoicPlotAxes:
+                if hax.genomicPlotAxes is not None:
+                    for gax in hax.genomicPlotAxes:
                         contains, attrib = gax.ax.contains(event)
                         if contains:
                             return gax
@@ -502,8 +502,8 @@ class GenomicDataSetSubPlotHelper:
         if self.hiCmapAxes is not None:
             cw, ch = self.canvas.get_width_height()
             for hax in self.hiCmapAxes:
-                if hax.genmoicPlotAxes is not None:
-                    for gax in hax.genmoicPlotAxes:
+                if hax.genomicPlotAxes is not None:
+                    for gax in hax.genomicPlotAxes:
                         bbox = gax.ax.get_position()
                         if bbox.contains(qpoint.x()/cw, 1-(qpoint.y()/ch)):
                             return gax
@@ -619,8 +619,8 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         if self.hiCmapAxes is not None:
             for hax in self.hiCmapAxes:
                 del hax.ccmap
-                if hax.genmoicPlotAxes is not None:
-                    for gax in hax.genmoicPlotAxes:
+                if hax.genomicPlotAxes is not None:
+                    for gax in hax.genomicPlotAxes:
 
                         # Close converter dialog
                         if gax.converterDialog is not None:
@@ -1238,8 +1238,8 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
             if axis.treeWidgetItem is self.axisTreeWidget.currentItem():
                 hidx = axis.index
                 break
-            if axis.genmoicPlotAxes is not None:
-                for gax in axis.genmoicPlotAxes:
+            if axis.genomicPlotAxes is not None:
+                for gax in axis.genomicPlotAxes:
                     if gax.treeWidgetItem is self.axisTreeWidget.currentItem():
                         hidx = axis.index
                         gidx = gax.index
@@ -1561,8 +1561,8 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
                 browserHelpers.showWarningMessageBox(msg, self)
 
         # First check is all data is available in genomic subplot
-        if self.hiCmapAxes[aidx].genmoicPlotAxes is not None and success:
-            for gax in self.hiCmapAxes[aidx].genmoicPlotAxes:
+        if self.hiCmapAxes[aidx].genomicPlotAxes is not None and success:
+            for gax in self.hiCmapAxes[aidx].genomicPlotAxes:
                 if not gax.changeDataByName(self, newMapName, change=False):
                     success = False
 
@@ -1580,8 +1580,8 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         self.reset_color_range() # Maintain color scaling type and reset scale
 
         # Change genomic subplot data
-        if self.hiCmapAxes[aidx].genmoicPlotAxes is not None:
-            for gax in self.hiCmapAxes[aidx].genmoicPlotAxes:
+        if self.hiCmapAxes[aidx].genomicPlotAxes is not None:
+            for gax in self.hiCmapAxes[aidx].genomicPlotAxes:
                 gax.changeDataByName(self, newMapName, change=True)
                 self.resetGenomicDataYScaleLimits(hidx=aidx, gidx=gax.index)
                 gax.updatePlot()
@@ -1722,9 +1722,9 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         axis_list = []
         for i in range(len(self.hiCmapAxes)):
             axis_list.append(self.hiCmapAxes[i].ax)
-            if self.hiCmapAxes[i].genmoicPlotAxes is not None:
-                for j in range(len(self.hiCmapAxes[i].genmoicPlotAxes)):
-                    axis_list.append(self.hiCmapAxes[i].genmoicPlotAxes[j].ax)
+            if self.hiCmapAxes[i].genomicPlotAxes is not None:
+                for j in range(len(self.hiCmapAxes[i].genomicPlotAxes)):
+                    axis_list.append(self.hiCmapAxes[i].genomicPlotAxes[j].ax)
 
         if self.marker is not None:
             self.marker.disconnect()
@@ -2503,8 +2503,8 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
                         break
 
                     # Check if resolution changing is possible for genomic dataset
-                    if self.hiCmapAxes[i].genmoicPlotAxes is not None:
-                        for gax in self.hiCmapAxes[i].genmoicPlotAxes:
+                    if self.hiCmapAxes[i].genomicPlotAxes is not None:
+                        for gax in self.hiCmapAxes[i].genomicPlotAxes:
                             if not gax.changeResolution(self.interchangeableResolutions[newResIndex], change=False):
                                 resolutionChanged = False
                                 if gax.showWarningNoChangeResolution:
@@ -2529,8 +2529,8 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
                     self.resolutionLineEdit.setText(self.hiCmapAxes[self.ActiveHiCmapAxis].resolution)  # Update resolution on GUI
 
                     # Change resolution of genomic dataset
-                    if self.hiCmapAxes[i].genmoicPlotAxes is not None:
-                        for gax in self.hiCmapAxes[i].genmoicPlotAxes:
+                    if self.hiCmapAxes[i].genomicPlotAxes is not None:
+                        for gax in self.hiCmapAxes[i].genomicPlotAxes:
                             gax.changeResolution(self.interchangeableResolutions[self.currentResolutionIndex])
 
                 map_xrange[0] = int( np.floor(map_xrange[0]/2))
@@ -2552,8 +2552,8 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
                         break
 
                     # Check if resolution changing is possible for genomic dataset
-                    if self.hiCmapAxes[i].genmoicPlotAxes is not None:
-                        for gax in self.hiCmapAxes[i].genmoicPlotAxes:
+                    if self.hiCmapAxes[i].genomicPlotAxes is not None:
+                        for gax in self.hiCmapAxes[i].genomicPlotAxes:
                             if not gax.changeResolution(self.interchangeableResolutions[newResIndex], change=False):
                                 resolutionChanged = False
                                 if gax.showWarningNoChangeResolution:
@@ -2578,8 +2578,8 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
                     self.resolutionLineEdit.setText(self.hiCmapAxes[self.ActiveHiCmapAxis].resolution)  # Update resolution on GUI
 
                     # Change resolution of genomic dataset
-                    if self.hiCmapAxes[i].genmoicPlotAxes is not None:
-                        for gax in self.hiCmapAxes[i].genmoicPlotAxes:
+                    if self.hiCmapAxes[i].genomicPlotAxes is not None:
+                        for gax in self.hiCmapAxes[i].genomicPlotAxes:
                             gax.changeResolution(self.interchangeableResolutions[self.currentResolutionIndex])
                             gax.showWarningNoChangeResolution = True
 
@@ -2690,8 +2690,8 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
 
         # Determine if genomic dataset subplot is clicked
         active_genomic_axis = None
-        if temp_ccmap_axis.genmoicPlotAxes is not None:
-            for gax in temp_ccmap_axis.genmoicPlotAxes:
+        if temp_ccmap_axis.genomicPlotAxes is not None:
+            for gax in temp_ccmap_axis.genomicPlotAxes:
                 if gax.treeWidgetItem is self.axisTreeWidget.currentItem():
                     active_genomic_axis = gax
                     break
@@ -3196,7 +3196,7 @@ class GenomicDataPlotAxis:
         self.axes_props.yTickLabelTexts = self.yticks
 
         # Hide x-label and x-ticklabel if not the lowest plots
-        if self.hiCmapAxis.lowerMostGenmoicPlotAxes != self.index:
+        if self.hiCmapAxis.lowerMostGenomicPlotAxes != self.index:
             self.axes_props.xLabel['Show Label'] = 'none'
             self.axes_props.xTickLabel['Label Position'] = 'none'
 
