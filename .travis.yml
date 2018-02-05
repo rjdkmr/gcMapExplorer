@@ -96,7 +96,8 @@ before_install:
     else
       brew update
       brew install gcc5 --without-multilib
-      brew install pyenv
+      brew link --overwrite gcc@5
+      brew upgrade pyenv
       eval "$(pyenv init -)"
 
       case "${TOXENV}" in
