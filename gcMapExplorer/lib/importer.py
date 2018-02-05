@@ -1355,7 +1355,7 @@ class BinsNContactFilesHandler:
         """
         if self.npyBinFileList is not None:
             for key in self.npyBinFileList:
-                self.npyBinFileList[key][0].close()
+                self.npyBinFileList[key][0]._mmap.close()
 
                 self.logger.info(' Removing temporary numpy array file [{0}] for {1} ...' .format(self.npyBinFileList[key][1], key))
                 if os.path.isfile(self.npyBinFileList[key][1]):
@@ -1459,7 +1459,7 @@ class BinsNContactFilesHandler:
             if self.npyBinFileList is None:
                 self.npyBinFileList = dict()
 
-            (fout, fname) = tempfile.mkstemp(suffix='.tmp', prefix='gcx_nparray_'+key+'_', dir=self.workDir, text=False)
+            (fout, fname) = tempfile.mkstemp(suffix='.npy', prefix='gcx_nparray_'+key+'_', dir=self.workDir, text=False)
             os.close(fout)
             self.logger.info(' Generating temporary numpy array file [{0}] for {1} ...' .format(fname, key))
 

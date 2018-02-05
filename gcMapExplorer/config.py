@@ -172,14 +172,16 @@ def cleanScratch():
     # If only one gcMapExplorer is running, it is the current one
     if count == 1:
         for f in os.listdir(config['Dirs']['WorkingDirectory']):
-            if not os.path.isfile(f):
+
+            fname = os.path.join(config['Dirs']['WorkingDirectory'], f)
+            if not os.path.isfile(fname):
                 continue
-            basename = os.path.basename(f)
+            basename = os.path.basename(fname)
             base = os.path.splitext(basename)[0]
             if "gcx" in base:
                 try:
-                    print(' Removing File: {0}'.format(f))
-                    os.remove(f)
+                    print(' Removing File: {0}'.format(fname))
+                    os.remove(fname)
                 except IOError:
                     pass
 

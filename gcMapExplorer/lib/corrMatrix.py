@@ -44,7 +44,7 @@ __all__ = [ 'calculateCorrMatrix',
 logger = logging.getLogger('CorrMatrix')
 logger.setLevel(logging.INFO)
 
-def calculateCorrMatrixForCCMap(inputCCMap, logspace=False, mask=0.0, vmin=None, vmax=None, outFile=None, workDir=None):
+def calculateCorrMatrixForCCMap(inputCCMap, logspace=False, maskvalue=0.0, vmin=None, vmax=None, outFile=None, workDir=None):
     """ Calculate correlation matrix of a contact map.
     It calculates correlation between all rows and columns of contact map.
 
@@ -56,7 +56,7 @@ def calculateCorrMatrixForCCMap(inputCCMap, logspace=False, mask=0.0, vmin=None,
     logspace : bool
         If its value is ``True``, at first map is converted as logarithm of map
         and subsequently correlation will be calculated.
-    mask : float
+    maskvalue : float
         Do not consider bins with this value during calculation. By default here
         it is zero because bins with zero is considered to be have missing data.
     vmin : float
@@ -93,9 +93,9 @@ def calculateCorrMatrixForCCMap(inputCCMap, logspace=False, mask=0.0, vmin=None,
 
         ccmapType = 'File' # This temporary file should be deleted when necessary
         if vmin is not None:
-            ccMapObj.matrix[ np.nonzero(ccMapObj.matrix <= vmin) ] = mask
+            ccMapObj.matrix[ np.nonzero(ccMapObj.matrix <= vmin) ] = maskvalue
         if vmax is not None:
-            ccMapObj.matrix[ np.nonzero(ccMapObj.matrix >= vmax) ] = mask
+            ccMapObj.matrix[ np.nonzero(ccMapObj.matrix >= vmax) ] = maskvalue
         ccMapObj.matrix.flush()
         ccMapObj.make_unreadable()
 
@@ -114,7 +114,7 @@ def calculateCorrMatrixForCCMap(inputCCMap, logspace=False, mask=0.0, vmin=None,
         #diagIdx = util.kth_diag_indices(0, matrix)
         #matrix[diagIdx] = 0
 
-        corrMatrix = calculateCorrMatrix(matrix, maskvalue=mask)
+        corrMatrix = calculateCorrMatrix(matrix, maskvalue=maskvalue)
         corrMatrix[np.isnan(corrMatrix)] = 0
 
         corrCCMap = ccMapObj.copy(fill=0.0)
@@ -155,7 +155,7 @@ def calculateCorrMatrixForCCMap(inputCCMap, logspace=False, mask=0.0, vmin=None,
     else:
         return corrCCMap
 
-def calculateCorrMatrixForGCMaps(gcMapInputFile, gcMapOutFile, logspace=False, mask=0.0, vmin=None, vmax=None, replaceMatrix=False, compression='lzf', workDir=None):
+def calculateCorrMatrixForGCMaps(gcMapInputFile, gcMapOutFile, logspace=False, maskvalue=0.0, vmin=None, vmax=None, replaceMatrix=False, compression='lzf', workDir=None):
     """ Calculate Correlation matrix for all maps present in input gcmap file
     It calculates correlation between all rows and columns of contact map.
 
@@ -169,7 +169,7 @@ def calculateCorrMatrixForGCMaps(gcMapInputFile, gcMapOutFile, logspace=False, m
     logspace : bool
         If its value is ``True``, at first map is converted as logarithm of map
         and subsequently correlation will be calculated.
-    mask : float
+    maskvalue : float
         Do not consider bins with this value during calculation. By default here
         it is zero because bins with zero is considered to be have missing data.
     vmin : float
@@ -203,17 +203,6 @@ def calculateCorrMatrixForGCMaps(gcMapInputFile, gcMapOutFile, logspace=False, m
         # Iterate over available resolutions
         gcmap.changeMap(mapName)
 
-        # Because ccMap is already loaded here, directly edit matrix here
-        # No need to pass vmin and vmx during next step as
-        # it is already taken care here
-        if vmin is not None or vmax is not None:
-            ccMap.make_editable()
-            if vmin is not None:
-                ccMap.matrix[ np.nonzero(ccMap.matrix <= vmin) ] = mask
-            if vmax is not None:
-                ccMap.matrix[ np.nonzero(ccMap.matrix >= vmax) ] = mask
-            ccMap.matrix.flush()
-            ccMap.make_unreadable()
 
         while True:
             # Check if map is present in output file
@@ -242,8 +231,20 @@ def calculateCorrMatrixForGCMaps(gcMapInputFile, gcMapOutFile, logspace=False, m
                                         resolution=gcmap.resolution,
                                         workDir=workDir)
 
+            # Because ccMap is already loaded here, directly edit matrix here
+            # No need to pass vmin and vmx during next step as
+            # it is already taken care here
+            if vmin is not None or vmax is not None:
+                ccMap.make_editable()
+                if vmin is not None:
+                    ccMap.matrix[np.nonzero(ccMap.matrix <= vmin)] = mask
+                if vmax is not None:
+                    ccMap.matrix[np.nonzero(ccMap.matrix >= vmax)] = mask
+                ccMap.matrix.flush()
+                ccMap.make_unreadable()
+
             try:
-                corrCCMap = calculateCorrMatrix(ccMap, logspace=logspace, mask=mask)
+                corrCCMap = calculateCorrMatrixForCCMap(ccMap, logspace=logspace, maskvalue=maskvalue)
                 if corrCCMap is not None:
                     gmp.addCCMap2GCMap(corrCCMap, gcMapOutFile,
                                             scaleoffset=4,

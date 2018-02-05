@@ -171,7 +171,7 @@ def main():
     # Convert gcmap
     if args.fileGCMap is not None:
         binContactReader.save_gcmap(args.fileGCMap,
-                                    coarseningMethod=args.coarsingMethod,
+                                    coarseningMethod=args.coarseningMethod,
                                     compression=args.compression)
 
 def parseArguments():

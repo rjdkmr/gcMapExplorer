@@ -528,124 +528,59 @@ class GCMAP:
 
         return xticks, yticks
 
-    def _performDownSampling(self , level=2, method='sum'):
+    def _performDownSampling(self, level=2, method='sum'):
 
-        # To determine output shape but it does not contain remainder regions
-        # subtracted one as real data start from first index
-        outShapeX = int( np.ceil(float(self.shape[1] - 1 )/level) )
-        outShapeY = int( np.ceil(float(self.shape[0] - 1 )/level) )
-
-
-        # To determine remainder regions(sourceMasked.max() - sourceMasked.min())
-        pad_size_outer = ( outShapeY * level) - (self.shape[0] - 1)
-        pad_size_inner = ( outShapeX * level) - (self.shape[1] - 1)
-
-        # Otput shape
-        outputShape = (outShapeX + 1 , outShapeY + 1)
-
-        # New binsize
-        newBinsize = self.binsize * level
-
-        # Create and add map
-        resolution = util.binsizeToResolution(newBinsize)
-
-        if  self.hdf5[self.groupName].attrs['compression'] == 'lzf':
-            outCmap = self.hdf5[self.groupName].create_dataset(resolution, outputShape, dtype=self.dtype, chunks=True, compression="lzf", shuffle=True)
-        else:
-            outCmap = self.hdf5[self.groupName].create_dataset(resolution, outputShape, dtype=self.dtype, chunks=True, compression="gzip", shuffle=True, compression_opts=4)
+        inputCMap = None
+        outPutCMap = None
 
         try:
-            # Ignore first row and column --- no data
-            count = 1
-            i = 1
-            while i < self.shape[0]:
+            inputCMap = loadGCMapAsCCMap(self.hdf5, mapName=self.groupName, resolution=self.resolution)
+            inputCMap.make_readable()
 
-                # Here handles inner
-                if pad_size_inner != 0:
-                    zero_part = []
-                    for n in range(level):
-                        zero_part.append( np.zeros(pad_size_inner) )
+            outPutCMap = cmp.downSampleCCMap(inputCMap, level=level, method=method)
 
-                    # Here handles outer
-                    if i+level < self.shape[0]:
-                        x_padded = np.hstack( (self.matrix[i:i + level, 1:], zero_part) )
-                    else:
-                        x_padded = np.hstack( (self.matrix[i:, 1:], zero_part[:self.matrix[i:].shape[0]] ) )
+            if self.hdf5[self.groupName].attrs['compression'] == 'lzf':
+                addCCMap2GCMap(outPutCMap, self.hdf5, compression='lzf', generateCoarse=False, replaceCMap=False)
+            else:
+                addCCMap2GCMap(outPutCMap, self.hdf5, compression='gzip', generateCoarse=False, replaceCMap=False)
 
-                    # print(x_padded.shape)
+            del inputCMap
+            del outPutCMap
 
-                    if method == 'mean':
-                        r = x_padded.mean(axis=0).reshape(-1, level).mean(axis=1)
-                    elif method == 'max':
-                        r = x_padded.max(axis=0).reshape(-1, level).max(axis=1)
-                    else:
-                        r = x_padded.sum(axis=0).reshape(-1, level).sum(axis=1)
-
-                    #rint(r.shape)
-
-                else:
-
-                    # Here handles outer
-                    if i+level < self.shape[0]:
-                        if method == 'mean':
-                            r = self.matrix[i:i+level, 1:].mean(axis=0).reshape(-1, level).mean(axis=1)
-                        elif method == 'max':
-                            r = self.matrix[i:i+level, 1:].max(axis=0).reshape(-1, level).max(axis=1)
-                        else:
-                            r = self.matrix[i:i+level, 1:].sum(axis=0).reshape(-1, level).sum(axis=1)
-                    else:
-                        remain = self.shape[0]-i
-                        if method == 'mean':
-                            r = self.matrix[i:, 1:].mean(axis=0).reshape(-1, remain).mean(axis=1)
-                        elif method == 'max':
-                            r = self.matrix[i:, 1:].max(axis=0).reshape(-1, remain).max(axis=1)
-                        else:
-                            r = self.matrix[i:, 1:].sum(axis=0).reshape(-1, remain).sum(axis=1)
-
-                i = i + level
-
-                outCmap[count, 1:] = r
-                count = count + 1
-
-
-            # Get minimum value othar than zero
-            ma = np.ma.masked_equal(outCmap, 0.0, copy=False)
-            minvalue = ma.min()
-            del ma
-
-            # Save all other attributes
-            if self.bNoData is not None:
-                bNoData = np.zeros(outputShape[0], dtype=np.bool)
-                if pad_size_inner != 0:
-                    x_padded = np.hstack( (self.bNoData[1:], np.zeros(pad_size_inner)) )
-                else:
-                    x_padded = self.bNoData[1:]
-
-                bNoData[1:] = x_padded.reshape(-1, level).sum(axis=1)
-
-                if  self.hdf5[self.groupName].attrs['compression'] == 'lzf':
-                    self.hdf5[self.groupName].create_dataset(resolution+'-bNoData', bNoData.shape, dtype=bNoData.dtype, data=bNoData, chunks=True, compression="lzf", shuffle=True)
-                else:
-                    self.hdf5[self.groupName].create_dataset(resolution+'-bNoData', bNoData.shape, dtype=bNoData.dtype, data=bNoData, chunks=True, compression="gzip", shuffle=True, compression_opts=4)
-
-            outCmap.attrs['minvalue'] = minvalue
-            outCmap.attrs['maxvalue'] = np.amax(outCmap)
-            outCmap.attrs['binsize'] = newBinsize
-            outCmap.attrs['xshape'] = outputShape[0]
-            outCmap.attrs['yshape'] = outputShape[1]
-
-        except:
+        except (KeyboardInterrupt, SystemExit) as e:
             # map might be incomplete, remove it
             if resolution in self.hdf5[self.groupName]:
                 self.hdf5[self.groupName].pop(resolution)
             if resolution+'-bNoData' in self.hdf5[self.groupName]:
                 self.hdf5[self.groupName].pop(resolution+'-bNoData')
-            raise
+
+            if inputCMap is not None:
+                del inputCMap
+            if outPutCMap is not None:
+                del outPutCMap
+
+            raise e
+
+        except Exception as e:
+            # map might be incomplete, remove it
+            if resolution in self.hdf5[self.groupName]:
+                self.hdf5[self.groupName].pop(resolution)
+            if resolution+'-bNoData' in self.hdf5[self.groupName]:
+                self.hdf5[self.groupName].pop(resolution+'-bNoData')
+
+            if inputCMap is not None:
+                del inputCMap
+            if outPutCMap is not None:
+                del outPutCMap
+
+            raise Warning(e)
+
+            return False
 
         return True
 
     def performDownSampling(self, method='sum'):
-        """Downsample recursively and store the maps
+        """ Downsample recursively and store the maps
 
         It Downsample the maps and automatically add it to same input ``gcmap`` file.
         Downsampling works recursively, and downsampled maps are generated until map has a size of less than 500.
@@ -667,6 +602,109 @@ class GCMAP:
                 break
             self.binsizes.append(self.binsize*2)
             self.toCoarserResolution()
+
+    def downsampleMapToResolution(self, resolution, method='sum'):
+        """ Downsample the current map to a particular resolution
+
+        By default, maps with only few resolutions are generated. For example, when finest resolution is 5 kb,
+        the downsampled map with 10kb, 20kb, 40kb, 80kb, 160kb etc are generated. If other resolution (e.g. 100kb) is
+        required, then it can be used.
+
+        .. note:: It only downsample for current map. To downsample all maps, look :meth:`gcmap.GCMAP.downsampleAllMapToResolution`.
+
+        Parameters
+        ----------
+        resolution : str
+            Resolution to downsample
+
+        method : str
+            Method of downsampling. Three accepted methods are ``sum``: sum all values, ``mean``: Average of all values
+            and ``max``: Maximum of all values.
+
+        Return
+        ------
+        success : bool
+            ``True`` or ``False``
+
+        """
+
+        allowed_methods= ['sum', 'mean', 'max']
+        if method not in allowed_methods:
+            raise ValueError(' "{0}" is not a valid keyword to downsample. Use: "sum", "mean" or "max". '.format(method))
+
+        resolutionList = list(map(util.binsizeToResolution, self.binsizes))
+        if resolution in resolutionList:
+            print(" Map at resolution {} For {} is already present in data. Skipping...".format(resolution, self.groupName))
+            return False
+
+        targetBinsize = util.resolutionToBinsize(resolution)
+        originalResolution = self.resolution
+
+        # Determine a base resolution from which map can be successfully downsampled
+        level = None
+        baseBinsize = None
+        for binsize in self.binsizes:
+            if targetBinsize % binsize == 0:
+                level = int(targetBinsize / binsize)
+                baseBinsize = binsize
+                break
+
+        if level is None:
+            print("Suitable base resolution not found for downsampling... Skipping...")
+            return False
+
+        success = True
+        self.changeResolution(resolution=util.binsizeToResolution(baseBinsize))
+        if not self._performDownSampling(level=level, method=method):
+            print(" Not able to downsample {} to resolution {}...".format(self.groupName, resolution))
+            success = False
+
+        # Revert to original resolution
+        self.changeResolution(resolution=originalResolution)
+
+        return success
+
+    def downsampleAllMapToResolution(self, resolution, method='sum'):
+        """ Downsample all maps to a particular resolution
+
+        By default, maps with only few resolutions are generated. For example, when finest resolution is 5 kb,
+        the downsampled map with 10kb, 20kb, 40kb, 80kb, 160kb etc are generated. If other resolution (e.g. 100kb) is
+        required, then it can be used.
+
+        Parameters
+        ----------
+        resolution : str
+            Resolution to downsample.
+
+        method : str
+            Method of downsampling. Three accepted methods are ``sum``: sum all values, ``mean``: Average of all values
+            and ``max``: Maximum of all values.
+
+        Return
+        ------
+        success : bool
+            ``True`` or ``False``
+
+        """
+
+        allowed_methods= ['sum', 'mean', 'max']
+        if method not in allowed_methods:
+            raise ValueError(' "{0}" is not a valid keyword to downsample. Use: "sum", "mean" or "max". '.format(method))
+
+        if self.mapNameList is None:
+            self.genMapNameList()
+
+        if self.mapNameList is None:
+            return
+
+        originalResolution = self.resolution
+        originalMap = self.groupName
+
+        for mapName in self.mapNameList:
+            self.changeMap(mapName=mapName)
+            self.downsampleMapToResolution(resolution, method=method)
+
+        self.changeMap(mapName=originalMap, resolution=originalResolution)
 
 
 def loadGCMapAsCCMap(filename, mapName=None, chromAtX=None, chromAtY=None, resolution=None, workDir=None):
@@ -844,6 +882,7 @@ def addCCMap2GCMap(cmap, filename, scaleoffset=None, compression='lzf', generate
         fileOpened = True
     elif isinstance(filename, h5py.File):
         hdf5 = filename
+        filename = hdf5.filename
     else:
         raise TypeError ('{0} is not a gcmap file or h5py.File instance'.format(hdf5))
 
@@ -933,8 +972,9 @@ def addCCMap2GCMap(cmap, filename, scaleoffset=None, compression='lzf', generate
         if groupName in hdf5:
             hdf5.pop(groupName)
 
-        hdf5.close()
-        logger.info(' Closed file [{0}]...'.format(filename))
+        if fileOpened:
+            hdf5.close()
+            logger.info(' Closed file [{0}]...'.format(filename))
 
         cmap.make_unreadable()
         if logHandler is not None:
@@ -946,10 +986,10 @@ def addCCMap2GCMap(cmap, filename, scaleoffset=None, compression='lzf', generate
         # Added map might be incomplete, remove it
         if groupName in hdf5:
             hdf5.pop(groupName)
-        raise
 
-        hdf5.close()
-        logger.info(' Closed file [{0}]...'.format(filename))
+        if fileOpened:
+            hdf5.close()
+            logger.info(' Closed file [{0}]...'.format(filename))
 
         cmap.make_unreadable()
         if logHandler is not None:

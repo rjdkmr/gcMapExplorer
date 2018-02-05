@@ -140,7 +140,7 @@ def main():
                                     gcmapOut=args.fileGCMap)
 
     pair_coo_reader.setGCMapOptions(
-            coarseningMethod=args.coarsingMethod,
+            coarseningMethod=args.coarseningMethod,
             compression=args.compression
         )
 

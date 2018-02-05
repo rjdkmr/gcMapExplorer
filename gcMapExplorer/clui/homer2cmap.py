@@ -129,7 +129,7 @@ def main():
         homer_reader = gmlib.importer.HomerInputHandler(inputFile,
                                                         workDir=args.workDir)
         homer_reader.save_gcmap(args.fileGCMap,
-                                coarseningMethod=args.coarsingMethod,
+                                coarseningMethod=args.coarseningMethod,
                                 compression=args.compression)
         del homer_reader
 

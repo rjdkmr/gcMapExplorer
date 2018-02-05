@@ -171,10 +171,6 @@ def main():
         msg = 'Both Percentile and Fraction filters cannot be used simultaneously!!'
         showErrorAndExit(parser, msg)
 
-    if args.inputFileFormat == 'gcmap' and args.mapSizeCeilingForMemory is None:
-        msg = 'Provide Map Size Ceiling value for memory! \n See -mscm/--map-size-ceiling-for-memory option.'
-        showErrorAndExit(parser, msg)
-
     if args.outputFileFormat == 'ccmap' and args.inputFileFormat == 'ccmap':
         gmlib.normalizer.normalizeCCMapByVCNorm(args.inputFile, sqroot=args.sqroot,
                                             vmin=args.vmin, vmax=args.vmax, outFile=args.outputFile,

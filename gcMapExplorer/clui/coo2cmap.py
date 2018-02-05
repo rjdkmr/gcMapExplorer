@@ -209,14 +209,14 @@ def main():
             ccmap = gmlib.ccmap.load_ccmap(infile=inFile, workDir=args.workDir)
             gmlib.gcmap.addCCMap2GCMap(ccmap, args.fileGCMap,
                                         compression=args.compression,
-                                        coarsingMethod=args.coarsingMethod)
+                                       coarseningMethod=args.coarseningMethod)
             del ccmap
 
     elif args.ccmapSuffix is not None:
         cooReader.save_ccmaps(outputFileList, xlabels=xlabels, ylabels=ylabels)
     elif args.fileGCMap is not None:
         cooReader.save_gcmap(args.fileGCMap, xlabels=xlabels, ylabels=ylabels,
-                             coarseningMethod=args.coarsingMethod,
+                             coarseningMethod=args.coarseningMethod,
                              compression=args.compression)
     else:
         pass
