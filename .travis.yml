@@ -155,7 +155,11 @@ install:
       pip install auditwheel
     else
       pip install --upgrade coverage coveralls flake8 pep8
+      export CC=gcc
+      export CXX=g++
       pip install psutil
+      export CC=gcc-5
+      export CXX=g++-5
     fi
 
     # Install gcMapExplorer
