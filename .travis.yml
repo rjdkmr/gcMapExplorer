@@ -95,7 +95,8 @@ before_install:
 
     else
       brew update
-      brew install gcc@5
+      brew cask uninstall oclint
+      brew install gcc@5 --without-multilib
       brew upgrade pyenv
       eval "$(pyenv init -)"
 
