@@ -97,7 +97,7 @@ before_install:
       brew update
       brew cask uninstall oclint
       brew install gcc@5 --without-multilib
-      brew upgrade pyenv
+      brew outdated pyenv || brew upgrade pyenv
       eval "$(pyenv init -)"
 
       case "${TOXENV}" in
@@ -144,7 +144,6 @@ install:
     fi
     pip install --upgrade pip
     pip install --upgrade wheel
-    pip install --upgrade setuptools
     pip install Cython --install-option="--no-cython-compile"
     pip install uninstall numpy
     pip install install numpy
@@ -154,6 +153,9 @@ install:
 
     if [[ $TRAVIS_OS_NAME != 'osx' ]]; then
       pip install auditwheel
+    else
+      pip install --upgrade coverage coveralls flake8 pep8
+      pip install psutil
     fi
 
     # Install gcMapExplorer
