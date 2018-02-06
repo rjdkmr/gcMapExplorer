@@ -161,16 +161,16 @@ def main():
     binContactReader = gmlib.importer.BinsNContactFilesHandler(
                                         inputBinFile,
                                         inputContactFile,
-                                        workDir=args.workDir)
+                                        workDir=os.path.normpath(args.workDir))
 
     # Convert ccmaps
     if args.ccmapSuffix is not None:
         # Save ccmaps
-        binContactReader.save_ccmaps(args.outDir, args.ccmapSuffix)
+        binContactReader.save_ccmaps(os.path.normpath(args.outDir), args.ccmapSuffix)
 
     # Convert gcmap
     if args.fileGCMap is not None:
-        binContactReader.save_gcmap(args.fileGCMap,
+        binContactReader.save_gcmap(os.path.normpath(args.fileGCMap),
                                     coarseningMethod=args.coarseningMethod,
                                     compression=args.compression)
 

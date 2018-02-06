@@ -132,6 +132,12 @@ def main():
     if not os.path.isdir(args.workDir):
         showErrorAndExit(parser, '\nScratch Directory "{0}" not found !!!\n'.format(args.workDir))
 
+    if args.outDir is not None:
+        args.outDir = os.path.normpath(args.outDir)
+
+    if args.fileGCMap is not None:
+        args.fileGCMap = os.path.normpath(args.fileGCMap)
+
     # Main region here
     pair_coo_reader = gmlib.importer.PairCooMatrixHandler(
                                     inputFile,

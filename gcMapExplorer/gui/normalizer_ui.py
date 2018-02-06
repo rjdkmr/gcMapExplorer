@@ -331,7 +331,7 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
             guiHelpers.showWarningMessageBox(msg, self)
             self.inputFileLineEdit.setFocus()
             return False
-        cmdDict['-i'] = inputFile
+        cmdDict['-i'] = os.path.normpath(inputFile)
 
         # Output File
         outputFile = self.outFileLineEdit.text()
@@ -340,7 +340,7 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
             guiHelpers.showWarningMessageBox(msg, self)
             self.outFileLineEdit.setFocus()
             return False
-        cmdDict['-o'] = outputFile
+        cmdDict['-o'] = os.path.normpath(outputFile)
 
         # Input and output format
         inputFormat = None
@@ -366,7 +366,7 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
             guiHelpers.showWarningMessageBox(msg, self)
             self.genOptsScratchDirLineEdit.setFocus()
             return False
-        cmdDict['-wd'] = '"{0}"'.format(workDir)
+        cmdDict['-wd'] = os.path.normpath(workDir)
 
         # Compression method for gcmap output file
         if self.outFormatCBox.currentText() == 'gcmap':
@@ -448,15 +448,15 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
                 cmdDict['-sq'] = '-sq'
 
             # Construct the command
-            self.constructMcfsCommand(cmdDict)
+            self.constructVanillaCovCommand(cmdDict)
 
     def constructKrCommand(self, cmdDict):
         """ Construct normKI command
         """
         command = ' normKR '
-        command += ' -i ' + cmdDict['-i']
+        command += ' -i ' +  '"{0}"'.format(cmdDict['-i'])
         command += ' -fi ' + cmdDict['-fi']
-        command += ' -o ' + cmdDict['-o']
+        command += ' -o ' +  '"{0}"'.format(cmdDict['-o'])
         command += ' -fo ' + cmdDict['-fo']
         command += ' -t ' + str(cmdDict['-t'])
         command += ' -m ' + cmdDict['-m']
@@ -469,7 +469,7 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
             command += ' -mscm ' + str(cmdDict['-mscm'])
         if '-cmeth' in cmdDict:
             command += ' -cmeth ' + cmdDict['-cmeth']
-        command += ' -wd ' + cmdDict['-wd']
+        command += ' -wd ' +  '"{0}"'.format(cmdDict['-wd'])
         if '-ptnd' in cmdDict:
             command += ' -ptnd ' + str(cmdDict['-ptnd'])
         if '-tdo' in cmdDict:
@@ -481,9 +481,9 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
         """ Construct normIC command
         """
         command = ' normIC '
-        command += ' -i ' + cmdDict['-i']
+        command += ' -i ' +  '"{0}"'.format(cmdDict['-i'])
         command += ' -fi ' + cmdDict['-fi']
-        command += ' -o ' + cmdDict['-o']
+        command += ' -o ' +  '"{0}"'.format(cmdDict['-o'])
         command += ' -fo ' + cmdDict['-fo']
         command += ' -t ' + str(cmdDict['-t'])
         command += ' -c ' + str(cmdDict['-c'])
@@ -493,7 +493,7 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
             command += ' -vmax ' + str(cmdDict['-vmax'])
         if '-cmeth' in cmdDict:
             command += ' -cmeth ' + cmdDict['-cmeth']
-        command += ' -wd ' + cmdDict['-wd']
+        command += ' -wd ' +  '"{0}"'.format(cmdDict['-wd'])
         if '-ptnd' in cmdDict:
             command += ' -ptnd ' + str(cmdDict['-ptnd'])
         if '-tdo' in cmdDict:
@@ -505,9 +505,9 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
         """ Construct normMCFS command
         """
         command = ' normMCFS '
-        command += ' -i ' + cmdDict['-i']
+        command += ' -i ' +  '"{0}"'.format(cmdDict['-i'])
         command += ' -fi ' + cmdDict['-fi']
-        command += ' -o ' + cmdDict['-o']
+        command += ' -o ' +  '"{0}"'.format(cmdDict['-o'])
         command += ' -fo ' + cmdDict['-fo']
 
         if '-vmin' in cmdDict:
@@ -516,7 +516,7 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
             command += ' -vmax ' + str(cmdDict['-vmax'])
         if '-cmeth' in cmdDict:
             command += ' -cmeth ' + cmdDict['-cmeth']
-        command += ' -wd ' + cmdDict['-wd']
+        command += ' -wd ' +  '"{0}"'.format(cmdDict['-wd'])
         if '-ptnd' in cmdDict:
             command += ' -ptnd ' + str(cmdDict['-ptnd'])
         if '-tdo' in cmdDict:
@@ -533,9 +533,9 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
         """ Construct normVC command
         """
         command = ' normVC '
-        command += ' -i ' + cmdDict['-i']
+        command += ' -i ' +  '"{0}"'.format(cmdDict['-i'])
         command += ' -fi ' + cmdDict['-fi']
-        command += ' -o ' + cmdDict['-o']
+        command += ' -o ' +  '"{0}"'.format(cmdDict['-o'])
         command += ' -fo ' + cmdDict['-fo']
 
         if '-vmin' in cmdDict:
@@ -544,7 +544,7 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
             command += ' -vmax ' + str(cmdDict['-vmax'])
         if '-cmeth' in cmdDict:
             command += ' -cmeth ' + cmdDict['-cmeth']
-        command += ' -wd ' + cmdDict['-wd']
+        command += ' -wd ' +  '"{0}"'.format(cmdDict['-wd'])
         if '-ptnd' in cmdDict:
             command += ' -ptnd ' + str(cmdDict['-ptnd'])
         if '-tdo' in cmdDict:
@@ -576,6 +576,8 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
         self.methodCBox.setEnabled(False)
         button.setEnabled(False)
         self.logOutputPlainTextEdit.clear()
+        self.logOutputPlainTextEdit.appendPlainText(
+            '##### Started Running #### \n gcMapExplorer ' + command + "\n ##### ####### ####")
 
     def writeLogOutputFromProcess(self):
         out = bytes(self.process.readAllStandardOutput()).decode("utf-8")

@@ -118,17 +118,17 @@ def main():
 
     # Convert ccmaps
     if args.ccmapSuffix is not None:
-        homer_reader = gmlib.importer.HomerInputHandler(inputFile,
-                                                        workDir=args.workDir)
-        homer_reader.save_ccmaps(args.outDir, suffix=args.ccmapSuffix)
+        homer_reader = gmlib.importer.HomerInputHandler(os.path.normpath(inputFile),
+                                                        workDir=os.path.normpath(args.workDir))
+        homer_reader.save_ccmaps(os.path.normpath(args.outDir), suffix=args.ccmapSuffix)
 
         del homer_reader
 
     # Convert gcmap
     if args.fileGCMap is not None:
         homer_reader = gmlib.importer.HomerInputHandler(inputFile,
-                                                        workDir=args.workDir)
-        homer_reader.save_gcmap(args.fileGCMap,
+                                                        workDir=os.path.normpath(args.workDir))
+        homer_reader.save_gcmap(os.path.normpath(args.fileGCMap),
                                 coarseningMethod=args.coarseningMethod,
                                 compression=args.compression)
         del homer_reader

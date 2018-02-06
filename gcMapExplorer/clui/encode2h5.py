@@ -216,12 +216,14 @@ def main():
     bigWigToWig = args.bigWigToWig
     if bigWigToWig == 'None':
         showErrorAndExit(parser, '\nPath to bigWigToWig not provided!!!\n')
+    bigWigToWig = os.path.normpath(bigWigToWig)
     checkFileExist(bigWigToWig, parser)
 
     # Check for bigWigInfo program
     bigWigInfo = args.bigWigInfo
     if bigWigInfo == 'None':
         showErrorAndExit(parser, '\nPath to bigWigInfo not provided!!!\n')
+    bigWigInfo = os.path.normpath(bigWigInfo)
     checkFileExist(bigWigInfo, parser)
 
     # Check for input bigWig File
@@ -243,6 +245,7 @@ def main():
     # Check for output directory
     outDir = args.outDir
     if outDir is not None:
+        outDir = os.path.normpath(outDir)
         if not os.path.isdir(outDir):
             showErrorAndExit(parser, '\nOutput directory not found/accessible.\n')
     else:

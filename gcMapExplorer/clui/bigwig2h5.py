@@ -169,12 +169,14 @@ def main():
     bigWigToWig = args.bigWigToWig
     if bigWigToWig == 'None':
         showErrorAndExit(parser, '\nPath to bigWigToWig not provided!!!\n')
+    bigWigToWig = os.path.normpath(bigWigToWig)
     checkFileExist(bigWigToWig, parser)
 
     # Check for bigWigInfo program
     bigWigInfo = args.bigWigInfo
     if bigWigInfo == 'None':
         showErrorAndExit(parser, '\nPath to bigWigInfo not provided!!!\n')
+    bigWigInfo = os.path.normpath(bigWigInfo)
     checkFileExist(bigWigInfo, parser)
 
     # Check for input bigWig File
@@ -196,11 +198,14 @@ def main():
     # Check for output file
     outFile = args.h5Name
     if outFile is not None:
+        outFile = os.path.normpath(outFile)
         check_overwrite_status(outFile, args.overwrite, parser)
     else:
         showErrorAndExit(parser, '\nNo output file!!!\n')
 
     # Check for scratch directory
+    if args.workDir is not None:
+        args.workDir = os.path.normpath(args.workDir)
     if not os.path.isdir(args.workDir):
         showErrorAndExit(parser, '\nScratch Directory "{0}" not found !!!\n'.format(args.workDir))
 

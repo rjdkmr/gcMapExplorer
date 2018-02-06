@@ -158,13 +158,19 @@ def main():
     # Check for output file
     outFile = args.h5Name
     if outFile is not None:
+        outFile = os.path.normpath(outFile)
         check_overwrite_status(outFile, args.overwrite, parser)
     else:
         showErrorAndExit(parser, '\nNo output file!!!\n')
 
     # Check for scratch directory
+    if args.workDir is not None:
+        args.workDir = os.path.normpath(args.workDir)
     if not os.path.isdir(args.workDir):
         showErrorAndExit(parser, '\nScratch Directory "{0}" not found !!!\n'.format(args.workDir))
+
+    if args.indexFile is not None:
+        args.indexFile = os.path.normpath(args.indexFile)
 
     # Main conversion start here
     wig = gmlib.genomicsDataHandler.WigHandler(inputWigFile,

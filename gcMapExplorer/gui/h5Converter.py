@@ -299,7 +299,7 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
                 fileOK = False
 
             if fileOK:
-                return fileName
+                return os.path.normpath(fileName)
             else:
                 return
 
@@ -313,7 +313,7 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
         file_choices = " h5/hdf5 files (*.h5 *.hdf5);;All Files(*.*)"
         path = QFileDialog.getSaveFileName(self, 'Select or Create File', '', file_choices, options=QFileDialog.DontConfirmOverwrite)
         if path[0]:
-            self.h5FileLineEdit.setText(path[0])
+            self.h5FileLineEdit.setText(os.path.normpath(path[0]))
         self.validateH5OutFile()
 
     def validateH5OutFile(self):
@@ -351,7 +351,7 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
             h5Out = os.path.join(h5OutDir, h5BaseName+'.h5')
             self.h5FileLineEdit.setText(h5Out)
 
-        return self.h5FileLineEdit.text()
+        return os.path.normpath(self.h5FileLineEdit.text())
 
     def isValidH5OutFileFromWidget(self, checked=None):
         """ Check whether scratch directory and h5 directory is same.
@@ -533,6 +533,7 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
             self.inFileLineEdit.selectAll()
             self.inFileLineEdit.setFocus()
             return False
+        command['-i'] = '"{0}"'.format(command['-i'])
 
         # Input file format
         inFormat = self.fileFormatCBox.currentText()
@@ -568,6 +569,7 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
         command['-o'] = self.validateH5OutFile()
         if command['-o'] is None:
             return False
+        command['-o'] = '"{0}"'.format(command['-o'])
 
         # Compression method in output file
         command['-cmeth'] = self.compressionCBox.currentText().lower()

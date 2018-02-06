@@ -298,7 +298,7 @@ class cooMatFormatTabWidgetHelper:
             options['resolution'] = 'None'
 
         options['coordinate'] = str( self.cooMatCoordTypeCBox.currentText() )
-        options['workDir'] = '"{0}"'.format(self.cooMatScratchDirLineEdit.text())
+        options['workDir'] = os.path.normpath(self.cooMatScratchDirLineEdit.text())
 
         if not self.cooMatCCMapGroupBox.isChecked() \
                         and not self.cooMatGCMapBoxGroupBox.isChecked():
@@ -351,9 +351,7 @@ class cooMatFormatTabWidgetHelper:
         command = ' coo2cmap '
 
         if opts['inputFiles']:
-            of, inputMetaFileName = tempfile.mkstemp(
-                                        dir=config['Dirs']['WorkingDirectory'],
-                                        text=True)
+            of, inputMetaFileName = tempfile.mkstemp(suffix='.temp', prefix='gcx_', dir=opts['workDir'], text=True)
             os.close(of)
 
             fout = open(inputMetaFileName, 'w')
@@ -363,11 +361,11 @@ class cooMatFormatTabWidgetHelper:
                                                     opts['ylabels'][i]))
             fout.close()
 
-            command += ' -i ' + inputMetaFileName
+            command += ' -i ' + '"{0}"'.format(os.path.normpath(inputMetaFileName))
             self.temporaryFiles.append(inputMetaFileName)
 
         if opts['inputCompressedFile'] != 'None':
-            command += ' -ic ' +  opts['inputCompressedFile']
+            command += ' -ic ' +  '"{0}"'.format(os.path.normpath(opts['inputCompressedFile']))
 
         if opts['resolution'] != 'None':
             command += ' -r ' + opts['resolution']
@@ -385,7 +383,7 @@ class cooMatFormatTabWidgetHelper:
             command += ' -dmeth ' + opts['coarseningMethod']
 
         command += ' -mt ' + opts['mapType']
-        command += ' -wd ' + opts['workDir']
+        command += ' -wd ' + '"{0}"'.format(opts['workDir'])
 
         self.cooMatCommand = command
 
@@ -466,9 +464,9 @@ class homerFormatTabWidgetHelper:
             showWarningMessageBox("No input file given !!!", self)
             return False
 
-        options['inputFile'] = inputFile
+        options['inputFile'] = os.path.normpath(inputFile)
 
-        options['workDir'] = '"{0}"'.format(self.homerScratchDirLineEdit.text())
+        options['workDir'] = os.path.normpath(self.homerScratchDirLineEdit.text())
 
         if not self.homerCCMapGroupBox.isChecked() \
                         and not self.homerGCMapGroupBox.isChecked():
@@ -495,7 +493,7 @@ class homerFormatTabWidgetHelper:
 
             options['ccmap'] = True
             options['ccmapSuffix'] = ccmapSuffix
-            options['outDir'] = '"{0}"'.format(outDir)
+            options['outDir'] = os.path.normpath(outDir)
 
         options['gcmap'] = False
         if self.homerGCMapGroupBox.isChecked():
@@ -508,7 +506,7 @@ class homerFormatTabWidgetHelper:
                 return False
 
             options['gcmap'] = True
-            options['fileGCMap'] = '"{0}"'.format(fileGCMap)
+            options['fileGCMap'] = os.path.normpath(fileGCMap)
             options['compression'] = str( self.homerGCMapCompressCBox.currentText() ).lower()
             options['coarseningMethod'] = str( self.homerGCMapDownsampleCBox.currentText() ).lower()
 
@@ -519,18 +517,18 @@ class homerFormatTabWidgetHelper:
         """
         command = ' homer2cmap '
 
-        command += ' -i ' +  opts['inputFile']
+        command += ' -i ' +  '"{0}"'.format(opts['inputFile'])
 
         if opts['ccmap']:
             command += ' -ccm ' + opts['ccmapSuffix']
-            command += ' -od ' + opts['outDir']
+            command += ' -od ' + '"{0}"'.format(opts['outDir'])
 
         if opts['gcmap']:
-            command += ' -gcm ' + opts['fileGCMap']
+            command += ' -gcm ' + '"{0}"'.format(opts['fileGCMap'])
             command += ' -cmeth ' + opts['compression']
             command += ' -dmeth ' + opts['coarseningMethod']
 
-        command += ' -wd ' + opts['workDir']
+        command += ' -wd ' + '"{0}"'.format(opts['workDir'])
 
         self.homerCommand = command
 
@@ -622,7 +620,7 @@ class binContactFormatTabWidgetHelper:
             self.binContactInputBinFileLineEdit.setFocus()
             showWarningMessageBox("No input file given !!!", self)
             return False
-        options['inputBinFile'] = '"{0}"'.format(inputFile)
+        options['inputBinFile'] = os.path.normpath(inputFile)
 
         inputContactFile = None
         if self.binContactInputContactFileLineEdit.text():
@@ -631,9 +629,9 @@ class binContactFormatTabWidgetHelper:
             self.binContactInputContactFileLineEdit.setFocus()
             showWarningMessageBox("No input file given !!!", self)
             return False
-        options['inputContactFile'] = '"{0}"'.format(inputFile)
+        options['inputContactFile'] = os.path.normpath(inputFile)
 
-        options['workDir'] = '"{0}"'.format(self.binContactScratchDirLineEdit.text())
+        options['workDir'] = os.path.normpath(self.binContactScratchDirLineEdit.text())
 
         if not self.binContactCCMapGroupBox.isChecked() \
                         and not self.binContactGCMapGroupBox.isChecked():
@@ -660,7 +658,7 @@ class binContactFormatTabWidgetHelper:
 
             options['ccmap'] = True
             options['ccmapSuffix'] = ccmapSuffix
-            options['outDir'] = '"{0}"'.format(outDir)
+            options['outDir'] = os.path.normpath(outDir)
 
         options['gcmap'] = False
         if self.binContactGCMapGroupBox.isChecked():
@@ -673,7 +671,7 @@ class binContactFormatTabWidgetHelper:
                 return False
 
             options['gcmap'] = True
-            options['fileGCMap'] = '"{0}"'.format(fileGCMap)
+            options['fileGCMap'] = os.path.normpath(fileGCMap)
             options['compression'] = str( self.binContactGCMapCompressCBox.currentText() ).lower()
             options['coarseningMethod'] = str( self.binContactGCMapDownsampleCBox.currentText() ).lower()
 
@@ -684,19 +682,19 @@ class binContactFormatTabWidgetHelper:
         """
         command = ' bc2cmap '
 
-        command += ' -ib ' +  opts['inputBinFile']
-        command += ' -ic ' +  opts['inputContactFile']
+        command += ' -ib ' +  '"{0}"'.format(opts['inputBinFile'])
+        command += ' -ic ' +  '"{0}"'.format(opts['inputContactFile'])
 
         if opts['ccmap']:
             command += ' -ccm ' + opts['ccmapSuffix']
-            command += ' -od ' + opts['outDir']
+            command += ' -od ' + '"{0}"'.format(opts['outDir'])
 
         if opts['gcmap']:
-            command += ' -gcm ' + opts['fileGCMap']
+            command += ' -gcm ' + '"{0}"'.format(opts['fileGCMap'])
             command += ' -cmeth ' + opts['compression']
             command += ' -dmeth ' + opts['coarseningMethod']
 
-        command += ' -wd ' + opts['workDir']
+        command += ' -wd ' + '"{0}"'.format(opts['workDir'])
 
         self.binContactCommand = command
 
@@ -776,9 +774,9 @@ class pairCooMatFormatTabWidgetHelper:
             self.pairCooMatInputFileLineEdit.setFocus()
             showWarningMessageBox("No input file given !!!", self)
             return False
-        options['-i'] = '"{0}"'.format(inputFile)
+        options['-i'] = os.path.normpath(inputFile)
 
-        options['-wd'] = '"{0}"'.format(self.pairCooMatScratchDirLineEdit.text())
+        options['-wd'] = os.path.normpath(self.pairCooMatScratchDirLineEdit.text())
 
         if not self.pairCooMatCCMapGroupBox.isChecked() \
                         and not self.pairCooMatGCMapGroupBox.isChecked():
@@ -804,7 +802,7 @@ class pairCooMatFormatTabWidgetHelper:
                 return False
 
             options['-ccm'] = ccmapSuffix
-            options['-od'] = '"{0}"'.format(outDir)
+            options['-od'] = os.path.normpath(outDir)
 
         if self.pairCooMatGCMapGroupBox.isChecked():
             fileGCMap = str( self.pairCooMatGCMapOutLineEdit.text() )
@@ -815,7 +813,7 @@ class pairCooMatFormatTabWidgetHelper:
                 self.pairCooMatGCMapOutLineEdit.setFocus()
                 return False
 
-            options['-gcm'] = '"{0}"'.format(fileGCMap)
+            options['-gcm'] = os.path.normpath(fileGCMap)
             options['-cmeth'] = str( self.pairCooMatGCMapCompressCBox.currentText() ).lower()
             options['-dmeth'] = str( self.pairCooMatGCMapDownsampleCBox.currentText() ).lower()
 
@@ -825,18 +823,18 @@ class pairCooMatFormatTabWidgetHelper:
         """Construct the command line
         """
         command = ' pairCoo2cmap '
-        command += ' -i ' +  opts['-i']
+        command += ' -i ' +  '"{0}"'.format(opts['-i'])
 
         if '-ccm' in opts:
             command += ' -ccm ' + opts['-ccm']
-            command += ' -od ' + opts['-od']
+            command += ' -od ' + '"{0}"'.format(opts['-od'])
 
         if '-gcm' in opts:
-            command += ' -gcm ' + opts['-gcm']
+            command += ' -gcm ' + '"{0}"'.format(opts['-gcm'])
             command += ' -cmeth ' + opts['-cmeth']
             command += ' -dmeth ' + opts['-dmeth']
 
-        command += ' -wd ' + opts['-wd']
+        command += ' -wd ' + '"{0}"'.format(opts['-wd'])
 
         self.pairCooMatCommand = command
 

@@ -198,7 +198,7 @@ def main():
                 name = xlabels[i] + '_' + ylabels[i] + '_' \
                         + args.ccmapSuffix + '.ccmap'
 
-            outputFileList.append(os.path.join(args.outDir, name))
+            outputFileList.append(os.path.join(os.path.normpath(args.outDir), name))
 
 
     if  args.ccmapSuffix is not None and args.fileGCMap is not None:
@@ -207,16 +207,16 @@ def main():
 
         for inFile in outputFileList:
             ccmap = gmlib.ccmap.load_ccmap(infile=inFile, workDir=args.workDir)
-            gmlib.gcmap.addCCMap2GCMap(ccmap, args.fileGCMap,
-                                        compression=args.compression,
-                                        coarsingMethod=args.coarsingMethod)
+            gmlib.gcmap.addCCMap2GCMap(ccmap, os.path.normpath(args.fileGCMap),
+                                       compression=args.compression,
+                                       coarseningMethod=args.coarseningMethod)
             del ccmap
 
     elif args.ccmapSuffix is not None:
         cooReader.save_ccmaps(outputFileList, xlabels=xlabels, ylabels=ylabels)
     elif args.fileGCMap is not None:
-        cooReader.save_gcmap(args.fileGCMap, xlabels=xlabels, ylabels=ylabels,
-                             coarseningMethod=args.coarsingMethod,
+        cooReader.save_gcmap(os.path.normpath(args.fileGCMap), xlabels=xlabels, ylabels=ylabels,
+                             coarseningMethod=args.coarseningMethod,
                              compression=args.compression)
     else:
         pass

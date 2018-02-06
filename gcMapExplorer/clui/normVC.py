@@ -148,10 +148,14 @@ def main():
         msg = 'No input file!!!'
         showErrorAndExit(parser, msg)
 
+    args.inputFile = os.path.normpath(args.inputFile)
+
     # check input file format provided
     if args.inputFileFormat is None:
         msg = 'No input file format given !!!'
         showErrorAndExit(parser, msg)
+
+    args.outputFile = os.path.normpath(args.outputFile)
 
     # check output file provided
     if args.outputFile is None:
