@@ -622,7 +622,7 @@ class binContactFormatTabWidgetHelper:
             self.binContactInputBinFileLineEdit.setFocus()
             showWarningMessageBox("No input file given !!!", self)
             return False
-        options['inputBinFile'] = inputFile
+        options['inputBinFile'] = '"{0}"'.format(inputFile)
 
         inputContactFile = None
         if self.binContactInputContactFileLineEdit.text():
@@ -631,7 +631,7 @@ class binContactFormatTabWidgetHelper:
             self.binContactInputContactFileLineEdit.setFocus()
             showWarningMessageBox("No input file given !!!", self)
             return False
-        options['inputContactFile'] = inputFile
+        options['inputContactFile'] = '"{0}"'.format(inputFile)
 
         options['workDir'] = '"{0}"'.format(self.binContactScratchDirLineEdit.text())
 
@@ -682,7 +682,7 @@ class binContactFormatTabWidgetHelper:
     def binContactConstructCommand(self, opts):
         """Construct the command line
         """
-        command = ' binContact2cmap '
+        command = ' bc2cmap '
 
         command += ' -ib ' +  opts['inputBinFile']
         command += ' -ic ' +  opts['inputContactFile']
@@ -776,7 +776,7 @@ class pairCooMatFormatTabWidgetHelper:
             self.pairCooMatInputFileLineEdit.setFocus()
             showWarningMessageBox("No input file given !!!", self)
             return False
-        options['-i'] = inputFile
+        options['-i'] = '"{0}"'.format(inputFile)
 
         options['-wd'] = '"{0}"'.format(self.pairCooMatScratchDirLineEdit.text())
 
@@ -927,8 +927,8 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow, cooMatFormatTabWidge
     def startProcess(self, command, button):
         self.process = QProcess(self)
         self.process.start('gcMapExplorer', shlex.split(command))
-        self.process.setProcessChannelMode( QProcess.MergedChannels )
-        #self.process.setReadChannel( QProcess.StandardOutput )
+        self.process.setProcessChannelMode( QProcess.MergedChannels)
+        # self.process.setReadChannel( QProcess.StandardOutput )
         self.process.waitForStarted()
 
         self.process.readyReadStandardOutput.connect( self.writeLogOutputFromProcess )
@@ -938,6 +938,9 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow, cooMatFormatTabWidge
         self.inputSelectorQCBox.setEnabled(False)
         button.setEnabled(False)
         self.logOutputPlainTextEdit.clear()
+        self.logOutputPlainTextEdit.appendPlainText(
+            '##### Started Running #### \n gcMapExplorer ' + command + "\n ##### ####### ####")
+
 
     def writeLogOutputFromProcess(self):
         out = bytes(self.process.readAllStandardOutput()).decode("utf-8")
