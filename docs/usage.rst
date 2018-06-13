@@ -1,4 +1,8 @@
 
+.. |tutorial| raw:: html
+
+  <a href="https://drive.google.com/drive/folders/1t5Jphi33y_bgBs2FAae489ulgHOI3Rw6?usp=sharing" target="_blank">here.</a>
+
 
 How to use gcMapExplorer?
 =========================
@@ -11,7 +15,8 @@ Several interfaces are available as following.
     * :ref:`convert-to-h5-file-table`
     * :ref:`normalize-maps-table`
 * `Application Programming Interface <http://gcmapexplorer.readthedocs.io/en/latest/apidoc/summary.html>`_
-  - It can be used to perform analysis by any mathematical operations through programming.
+  - It can be used to perform analysis by any mathematical operations through programming. Tutorial files with
+  Jupyter-Notebooks can be downloaded from |tutorial|
 
 Usage
 -----

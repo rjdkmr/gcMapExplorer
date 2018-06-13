@@ -24,9 +24,15 @@
 
   <a href="http://docs.scipy.org/doc/scipy/reference/" target="_blank">scipy</a>
 
+.. |tutorial| raw:: html
+
+  <a href="https://drive.google.com/drive/folders/1t5Jphi33y_bgBs2FAae489ulgHOI3Rw6?usp=sharing" target="_blank">here.</a>
+
 
 Contents
 --------
+
+**Please download tutorial files** |tutorial|
 
 .. toctree::
    :maxdepth: 1
