@@ -30,7 +30,8 @@ from .config import cleanScratch
 logging.basicConfig(level=logging.INFO)
 
 gui_tools =      ['browser', 'cmapImporter', 'cmapNormalizer', 'h5Converter']
-convert_tools =  ['coo2cmap', 'pairCoo2cmap', 'homer2cmap', 'bc2cmap', 'bigwig2h5', 'wig2h5', 'bed2h5', 'encode2h5']
+convert_tools =  ['coo2cmap', 'pairCoo2cmap', 'homer2cmap', 'bc2cmap', 'bigwig2h5', 'wig2h5', 'bed2h5', 'encode2h5',
+                  'hic2gcmap']
 norm_tools =     ['normKR', 'normVC', 'normIC', 'normMCFS']
 analysis_tools = ['corrBWcmaps']
 utility_tools = ['config']
@@ -48,6 +49,7 @@ def main():
                'wig2h5': 'Import a wig file to browser compatible h5 format',
                'bed2h5' : 'Import a bed file to browser compatible h5 format',
                'encode2h5' : 'Download and convert datasets from ENCODE project',
+               'hic2gcmap': 'Import hic file to gcmap',
                'normKR' : 'Normalization using Knight-Ruiz matrix balancing',
                'normVC' : 'Normalization using Vanilla-Coverage method',
                'normIC' : 'Normalization using Iterative Correction',
@@ -114,6 +116,10 @@ def main():
     if sys.argv[1] == 'encode2h5':
         from .clui import encode2h5
         encode2h5.main()
+
+    if sys.argv[1] == 'hic2gcmap':
+        from .clui import hic2gcmap
+        hic2gcmap.main()
 
     if sys.argv[1] == 'normKR':
         from .clui import normKR
