@@ -248,13 +248,13 @@ def main():
     group.add_argument("-a", "--all", action="store_true", help="all chromosome pairs")
     group.add_argument("-c", "--chromosomes", type=str, nargs=2, metavar=("A", "B"), help="a pair of chromosomes A B")
     group.add_argument("-l", "--list", action="store_true", help="list all available chromosomes")
-    parser.add_argument("--compression", type=str, choices=["lzf", "gzip"], default="lzf",
+    parser.add_argument("-cmp", "--compression", type=str, choices=["lzf", "gzip"], default="lzf",
                         help="compression type")
     parser.add_argument("-r", "--resolution", type=resolution, default="finest", metavar="R",
                         help="the resolution R, as an integer or as kb")
     parser.add_argument("-n", "--norm", type=str, choices=["VC", "VC_SQRT", "KR", "none"],
                         default="none", help="the type of norm to use")
-    parser.add_argument("--coarsening", type=str, choices=["sum", "mean", "max", "none"], default="sum",
+    parser.add_argument("-co", "--coarsening", type=str, choices=["sum", "mean", "max", "none"], default="sum",
                         help="the coarsening method")
 
     args = parser.parse_args(args=sys.argv[sys.argv.index("hic2gcmap") + 1:])
