@@ -1,39 +1,64 @@
 hic2gcmap - convert hic file to gcmap
 -------------------------------------
 
-Hic files as described in [Juicer]_ can be converted to gcmap.
+Hic files as described in [1]_ can be converted to gcmap.
 
 Usage:
     .. code-block:: bash
 
-        usage: gcMapExplorer hic2gcmap [-h] (-a | -c A B | -l) [-cmp {lzf,gzip}]
-                                       [-r R] [-n {VC,VC_SQRT,KR,none}]
-                                       [-co {sum,mean,max,none}]
-                                       input_file [output]
+        usage: gcMapExplorer hic2gcmap [-h] [-c A B | -l] [--compression C] [-r R]
+                                       [-n N] [--coarsening C]
+                                       input [output]
 
-*Help:*
 
+Arguments:
     .. code-block:: bash
 
         positional arguments:
-          input_file            hic input file
-          output                output file or directory (default: .)
+          input                 hic input file
+          output                output file or directory
 
         optional arguments:
           -h, --help            show this help message and exit
-          -a, --all             all chromosome pairs (default: False)
           -c A B, --chromosomes A B
-                                a pair of chromosomes A B (default: None)
-          -l, --list            list all available chromosomes (default: False)
-          -cmp {lzf,gzip}, --compression {lzf,gzip}
-                                compression type (default: lzf)
-          -r R, --resolution R  the resolution R, as an integer or as kb (default:
+                                a pair of chromosomes A B
+          -l, --list            list all available chromosomes
+          --compression C       compression type, choose between lzf, gzip (default:
+                                lzf)
+          -r R, --resolution R  the resolution, as an integer or as kb (default:
                                 finest)
-          -n {VC,VC_SQRT,KR,none}, --norm {VC,VC_SQRT,KR,none}
-                                the type of norm to use (default: none)
-          -co {sum,mean,max,none}, --coarsening {sum,mean,max,none}
-                                the coarsening method (default: sum)
+          -n N, --norm N        the type of norm to use, choose between VC, VC_SQRT,
+                                KR, none (default: none)
+          --coarsening C        the coarsening method to use, choose between sum,
+                                mean, max, none (default: sum)
 
 
-.. [Juicer] Juicer Provides a One-Click System for Analyzing Loop-Resolution Hi-C Experiments, Durand, Neva C. et al. Cell Systems, Volume 3, Issue 1, p. 95-98.
+Examples:
+    Import all chromosome pairs at the finest available resolution:
+
+    .. code-block:: bash
+
+        gcMapExplorer hic2gcmap input.hic
+
+    List all available chromosomes:
+
+    .. code-block:: bash
+
+        gcMapExplorer hic2gcmap input.hic -list
+
+    Import chromosome pair X X and save output to ``output.gcmap``:
+
+    .. code-block:: bash
+
+        gcMapExplorer hic2gcmap input.hic ouput.gcmap -c X X
+
+    Same as above but save to a generated filename in ``outdir/`` using finest resulution 10kb:
+
+    .. code-block:: bash
+
+        gcMapExplorer hic2gcmap input.hic outdir/ -c X X -r 10kb
+
+
+References:
+    .. [1] Durand, Neva C. *et al*. Juicer Provides a One-Click System for Analyzing Loop-Resolution Hi-C Experiments, Cell Systems, Volume 3, Issue 1, p. 95-98.
 

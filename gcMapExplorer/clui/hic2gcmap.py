@@ -18,10 +18,10 @@
 #
 # =============================================================================
 import logging
-from argparse import ArgumentParser, ArgumentTypeError, FileType, ArgumentDefaultsHelpFormatter
+import sys
+from argparse import ArgumentParser, ArgumentTypeError, FileType
 from math import inf
 from os import path
-import sys
 
 import numpy as np
 
@@ -240,29 +240,29 @@ def norm(string):
 
 
 def main():
-    parser = ArgumentParser(prog="gcMapExplorer hic2gcmap", description="Convert hic to gcmap",
-                            formatter_class=ArgumentDefaultsHelpFormatter)
-    parser.add_argument("input_file", type=FileType("rb"), help="hic input file")
+    parser = ArgumentParser(prog="gcMapExplorer hic2gcmap", description="Convert hic files to gcmap",
+                            allow_abbrev=False)
+    parser.add_argument("input", type=FileType("rb"), help="hic input file")
     parser.add_argument("output", type=str, nargs="?", help="output file or directory", default=".")
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("-a", "--all", action="store_true", help="all chromosome pairs")
+    group = parser.add_mutually_exclusive_group()
     group.add_argument("-c", "--chromosomes", type=str, nargs=2, metavar=("A", "B"), help="a pair of chromosomes A B")
     group.add_argument("-l", "--list", action="store_true", help="list all available chromosomes")
-    parser.add_argument("-cmp", "--compression", type=str, choices=["lzf", "gzip"], default="lzf",
-                        help="compression type")
+    parser.add_argument("--compression", type=str, choices=["lzf", "gzip"], default="lzf", metavar="C",
+                        help="compression type, choose between lzf, gzip (default: lzf)")
     parser.add_argument("-r", "--resolution", type=resolution, default="finest", metavar="R",
-                        help="the resolution R, as an integer or as kb")
-    parser.add_argument("-n", "--norm", type=str, choices=["VC", "VC_SQRT", "KR", "none"],
-                        default="none", help="the type of norm to use")
-    parser.add_argument("-co", "--coarsening", type=str, choices=["sum", "mean", "max", "none"], default="sum",
-                        help="the coarsening method")
+                        help="the resolution, as an integer or as kb (default: finest)")
+    parser.add_argument("-n", "--norm", type=str, choices=["VC", "VC_SQRT", "KR", "none"], metavar="N",
+                        default="none",
+                        help="the type of norm to use, choose between VC, VC_SQRT, KR, none (default: none)")
+    parser.add_argument("--coarsening", type=str, choices=["sum", "mean", "max", "none"], default="sum", metavar="C",
+                        help="the coarsening method to use, choose between sum, mean, max, none (default: sum)")
 
     args = parser.parse_args(args=sys.argv[sys.argv.index("hic2gcmap") + 1:])
 
-    hic = HicParser(args.input_file)
+    hic = HicParser(args.input)
 
     if path.isdir(args.output):
-        filename = path.splitext(path.basename(args.input_file.name))[0]
+        filename = path.splitext(path.basename(args.input.name))[0]
         output_file = path.join(args.output, filename)
         if args.chromosomes:
             output_file += "_" + "_".join(args.chromosomes)
@@ -279,7 +279,12 @@ def main():
         if len(hic.chromosomes):
             print(", ".join(hic.chromosomes))
 
-    elif args.all:
+    elif args.chromosomes:
+        chr1, chr2 = args.chromosomes
+        hic2gcmap(hic, chr1, chr2, output_file, resolution=args.resolution, norm_type=norm(args.norm),
+                  compression=args.compression,
+                  coarsening=args.coarsening)
+    else:
         for record in hic.records:
             chr1, chr2 = hic.chromosome_names(record)
             if "All" in (chr1, chr2):
@@ -287,11 +292,6 @@ def main():
             hic2gcmap(hic, chr1, chr2, output_file, resolution=args.resolution, norm_type=norm(args.norm),
                       compression=args.compression,
                       coarsening=args.coarsening)
-    else:
-        chr1, chr2 = args.chromosomes
-        hic2gcmap(hic, chr1, chr2, output_file, resolution=args.resolution, norm_type=norm(args.norm),
-                  compression=args.compression,
-                  coarsening=args.coarsening)
 
 
 if __name__ == "__main__":
