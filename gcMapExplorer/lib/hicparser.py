@@ -19,14 +19,11 @@ from struct import unpack, unpack_from, Struct
 
 def _read_string(file):
     buf = b""
-    while True:
-        b = file.read(1)
-        if b is None or b == b"\0":
-            return buf.decode("utf-8")
-        elif b == "":
+    for b in iter(lambda: file.read(1), b"\0"):
+        if b == "":
             raise EOFError("Buffer unexpectedly empty while trying to read null-terminated string")
-        else:
-            buf += b
+        buf += b
+    return buf.decode("utf-8")
 
 
 _struct_int = Struct("<i")
@@ -36,12 +33,12 @@ def _read_int(file):
     return _struct_int.unpack(file.read(4))[0]
 
 
-Chromosome = namedtuple("Chromosome", "length, index")
-Record = namedtuple("Record", "position, size")
-ScaleFactor = namedtuple("ScaleFactor", "index, scale_factor")
-ExpectedValue = namedtuple("ExpectedValue", "bin_size, unit, values, scale_factors")
-NormExpectedValue = namedtuple("NormExpectedValue", "type, bin_size, unit, values, scale_factors")
-NormVector = namedtuple("NormVector", "type, index, unit, bin_size, position, n_bytes")
+Chromosome = namedtuple("Chromosome", "length index")
+Record = namedtuple("Record", "position size")
+ScaleFactor = namedtuple("ScaleFactor", "index scale_factor")
+ExpectedValue = namedtuple("ExpectedValue", "bin_size unit values scale_factors")
+NormExpectedValue = namedtuple("NormExpectedValue", "type bin_size unit values scale_factors")
+NormVector = namedtuple("NormVector", "type index unit bin_size position n_bytes")
 
 
 class Unit(Enum):
@@ -316,7 +313,7 @@ class HicParser:
             blocks = [unpack("<iqi", file.read(16)) for _ in range(block_count)]
 
             block_readers.append(
-                make_block_reader(self.version, self.file, unit, bin_size, block_bin_count, block_column_count, blocks))
+                make_block_reader(self.version, file, unit, bin_size, block_bin_count, block_column_count, blocks))
 
         return block_readers
 
@@ -349,9 +346,10 @@ class HicParser:
                                                                                                     norm_type.name,
                                                                                                     unit.name,
                                                                                                     bin_size))
-        self.file.seek(norm.position)
-        n_values = _read_int(self.file)
-        return array("d", self.file.read(8 * n_values))
+        else:
+            self.file.seek(norm.position)
+            n_values = _read_int(self.file)
+            return array("d", self.file.read(8 * n_values))
 
     def chromosome_index(self, chromosome):
         """
@@ -371,19 +369,13 @@ class HicParser:
         :param record_key: the record key
         :return: chromosome name 1, chromosome name 2
         """
-        chr1, chr2 = None, None
-        chr1_index, chr2_index = map(int, record_key.split("_"))
+        index1, index2 = map(int, record_key.split("_"))
+        chromosome_names = {index: name for name, (_, index) in self.chromosomes.items()}
 
-        for name, (_, index) in self.chromosomes.items():
-            if chr1_index == index:
-                chr1 = name
-            if chr2_index == index:
-                chr2 = name
-
-        if chr1 is None and chr2 is None:
+        try:
+            return chromosome_names[index1], chromosome_names[index2]
+        except KeyError:
             raise LookupError("No chromosomes found for record {}".format(record_key))
-
-        return chr1, chr2
 
     def record(self, chr1, chr2):
         """
@@ -398,8 +390,9 @@ class HicParser:
         else:
             index1, index2 = sorted((self.chromosome_index(chr1), self.chromosome_index(chr2)))
 
+        key = "{}_{}".format(index1, index2)
         try:
-            return self.records["{}_{}".format(index1, index2)]
+            return self.records[key]
         except KeyError:
             raise LookupError("No record found for chromosomes {} {}".format(chr1, chr2))
 
