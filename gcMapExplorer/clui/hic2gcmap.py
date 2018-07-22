@@ -18,14 +18,14 @@
 #
 # =============================================================================
 import logging
-from argparse import ArgumentParser, ArgumentTypeError, FileType
+from argparse import ArgumentParser, ArgumentTypeError
 from math import inf
 
 import numpy as np
 
 from gcMapExplorer.config import getConfig
 from gcMapExplorer.lib import util, ccmap, gcmap
-from gcMapExplorer.lib.hicparser import HicParser, Unit, NormType
+from gcMapExplorer.lib.hicparser import HicFileType, Unit, NormType
 
 config = getConfig()
 
@@ -240,7 +240,7 @@ def main():
 
     parser = ArgumentParser(prog="gcMapExplorer hic2gcmap", description="Convert hic files to gcmap",
                             allow_abbrev=False)
-    parser.add_argument("input", type=FileType("rb"), help="hic input file")
+    parser.add_argument("input", type=HicFileType(), help="hic input file")
     parser.add_argument("output", type=str, nargs="?", help="output file or directory", default=".")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-c", "--chromosomes", type=str, nargs=2, metavar=("A", "B"), help="a pair of chromosomes A B")
@@ -257,11 +257,7 @@ def main():
 
     args = parser.parse_args(args=sys.argv[sys.argv.index("hic2gcmap") + 1:])
 
-    try:
-        hic = HicParser(args.input)
-    except Exception as e:
-        print("Error: {}".format(e))
-        return
+    hic = args.input
 
     if args.list:
         print(", ".join(hic.chromosomes))

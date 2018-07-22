@@ -9,7 +9,7 @@ Author: Anton Eriksson (anton.eriksson@umu.se)
 Date: 2018-07-13
 """
 import zlib
-from argparse import ArgumentParser, FileType
+from argparse import ArgumentParser, ArgumentTypeError, FileType
 from array import array
 from collections import namedtuple
 from enum import Enum
@@ -423,12 +423,30 @@ class HicParser:
                 "No header found for chromosomes {} {}, unit {}, bin size {}".format(chr1, chr2, unit.name, bin_size))
 
 
+class HicFileType(FileType):
+    """
+    Factory for creating hic file types for use with ArgumentParser
+
+    See also argparse.FileType
+    """
+
+    def __init__(self):
+        super().__init__(mode="rb")
+
+    def __call__(self, string):
+        f = super().__call__(string)
+        try:
+            return HicParser(f)
+        except Exception as e:
+            raise ArgumentTypeError(e)
+
+
 if __name__ == "__main__":
     parser = ArgumentParser(description="Fast hic file parser")
-    parser.add_argument("input_file", type=FileType("rb"), help="hic input file")
+    parser.add_argument("input", type=HicFileType(), help="hic input file")
     args = parser.parse_args()
 
-    hic = HicParser(args.input_file)
+    hic = args.input
     print("Hic version {}\n".format(hic.version))
 
     if len(hic.attributes):
