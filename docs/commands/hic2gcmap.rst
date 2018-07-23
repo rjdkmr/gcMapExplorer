@@ -7,9 +7,8 @@ Usage:
     .. code-block:: bash
 
         usage: gcMapExplorer hic2gcmap [-h] [-c A B | -l] [--compression C] [-r R]
-                                       [-n N] [--coarsening C]
+                                       [-n N] [--downsampling D]
                                        input [output]
-
 
 Arguments:
     .. code-block:: bash
@@ -29,7 +28,7 @@ Arguments:
                                 finest)
           -n N, --norm N        the type of norm to use, choose between VC, VC_SQRT,
                                 KR, none (default: none)
-          --coarsening C        the coarsening method to use, choose between sum,
+          --downsampling D      the downsampling method to use, choose between sum,
                                 mean, max, none (default: sum)
 
 
@@ -44,7 +43,7 @@ Examples:
 
     .. code-block:: bash
 
-        gcMapExplorer hic2gcmap input.hic -list
+        gcMapExplorer hic2gcmap input.hic --list
 
     Import chromosome pair X X and save output to ``output.gcmap``:
 
