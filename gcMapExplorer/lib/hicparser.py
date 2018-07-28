@@ -385,16 +385,45 @@ class HicParser:
         :param chr2: chromosome name
         :return: Record for chromosome pair
         """
-        if chr1 == chr2:
-            index1 = index2 = self.chromosome_index(chr1)
-        else:
-            index1, index2 = sorted((self.chromosome_index(chr1), self.chromosome_index(chr2)))
+        key = self.chromosome_key(chr1, chr2)
 
-        key = "{}_{}".format(index1, index2)
         try:
             return self.records[key]
         except KeyError:
             raise LookupError("No record found for chromosomes {} {}".format(chr1, chr2))
+
+    def chromosome_key(self, chr1, chr2):
+        """
+        Get chromosome key for chromosome pair.
+
+        >>> hic.chromosome_key("X", "X")  # hic: HicParser
+        "0_0"
+        >>> hic.chromosome_key("X", "Y")
+        "0_1"
+
+        :param chr1: chromosome name
+        :param chr2: chromosome name
+        :return: key for lookup in chromosome dictionary
+        """
+        index1, index2 = self.chromosome_indices(chr1, chr2)
+        return "{}_{}".format(index1, index2)
+
+    def chromosome_indices(self, chr1, chr2):
+        """
+        Get indices for a pair of chromosomes.
+
+        >>> hic.chromosome_indices("X", "X")  # hic: HicParser
+        (0, 0)
+        >>> hic.chromosome_indices("X", "Y")
+        (0, 1)
+        >>> hic.chromosome_indices("Y", "X")
+        (0, 1)
+
+        :param chr1: chromosome name
+        :param chr2: chromosome name
+        :return: indices (sorted)
+        """
+        return sorted((self.chromosome_index(chr1), self.chromosome_index(chr2)))
 
     def blocks(self, chr1, chr2, unit, bin_size):
         """
