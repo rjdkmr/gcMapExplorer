@@ -339,7 +339,7 @@ class HicParser:
 
         try:
             norm = next(n for n in self.norm_vectors
-                        if n.index == index and n.type == norm_type and n.unit == unit and n.bin_size == bin_size)
+                        if all([n.index == index, n.type == norm_type, n.unit == unit, n.bin_size == bin_size]))
         except StopIteration:
             raise LookupError(
                 "No norm vector found for chromosome {}, norm type {}, unit {}, bin size {}".format(chromosome,
