@@ -88,7 +88,7 @@ class BlockReader:
 
         :yields: bin_x, bin_y, count
         """
-        for _, position, size in self.blocks:
+        for __, position, size in self.blocks:
             self.file.seek(position)
             compressed = self.file.read(size)
             data = zlib.decompress(compressed)
@@ -139,7 +139,7 @@ class BlockReaderV6(BlockReader):
 
         :yields: bin_x, bin_y, count
         """
-        for _, position, size in self.blocks:
+        for __, position, size in self.blocks:
             self.file.seek(position)
             compressed = self.file.read(size)
             data = zlib.decompress(compressed)
@@ -370,7 +370,7 @@ class HicParser:
         :return: chromosome name 1, chromosome name 2
         """
         index1, index2 = map(int, record_key.split("_"))
-        chromosome_names = {index: name for name, (_, index) in self.chromosomes.items()}
+        chromosome_names = {index: name for name, (__, index) in self.chromosomes.items()}
 
         try:
             return chromosome_names[index1], chromosome_names[index2]
