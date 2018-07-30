@@ -393,20 +393,25 @@ class HicParser:
         >>>     print(count / (c1_norm[bin_x] * c2_norm[bin_y]))  # print normalized count
         """
         index = self.chromosome_index[chromosome]
+        norm = self._get_norm_vector(index, norm_type, bin_size, unit)
+        return self._read_norm_vector(norm.position)
 
+    def _get_norm_vector(self, index, norm_type, bin_size, unit):
         try:
-            norm = next(n for n in self.norm_vectors
-                        if all([n.index == index, n.type == norm_type, n.unit == unit, n.bin_size == bin_size]))
+            return next(n for n in self.norm_vectors
+                        if n.index == index and n.type == norm_type and n.unit == unit and n.bin_size == bin_size)
         except StopIteration:
             raise LookupError(
-                "No norm vector found for chromosome {}, norm type {}, unit {}, bin size {}".format(chromosome,
-                                                                                                    norm_type.name,
-                                                                                                    unit.name,
-                                                                                                    bin_size))
-        else:
-            self.file.seek(norm.position)
-            n_values = _read_int(self.file)
-            return array("d", self.file.read(8 * n_values))
+                "No norm vector found for chromosome {}, norm type {}, unit {}, bin size {}".format(
+                    self.chromosome_name[index],
+                    norm_type.name,
+                    unit.name,
+                    bin_size))
+
+    def _read_norm_vector(self, position):
+        self.file.seek(position)
+        n_values = _read_int(self.file)
+        return array("d", self.file.read(8 * n_values))
 
     @property
     def chromosome_index(self):
