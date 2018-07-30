@@ -36,8 +36,6 @@ from struct import unpack, unpack_from, Struct
 
 
 def _read_string(file):
-    """Read a null-terminated c style string from binary file.
-    """
     buf = b""
     for b in iter(lambda: file.read(1), b"\0"):
         if b == "":
@@ -190,9 +188,10 @@ class HicParser:
     >>>     hic = HicParser(f)
     >>>     hic.bp_resolutions
     [2500000, 1000000, 500000, 250000, 100000, 50000, 25000, 10000, 5000]
-    >>>     blocks = hic.blocks("X","X",10000)
+    >>>     record = hic.record("X", "X")
+    >>>     blocks = hic.blocks(record, 5000)
     >>>     for x, y, count in blocks:
-    >>>         print("{} {} {}".format(x * blocks.bin_size, y * blocks.bin_size, count))
+    >>>         print(x * blocks.bin_size, y * blocks.bin_size, count)
     0 10000 1.0
     10000 10000 1.0
     ...
@@ -205,7 +204,7 @@ class HicParser:
         the format version
     genome_id : str
         Genome identifier or file that contains list of genome identifiers
-    attributes : dict of str -> str
+    attributes : dict of str to str
         Dictionary of metadata that describes the experiment
     chromosomes : dict of str -> Chromosome
         Chromosome dictionary
@@ -215,7 +214,7 @@ class HicParser:
         Fragment resolutions
     sites : array of int
         Restriction sites
-    records : dict of str -> Record
+    records : dict of str to Record
         Records of chromosome pairs
     expected_value_vectors : list of ExpectedValue
     norm_expected_value_vectors : list of NormExpectedValue
@@ -249,7 +248,6 @@ class HicParser:
         if self.version < 6:
             raise Exception("Version {} no longer supported".format(self.version))
 
-        # File position of master index
         master_index_pos = unpack("<q", file.read(8))[0]
 
         self.genome_id = _read_string(file)
@@ -284,7 +282,6 @@ class HicParser:
 
         n_bytes_v5 = _read_int(file)
 
-        # Matrix records
         self.records = dict()
         n_entries = _read_int(file)
         for _ in range(n_entries):
@@ -387,9 +384,11 @@ class HicParser:
         Examples
         --------
         >>> hic = HicParser(f)  # f: file object
-        >>> c1_norm = hic.norm_vector(c1, NormType.VC, 5000)  # c1: chromosome name
-        >>> c2_norm = hic.norm_vector(c2, NormType.VC, 5000)  # c2: chromosome name
-        >>> blocks = hic.blocks(c1, c2, 5000)
+        >>> c1, c2, res = "X", "Y", 5000
+        >>> c1_norm = hic.norm_vector(c1, NormType.VC, res)
+        >>> c2_norm = hic.norm_vector(c2, NormType.VC, res)
+        >>> record = hic.record(c1, c2)
+        >>> blocks = hic.blocks(record, res)
         >>> for bin_x, bin_y, count in blocks:
         >>>     print(count / (c1_norm[bin_x] * c2_norm[bin_y]))  # print normalized count
         """
@@ -513,7 +512,7 @@ class HicParser:
         >>> for bin_x, bin_y, count in blocks:
         >>>     x = bin_x * blocks.bin_size
         >>>     y = bin_y * blocks.bin_size
-        >>>     print("{} {} {}".format(x, y, count))
+        >>>     print(x, y, count)
         """
         try:
             return next(h for h in self.read_header(record) if h.unit == unit and h.bin_size == bin_size)
