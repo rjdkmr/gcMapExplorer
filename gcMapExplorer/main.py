@@ -30,7 +30,7 @@ from .config import cleanScratch
 logging.basicConfig(level=logging.INFO)
 
 gui_tools =      ['browser', 'cmapImporter', 'cmapNormalizer', 'h5Converter']
-convert_tools =  ['coo2cmap', 'pairCoo2cmap', 'homer2cmap', 'bc2cmap', 'bigwig2h5', 'wig2h5', 'bed2h5', 'encode2h5']
+convert_tools =  ['coo2cmap', 'pairCoo2cmap', 'homer2cmap', 'bc2cmap', 'hic2gcmap', 'bigwig2h5', 'wig2h5', 'bed2h5', 'encode2h5']
 norm_tools =     ['normKR', 'normVC', 'normIC', 'normMCFS']
 analysis_tools = ['corrBWcmaps']
 utility_tools = ['config']
@@ -44,6 +44,7 @@ def main():
                'pairCoo2cmap': 'Import map from files similar to paired sparse matrix Coordinate (COO) format',
                'homer2cmap':'Import HOMER Hi-C interaction matrix to ccmap or gcmap',
                'bc2cmap': 'Import Bin-Contact format files to ccmap or gcmap',
+               'hic2gcmap': 'Import hic file to gcmap',
                'bigwig2h5': 'Import a bigWig file to browser compatible h5 format',
                'wig2h5': 'Import a wig file to browser compatible h5 format',
                'bed2h5' : 'Import a bed file to browser compatible h5 format',
@@ -98,6 +99,10 @@ def main():
     if sys.argv[1] == 'bc2cmap':
         from .clui import bc2cmap
         bc2cmap.main()
+
+    if sys.argv[1] == 'hic2gcmap':
+        from .clui import hic2gcmap
+        hic2gcmap.main()
 
     if sys.argv[1] == 'bigwig2h5':
         from .clui import bigwig2h5

@@ -107,6 +107,7 @@ formats can be converted to gcmap using implemented tools.
 * Paired COO sparse matrix
 * Homer Hi-C interaction matrix
 * Bin-Contact pair files
+* Hic files
 
 
 **Following tools are available for the conversion**
@@ -116,6 +117,7 @@ formats can be converted to gcmap using implemented tools.
     pairCoo2cmap : convert pair COO sparse matrix format <commands/pairCoo2cmap>
     homer2cmap : convert HOMER Hi-C matrix format <commands/homer2cmap>
     bc2cmap : convert Bin-Contact pair files <commands/bc2cmap>
+    hic2gcmap : convert hic files <commands/hic2gcmap>
     cmapImporter : An application to convert Hi-C formats to ccmap/gcmap <commands/cmapImporter>
 
 

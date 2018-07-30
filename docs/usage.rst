@@ -66,6 +66,9 @@ Run ``gcMapExplorer`` command on terminal to get list of all sub-commands.
     * - `bc2cmap <http://gcmapexplorer.readthedocs.io/en/latest/commands/bc2cmap.html>`_
       - Import Bin-Contact format files to ccmap or gcmap
 
+    * - `hic2gcmap <http://gcmapexplorer.readthedocs.io/en/latest/commands/hic2gcmap.html>`_
+      - Import hic to gcmap
+
 
 .. list-table:: Commands to convert bigWig/wig/bed to h5
     :widths: 1, 4
