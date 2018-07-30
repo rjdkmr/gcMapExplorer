@@ -22,9 +22,6 @@ Fast parser for Hi-C contact map format described in:
 Juicer Provides a One-Click System for Analyzing Loop-Resolution Hi-C Experiments
 Durand, Neva C. et al.
 Cell Systems, Volume 3, Issue 1, p. 95-98
-
-Author: Anton Eriksson (anton.eriksson@umu.se)
-Date: 2018-07-13
 """
 import zlib
 from argparse import ArgumentParser, ArgumentTypeError, FileType
