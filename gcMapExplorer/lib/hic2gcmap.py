@@ -158,42 +158,49 @@ def gen_map_from_generator(values, c1_norm=None, c2_norm=None, resolution=None, 
     return ccmap_obj
 
 
-def hic2gcmap(hic, chr1, chr2, output_file, resolution="finest", norm_type=None, compression="lzf", downsampling="sum",
-              log_handler=None):
-    """
-    Convert hic file to gcmap file.
+def hic2ccmap(hic, chr1, chr2, resolution="finest", norm_type=None, log_handler=None):
+    """Generate ccmap from hic
 
-    :param hic: the hic file object
-    :param chr1: chromosome name
-    :param chr2: chromosome name
-    :param output_file: output file
-    :param resolution: the resolution
-    :param norm_type: the norm type (see hicparser.NormType)
-    :param compression: compression type (lzf or gzip)
-    :param downsampling: downsampling method (sum, mean, max or none)
-    :param log_handler: the log handler
+    Parameters
+    ----------
+    hic : HicParser
+        the hic parser object
+    chr1 : str
+        chromosome name
+    chr2 : str
+        chromosome name
+    resolution : int or str, optional
+        the resolution (default "finest" uses the finest available)
+    norm_type : NormType, optional
+        the norm type
+    log_handler : optional
+        the log handler
+
+    Returns
+    -------
+    ccmap.CCMAP
+
+    See Also
+    --------
+    hic2gcmap
     """
     logger = logging.getLogger('hic2gcmap')
     if log_handler is not None:
         logger.propagate = False
         logger.addHandler(log_handler)
     logger.setLevel(logging.INFO)
-
     logger.info("Converting map for pair {} {} ...".format(chr1, chr2))
-
     if log_handler is not None:
         logger.removeHandler(log_handler)
 
-    res = resolution
-    if resolution == "finest":
-        res = min(hic.bp_resolutions)  # gcmap downsamples from this, so choose the finest
+    res = min(hic.bp_resolutions) if resolution == "finest" else resolution
 
     record = hic.record(chr1, chr2)
     values = hic.blocks(record, res)
 
     if norm_type is not None:
-        c1_norm = hic.norm_vector(chr1, norm_type, res, Unit.BP)
-        c2_norm = hic.norm_vector(chr2, norm_type, res, Unit.BP)
+        c1_norm = hic.norm_vector(chr1, norm_type, res)
+        c2_norm = hic.norm_vector(chr2, norm_type, res)
     else:
         c1_norm, c2_norm = None, None
 
@@ -206,5 +213,44 @@ def hic2gcmap(hic, chr1, chr2, output_file, resolution="finest", norm_type=None,
     ccmap_obj.xlabel = chr1
     ccmap_obj.ylabel = chr2
 
-    gcmap.addCCMap2GCMap(ccmap_obj, output_file, compression=compression, generateCoarse=downsampling != "none",
-                         coarseningMethod=downsampling)
+    return ccmap_obj
+
+
+def hic2gcmap(hic, chr1, chr2, output_file, resolution="finest", norm_type=None, compression="lzf", downsampling="sum",
+              log_handler=None):
+    """Generate gcmap from hic and write to file
+
+    Parameters
+    ----------
+    hic : HicParser
+        the hic parser object
+    chr1 : str
+        chromosome name
+    chr2 : str
+        chromosome name
+    output_file : str
+        the output filename
+    resolution : int or str, optional
+        the resolution (default "finest" uses the finest available)
+    norm_type : NormType, optional
+        the norm type
+    compression : str, optional
+        compression type (lzf or gzip)
+    downsampling : str, optional
+        downsampling method (sum, mean, max, or none)
+    log_handler : optional
+        the log handler
+
+    Returns
+    -------
+    bool
+        True or False depending on success
+
+    See Also
+    --------
+    hic2ccmap
+    """
+    ccmap_obj = hic2ccmap(hic, chr1, chr2, resolution, norm_type, log_handler)
+
+    return gcmap.addCCMap2GCMap(ccmap_obj, output_file, compression=compression, generateCoarse=downsampling != "none",
+                                coarseningMethod=downsampling, logHandler=log_handler)
