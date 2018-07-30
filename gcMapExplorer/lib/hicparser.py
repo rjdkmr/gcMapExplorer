@@ -36,6 +36,8 @@ from struct import unpack, unpack_from, Struct
 
 
 def _read_string(file):
+    """Read a null-terminated c style string from binary file.
+    """
     buf = b""
     for b in iter(lambda: file.read(1), b"\0"):
         if b == "":
@@ -71,8 +73,7 @@ class NormType(Enum):
 
 
 class BlockReader:
-    """
-    The BlockReader is an iterable that decompresses block data on the fly
+    """The BlockReader is an iterable that decompresses block data on the fly
     which allows for huge files to be read.
 
     This class is not supposed to be used directly, it is supposed to be instantiated
@@ -83,15 +84,22 @@ class BlockReader:
     __struct_hh = Struct("<hh")
 
     def __init__(self, file, unit, bin_size, bin_count, column_count, blocks):
-        """
-        Initialize a BlockReader
+        """Initialize a BlockReader
 
-        :param file: hic file object (must be open)
-        :param unit: the resolution unit (see Unit)
-        :param bin_size: the size of the bin
-        :param bin_count: the size of each block in bins
-        :param column_count: the number of columns for the block grid
-        :param blocks: list of tuples (id, position, size)
+        Parameters
+        ----------
+        file
+            hic file object (must be open)
+        unit : Unit
+            the resolution unit
+        bin_size : int
+            the bin size
+        bin_count : int
+            the size of each block in bins
+        column_count : int
+            the number of columns for the block grid
+        blocks : iterable tuple
+            id, position, size
         """
         self.file = file
         self.unit = unit
@@ -101,10 +109,12 @@ class BlockReader:
         self.blocks = blocks
 
     def __iter__(self):
-        """
-        Generator which yields all block data.
+        """Generator which yields all block data.
 
-        :yields: bin_x, bin_y, count
+        Yields
+        ------
+        int, int, int
+            bin_x, bin_y, count
         """
         for __, position, size in self.blocks:
             self.file.seek(position)
@@ -147,15 +157,17 @@ class BlockReader:
 
 
 class BlockReaderV6(BlockReader):
-    """
-    Specialized version of BlockReader for hic version 6.
+    """Specialized version of BlockReader for hic version 6.
+
     """
 
     def __iter__(self):
-        """
-        Generator which yields all block data.
+        """Generator which yields all block data.
 
-        :yields: bin_x, bin_y, count
+        Yields
+        ------
+        int, int, float
+            bin_x, bin_y, count
         """
         for __, position, size in self.blocks:
             self.file.seek(position)
@@ -181,31 +193,58 @@ def make_block_reader(version, *args):
 
 
 class HicParser:
-    """
-    Fast access to hic data.
+    """Fast access to hic data.
 
-    Supports versions 6 and greater.
+    Supports version 6 and greater.
 
+    Examples
+    --------
     >>> with open("somefile.hic", "rb") as f:
     >>>     hic = HicParser(f)
     >>>     hic.bp_resolutions
     [2500000, 1000000, 500000, 250000, 100000, 50000, 25000, 10000, 5000]
-    >>>     blocks = hic.blocks("X", "X", Unit.BP, 10000)
+    >>>     blocks = hic.blocks("X","X",10000)
     >>>     for x, y, count in blocks:
     >>>         print("{} {} {}".format(x * blocks.bin_size, y * blocks.bin_size, count))
     0 10000 1.0
     10000 10000 1.0
     ...
 
+    Attributes
+    ----------
+    name: str
+        the file name
+    version : int
+        the format version
+    genome_id : str
+        Genome identifier or file that contains list of genome identifiers
+    attributes : dict of str -> str
+        Dictionary of metadata that describes the experiment
+    chromosomes : dict of str -> Chromosome
+        Chromosome dictionary
+    bp_resolutions : array of int
+        Base pair resolutions
+    frag_resolutions : array of int
+        Fragment resolutions
+    sites : array of int
+        Restriction sites
+    records : dict of str -> Record
+        Records of chromosome pairs
+    expected_value_vectors : list of ExpectedValue
+    norm_expected_value_vectors : list of NormExpectedValue
+    norm_vectors : list of NormVector
     """
 
     def __init__(self, file):
-        """
-        Initialize a HicParser
+        """Initialize a HicParser
 
-        :param file: hic file object (must be open as "rb")
+        Parameters
+        ----------
+        file
+            hic file object (must be open as "rb")
         """
         self.file = file
+        self.name = file.name
 
         if file.mode != "rb":
             raise ValueError("File mode must be 'rb'")
@@ -226,10 +265,8 @@ class HicParser:
         # File position of master index
         master_index_pos = unpack("<q", file.read(8))[0]
 
-        # Genome identifier or file that contains list of genome identifiers
         self.genome_id = _read_string(file)
 
-        # Dictionary of metadata that describes the experiment
         self.attributes = dict()
         n_attributes = _read_int(file)
         for _ in range(n_attributes):
@@ -237,7 +274,6 @@ class HicParser:
             value = _read_string(file)
             self.attributes[key] = value
 
-        # Chromosome dictionary
         self.chromosomes = dict()
         n_chromosomes = _read_int(file)
         for index in range(n_chromosomes):
@@ -245,15 +281,12 @@ class HicParser:
             chr_length = _read_int(file)
             self.chromosomes[chr_name] = Chromosome(chr_length, index)
 
-        # Base pair resolutions
         n_bp_resolutions = _read_int(file)
         self.bp_resolutions = array("i", file.read(4 * n_bp_resolutions))
 
-        # Fragment resolutions
         n_frag_resolutions = _read_int(file)
         self.frag_resolutions = array("i", file.read(4 * n_frag_resolutions))
 
-        # Restriction sites
         self.sites = []
         if n_frag_resolutions > 0:
             n_sites = _read_int(file)
@@ -304,11 +337,16 @@ class HicParser:
 
     @lru_cache(maxsize=32)
     def read_header(self, record):
-        """
-        Read all block headers for chomosome pairs defined by the record.
+        """Read all block headers for chromosome pairs defined by the record.
 
-        :param record: the chromosome pair record
-        :return: list of BlockReaders
+        Parameters
+        ----------
+        record : Record
+            the chromosome pair record
+
+        Returns
+        -------
+        list of BlockReader
         """
         file = self.file
         file.seek(record.position)
@@ -336,24 +374,39 @@ class HicParser:
         return block_readers
 
     @lru_cache(maxsize=32)
-    def norm_vector(self, chromosome, norm_type, unit, bin_size):
-        """
-        Get norm vector for chromosome.
+    def norm_vector(self, chromosome, norm_type, bin_size, unit=Unit.BP):
+        """Get norm vector for chromosome.
 
-        :param chromosome: the chromosome name
-        :param norm_type: the norm type (see NormType for valid norms)
-        :param unit: the unit (see Unit for valid units)
-        :param bin_size: the bin size
-        :return: array of floats
+        Parameters
+        ----------
+        chromosome : str
+            the chromosome name
+        norm_type : NormType
+            the norm type
+        bin_size : int
+            the bin size
+        unit : Unit, optional
+            the resolution unit
 
+        Returns
+        -------
+        array of floats
+
+        Raises
+        ------
+        LookupError
+            If no norm vector was found matching the arguments.
+
+        Examples
+        --------
         >>> hic = HicParser(f)  # f: file object
-        >>> c1_norm = hic.norm_vector(c1, NormType.VC, Unit.BP, 5000)  # c1: chromosome name
-        >>> c2_norm = hic.norm_vector(c2, NormType.VC, Unit.BP, 5000)  # c2: chromosome name
-        >>> blocks = hic.blocks(c1, c2, Unit.BP, 5000)
+        >>> c1_norm = hic.norm_vector(c1, NormType.VC, 5000)  # c1: chromosome name
+        >>> c2_norm = hic.norm_vector(c2, NormType.VC, 5000)  # c2: chromosome name
+        >>> blocks = hic.blocks(c1, c2, 5000)
         >>> for bin_x, bin_y, count in blocks:
         >>>     print(count / (c1_norm[bin_x] * c2_norm[bin_y]))  # print normalized count
         """
-        index = self.chromosome_index(chromosome)
+        index = self.chromosome_index[chromosome]
 
         try:
             norm = next(n for n in self.norm_vectors
@@ -369,112 +422,125 @@ class HicParser:
             n_values = _read_int(self.file)
             return array("d", self.file.read(8 * n_values))
 
-    def chromosome_index(self, chromosome):
-        """
-        Get chromosome index from chromosome name.
+    @property
+    def chromosome_index(self):
+        """Chromosome index by name
 
-        :param chromosome: chromosome name
-        :return: chromosome index
+        Returns
+        -------
+        int
+            chromosome index
         """
-        try:
-            return self.chromosomes[chromosome].index
-        except KeyError:
-            raise LookupError("No index found for chromosome {}".format(chromosome))
+        return {name: index for name, (__, index) in self.chromosomes.items()}
+
+    @property
+    def chromosome_name(self):
+        """Chromosome name by index
+
+        Returns
+        -------
+        str
+            chromosome name
+        """
+        return {index: name for name, (__, index) in self.chromosomes.items()}
 
     def chromosome_names(self, record_key):
-        """
-        Get chromosome names from record key
-        :param record_key: the record key
-        :return: chromosome name 1, chromosome name 2
+        """Get chromosome names from record key
+
+        Parameters
+        ----------
+        record_key : str
+            The key in the record dictionary corresponding to the chromosome pair.
+
+        Returns
+        -------
+        tuple of str, str
+            Two chromosome names
+
+        Raises
+        ------
+        LookupError
+            If chromosome names were not found.
         """
         index1, index2 = map(int, record_key.split("_"))
-        chromosome_names = {index: name for name, (__, index) in self.chromosomes.items()}
 
         try:
-            return chromosome_names[index1], chromosome_names[index2]
+            return self.chromosome_name[index1], self.chromosome_name[index2]
         except KeyError:
             raise LookupError("No chromosomes found for record {}".format(record_key))
 
-    def record(self, chr1, chr2):
-        """
-        Get record for chromosome pair.
+    def record(self, chromosome1, chromosome2):
+        """Get record for chromosome pair.
 
-        :param chr1: chromosome name
-        :param chr2: chromosome name
-        :return: Record for chromosome pair
+        Parameters
+        ----------
+        chromosome1 : str
+            chromosome name
+        chromosome2 : str
+            chromosome name
+
+        Returns
+        -------
+        Record
+            The record for the chromosome pair
+
+        Raises
+        ------
+        LookupError
+            If no record was found for the chromosome pair.
         """
-        key = self.chromosome_key(chr1, chr2)
+        index1, index2 = sorted((self.chromosome_index[chromosome1], self.chromosome_index[chromosome2]))
+        key = "{}_{}".format(index1, index2)
 
         try:
             return self.records[key]
         except KeyError:
-            raise LookupError("No record found for chromosomes {} {}".format(chr1, chr2))
+            raise LookupError("No record found for chromosomes {} {}".format(chromosome1, chromosome2))
 
-    def chromosome_key(self, chr1, chr2):
-        """
-        Get chromosome key for chromosome pair.
+    def blocks(self, record, bin_size, unit=Unit.BP):
+        """Get BlockReader for chromosome pair.
 
-        >>> hic.chromosome_key("X", "X")  # hic: HicParser
-        "0_0"
-        >>> hic.chromosome_key("X", "Y")
-        "0_1"
+        Parameters
+        ----------
+        record : Record
+            record for the chromosome pair
+        bin_size : int
+            bin size
+        unit : Unit, optional
+            resolution unit
 
-        :param chr1: chromosome name
-        :param chr2: chromosome name
-        :return: key for lookup in chromosome dictionary
-        """
-        index1, index2 = self.chromosome_indices(chr1, chr2)
-        return "{}_{}".format(index1, index2)
+        Returns
+        -------
+        BlockReader
 
-    def chromosome_indices(self, chr1, chr2):
-        """
-        Get indices for a pair of chromosomes.
+        Raises
+        ------
+        LookupError
+            If no block header was found matching the arguments.
 
-        >>> hic.chromosome_indices("X", "X")  # hic: HicParser
-        (0, 0)
-        >>> hic.chromosome_indices("X", "Y")
-        (0, 1)
-        >>> hic.chromosome_indices("Y", "X")
-        (0, 1)
-
-        :param chr1: chromosome name
-        :param chr2: chromosome name
-        :return: indices (sorted)
-        """
-        return sorted((self.chromosome_index(chr1), self.chromosome_index(chr2)))
-
-    def blocks(self, chr1, chr2, unit, bin_size):
-        """
-        Get BlockReader for chromosomes.
-
-        :param chr1: chromosome name
-        :param chr2: chromosome name
-        :param unit: resolution unit (see Unit for valid units)
-        :param bin_size: resolution bin size
-        :return: BlockReader
-
+        Examples
+        --------
         >>> hic = HicParser(f)  # f: file object
-        >>> blocks = hic.blocks(c1, c2, Unit.BP, 5000)  # c1, c2: chromosome names
+        >>> record = hic.record("X", "Y")
+        >>> blocks = hic.blocks(record, 5000)
         >>> for bin_x, bin_y, count in blocks:
         >>>     x = bin_x * blocks.bin_size
         >>>     y = bin_y * blocks.bin_size
         >>>     print("{} {} {}".format(x, y, count))
         """
-        record = self.record(chr1, chr2)
-        headers = self.read_header(record)
-
         try:
-            return next(h for h in headers if h.unit == unit and h.bin_size == bin_size)
+            return next(h for h in self.read_header(record) if h.unit == unit and h.bin_size == bin_size)
         except StopIteration:
             raise LookupError(
-                "No header found for chromosomes {} {}, unit {}, bin size {}".format(chr1, chr2, unit.name, bin_size))
+                "No block header found for unit {}, bin size {}".format(unit.name, bin_size))
 
 
 class HicFileType(FileType):
-    """
-    Factory for creating hic file types for use with ArgumentParser
+    """Factory for creating hic file types for use with ArgumentParser
 
-    See also argparse.FileType
+    See Also
+    --------
+    argparse.FileType
     """
 
     def __init__(self):
