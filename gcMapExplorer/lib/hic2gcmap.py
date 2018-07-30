@@ -30,23 +30,35 @@ config = getConfig()
 
 def gen_map_from_generator(values, c1_norm=None, c2_norm=None, resolution=None, map_type='intra', work_dir=None,
                            log_handler=None):
+    """Generate ccmap from generator
+
+    Adapted from work by Rajendra Kumar.
+
+    Parameters
+    ----------
+    values : BlockReader
+        generator yielding (x, y, count)
+    c1_norm : array of float, optional
+        norm vector for x values
+    c2_norm : array of float, optional
+        norm vector for y values
+    resolution : int, optional
+        the resolution
+    map_type : str, optional
+        the map type: "intra" or "inter" chromosomal map
+    work_dir : str, optional
+        directory where temporary files will be stored.
+    log_handler
+        the log handler
+
+    Returns
+    -------
+    ccmap.CCMAP
+
+    See Also
+    --------
+    gen_map_from_locations_value in gcMapExplorer.lib.importer
     """
-    Create CCMAP from generator
-
-    Adapted from work by Rajendra Kumar
-    See gen_map_from_locations_value in gcMapExplorer.lib.importer
-
-    :param values: generator yielding (x, y, count)
-    :param c1_norm: norm vector for x
-    :param c2_norm: norm vector for y
-    :param resolution: Resolution of Hi-C map
-    :param map_type: Hi-C map type: "intra" or "inter" chromosomal map
-    :param work_dir: Directory where temporary files will be stored.
-        If it is not provided, this value is taken from configuration file.
-    :param log_handler: Optional log handler
-    :return: CCMAP
-    """
-
     logger = logging.getLogger('genMapFromGenerator')
     if log_handler is not None:
         logger.propagate = False
