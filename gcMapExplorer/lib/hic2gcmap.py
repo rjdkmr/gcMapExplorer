@@ -209,7 +209,8 @@ def hic2ccmap(hic, chr1, chr2, resolution="finest", norm_type=None, log_handler=
     else:
         map_type = 'inter'
 
-    ccmap_obj = gen_map_from_generator(values, c1_norm=c1_norm, c2_norm=c2_norm, map_type=map_type)
+    ccmap_obj = gen_map_from_generator(values, c1_norm=c1_norm, c2_norm=c2_norm, map_type=map_type,
+                                       log_handler=log_handler)
     ccmap_obj.xlabel = chr1
     ccmap_obj.ylabel = chr2
 
