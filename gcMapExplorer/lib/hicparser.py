@@ -179,19 +179,6 @@ class BlockReaderV6(BlockReader):
                 yield bin_x, bin_y, count
 
 
-def make_block_reader(version, *args):
-    """
-    Construct the appropriate BlockReader for given version
-
-    :param version: determines which BlockReader to use
-    :param args: arguments for the BlockReader
-    :return: BlockReader
-    """
-    if version < 7:
-        return BlockReaderV6(*args)
-    return BlockReader(*args)
-
-
 class HicParser:
     """Fast access to hic data.
 
@@ -354,6 +341,7 @@ class HicParser:
         chr1_idx, chr2_idx, n_resolutions = unpack("<3i", file.read(12))
 
         block_readers = []
+        block_reader = BlockReaderV6 if self.version < 7 else BlockReader
 
         for _ in range(n_resolutions):
             unit = Unit(_read_string(file))
@@ -368,8 +356,7 @@ class HicParser:
             # id, position, size
             blocks = [unpack("<iqi", file.read(16)) for _ in range(block_count)]
 
-            block_readers.append(
-                make_block_reader(self.version, file, unit, bin_size, block_bin_count, block_column_count, blocks))
+            block_readers.append(block_reader(file, unit, bin_size, block_bin_count, block_column_count, blocks))
 
         return block_readers
 
