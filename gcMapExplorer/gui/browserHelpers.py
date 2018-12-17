@@ -21,6 +21,7 @@
 #=============================================================================
 
 import os
+from collections import OrderedDict
 import numpy as np
 import h5py
 import json
@@ -36,6 +37,7 @@ import matplotlib as mpl
 from matplotlib import font_manager as mplFontManager
 from matplotlib import colors as mplColors
 from matplotlib.ticker import AutoMinorLocator, MaxNLocator
+import matplotlib.pyplot as plt
 
 import gcMapExplorer.lib as gmlib
 
@@ -261,7 +263,8 @@ class GCMapSelectorDialog(gcmapSelectorDialogBase, Ui_gcmapSelectorDialog):
         """
         # A dialog box will be displayed to select a text file and path will be stored in the cell
         file_choices = "gcmap file (*.gcmap);;All files (*.*)"
-        path = QFileDialog.getOpenFileName(self, 'Select a gcmap file', '', file_choices)
+        path = QFileDialog.getOpenFileName(self, 'Select a gcmap file', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             self.fileNameLineEdit.setText( path[0] )
             self.resetForNewFile()
@@ -292,13 +295,16 @@ class GCMapSelectorDialog(gcmapSelectorDialogBase, Ui_gcmapSelectorDialog):
 pathToThisUI = os.path.join(PathToUIs, 'dialogAxisProps.ui')
 Ui_DialogAxisProps, QDialogAxisPropsBase = loadUiType(pathToThisUI)
 class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
-    def __init__(self, canvas, tabIdx, axes, axesProps=None, xTickLocations=None, xTickLabelTexts=None, yTickLocations=None, yTickLabelTexts=None):
+    def __init__(self, canvas, tabIdx, axes, axesProps=None, xTickLocations=None, xTickLabelTexts=None,
+                 yTickLocations=None, yTickLabelTexts=None, image=None, colorScaleStatus=None):
         super(DialogAxisProps, self).__init__()
         self.setupUi(self)
 
         self.tabWidgetAxisProps.setCurrentIndex(tabIdx)
         self.axes = axes
         self.canvas = canvas
+        self.image = image
+        self.colorScaleStatus = colorScaleStatus
 
         self.init_font_matplotlib_qt()
 
@@ -306,6 +312,12 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
             self.axesProps = AxesProperties(axes, xTickLocations, xTickLabelTexts, yTickLocations, yTickLabelTexts)
         else:
             self.axesProps = axesProps
+
+        # Enable/Disable colorbar tab
+        if self.image is not None:
+            self.tabCBar.setEnabled(True)
+        else:
+            self.tabCBar.setEnabled(False)
 
         # Display X label properties
         self.displayXLabelPropsOnTabWidget()
@@ -323,12 +335,15 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
         self.xTickShowMinorTicksCBox.currentIndexChanged.connect(self.xMinorTicksController)
         self.yTickShowMinorTicksCBox.currentIndexChanged.connect(self.yMinorTicksController)
         self.okCancelApplyButtonBox.clicked.connect(self.uponButtonClicked)
+        self.cbarSaveButton.clicked.connect(self.save_colorbar)
 
-    def update_axes(self, axes, axesProps, xTickLocations=None, xTickLabelTexts=None, yTickLocations=None, yTickLabelTexts=None):
+    def update_axes(self, axes, axesProps, xTickLocations=None, xTickLabelTexts=None, yTickLocations=None,
+                    yTickLabelTexts=None, image=None, colorScaleStatus=None):
         ''' If dialog box is already opened by user, use this function to update dialog box for given axes and axes properties
         '''
         self.axes = axes
         self.axesProps = axesProps
+        self.image = image
 
         # Display X label properties
         self.displayXLabelPropsOnTabWidget()
@@ -341,6 +356,13 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
 
         # Display X tick label properties
         self.displayYTickLabelPropsOnTabWidget()
+
+        # Enable/Disable colorbar tab
+        if self.image is not None:
+            self.tabCBar.setEnabled(True)
+        else:
+            self.tabCBar.setEnabled(False)
+        self.colorScaleStatus = colorScaleStatus
 
     def init_font_matplotlib_qt(self):
         ''' Initialize font name list QFontComboBox.
@@ -573,57 +595,46 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
 
     def changeXTickLabelPropsOnAxes(self):
         # Change tick label  and ticks position
-        ticks = self.axes.get_xaxis().get_major_ticks()
 
         # Bottom tick label
         if self.xTickShowTickLabelsCBox.currentIndex() == 0:
-            for tick in ticks:
-                tick.label1On = True
-                tick.label2On = False
+            self.axes.tick_params(axis='x', which='major', labelbottom=True, labeltop=False)
+
         # top tick label
         if self.xTickShowTickLabelsCBox.currentIndex() == 1:
-            for tick in ticks:
-                tick.label1On = False
-                tick.label2On = True
+            self.axes.tick_params(axis='x', which='major', labelbottom=False, labeltop=True)
+
         # tick label at both side
         if self.xTickShowTickLabelsCBox.currentIndex() == 2:
-            for tick in ticks:
-                tick.label1On = True
-                tick.label2On = True
+            self.axes.tick_params(axis='x', which='major', labelbottom=True, labeltop=True)
+
         # hide tick label
         if self.xTickShowTickLabelsCBox.currentIndex() == 3:
-            for tick in ticks:
-                tick.label1On = False
-                tick.label2On = False
+            self.axes.tick_params(axis='x', which='major', labelbottom=False, labeltop=False)
 
 
-        ticks = self.axes.get_xaxis().get_major_ticks()
         # Both ticks position
         if self.xTickShowTicksCBox.currentIndex() == 0:
-            for tick in ticks:
-                tick.tick1On = True
-                tick.tick2On = True
+            self.axes.tick_params(axis='x', which='major', bottom=True, top=True)
+
         # bottom ticks position
         if self.xTickShowTicksCBox.currentIndex() == 1:
-            for tick in ticks:
-                tick.tick1On = True
-                tick.tick2On = False
+            self.axes.tick_params(axis='x', which='major', bottom=True, top=False)
+
         # top ticks position
         if self.xTickShowTicksCBox.currentIndex() == 2:
-            for tick in ticks:
-                tick.tick1On = False
-                tick.tick2On = True
+            self.axes.tick_params(axis='x', which='major', bottom=False, top=True)
+
         # hide ticks position
         if self.xTickShowTicksCBox.currentIndex() == 3:
-            for tick in ticks:
-                tick.tick1On = False
-                tick.tick2On = False
+            self.axes.tick_params(axis='x', which='major', bottom=False, top=False)
 
 
         # Change Tick labels rotation
         labels = self.axes.get_xticklabels()
         for label in labels:
-            label.set_rotation( int( self.xTickLabelRotationCBox.currentText() ) )
+            label.set_rotation(float(self.xTickLabelRotationCBox.currentText()))
+
 
 
         # Check whether font name is changed in tab-widget and then change it in plot
@@ -685,35 +696,28 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
             self.xTickMinorTickWidthLineEdit.setText(str(self.axesProps.xTickLabel['Minor Ticks Width']))
 
             # Reset positions of minor ticks according to major ticks
-            ticks = self.axes.get_xaxis().get_minor_ticks()
             # Bottom tick label
             if self.xTickShowTicksCBox.currentIndex() == 0:
-                for tick in ticks:
-                    tick.tick1On = True
-                    tick.tick2On = True
+                self.axes.tick_params(axis='x', which='minor', bottom=True, top=True)
+
             # top tick label
             if self.xTickShowTicksCBox.currentIndex() == 1:
-                for tick in ticks:
-                    tick.tick1On = True
-                    tick.tick2On = False
+                self.axes.tick_params(axis='x', which='minor', bottom=True, top=False)
+
             # tick label at both side
             if self.xTickShowTicksCBox.currentIndex() == 2:
-                for tick in ticks:
-                    tick.tick1On = False
-                    tick.tick2On = True
+                self.axes.tick_params(axis='x', which='minor', bottom=False, top=True)
+
             # hide tick label
             if self.xTickShowTicksCBox.currentIndex() == 3:
-                for tick in ticks:
-                    tick.tick1On = False
-                    tick.tick2On = False
+                self.axes.tick_params(axis='x', which='minor', bottom=False, top=False)
+
 
         # If minor ticks are disabled, remove them
         if self.xTickShowMinorTicksCBox.currentIndex() == 0:
             ticks = self.axes.get_xaxis().get_minor_ticks()
             if ticks:
-                for tick in ticks:
-                    tick.tick1On = False
-                    tick.tick2On = False
+                self.axes.tick_params(axis='x', which='minor', bottom=False, top=False)
 
     def displayYTickLabelPropsOnTabWidget(self):
         # Display tick label position
@@ -786,54 +790,41 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
 
         # Bottom tick label
         if self.yTickShowTickLabelsCBox.currentIndex() == 0:
-            for tick in ticks:
-                tick.label1On = True
-                tick.label2On = False
+            self.axes.tick_params(axis='y', which='major', labelleft=True, labelright=False)
+
         # top tick label
         if self.yTickShowTickLabelsCBox.currentIndex() == 1:
-            for tick in ticks:
-                tick.label1On = False
-                tick.label2On = True
+            self.axes.tick_params(axis='y', which='major', labelleft=False, labelright=True)
+
         # tick label at both side
         if self.yTickShowTickLabelsCBox.currentIndex() == 2:
-            for tick in ticks:
-                tick.label1On = True
-                tick.label2On = True
+            self.axes.tick_params(axis='y', which='major', labelleft=True, labelright=True)
+
         # hide tick label
         if self.yTickShowTickLabelsCBox.currentIndex() == 3:
-            for tick in ticks:
-                tick.label1On = False
-                tick.label2On = False
+            self.axes.tick_params(axis='y', which='major', labelleft=False, labelright=False)
 
 
-        ticks = self.axes.get_yaxis().get_major_ticks()
         # Both ticks position
         if self.yTickShowTicksCBox.currentIndex() == 0:
-            for tick in ticks:
-                tick.tick1On = True
-                tick.tick2On = True
+            self.axes.tick_params(axis='y', which='major', left=True, right=True)
+
         # bottom ticks position
         if self.yTickShowTicksCBox.currentIndex() == 1:
-            for tick in ticks:
-                tick.tick1On = True
-                tick.tick2On = False
+            self.axes.tick_params(axis='y', which='major', left=True, right=False)
+
         # top ticks position
         if self.yTickShowTicksCBox.currentIndex() == 2:
-            for tick in ticks:
-                tick.tick1On = False
-                tick.tick2On = True
+            self.axes.tick_params(axis='y', which='major', left=False, right=True)
+
         # hide ticks position
         if self.yTickShowTicksCBox.currentIndex() == 3:
-            for tick in ticks:
-                tick.tick1On = False
-                tick.tick2On = False
-
+            self.axes.tick_params(axis='y', which='major', left=False, right=False)
 
         # Change Tick labels rotation
         labels = self.axes.get_yticklabels()
         for label in labels:
-            label.set_rotation( int( self.yTickLabelRotationCBox.currentText() ) )
-
+            label.set_rotation(float(self.yTickLabelRotationCBox.currentText()))
 
         # Check whether font name is changed in tab-widget and then change it in plot
         qfont = self.yTickFontNameCBox.currentFont()
@@ -897,39 +888,33 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
             ticks = self.axes.get_yaxis().get_minor_ticks()
             # Bottom tick label
             if self.yTickShowTicksCBox.currentIndex() == 0:
-                for tick in ticks:
-                    tick.tick1On = True
-                    tick.tick2On = True
+                self.axes.tick_params(axis='y', which='minor', left=True, right=True)
+
             # top tick label
             if self.yTickShowTicksCBox.currentIndex() == 1:
-                for tick in ticks:
-                    tick.tick1On = True
-                    tick.tick2On = False
+                self.axes.tick_params(axis='y', which='minor', left=True, right=False)
+
             # tick label at both side
             if self.yTickShowTicksCBox.currentIndex() == 2:
-                for tick in ticks:
-                    tick.tick1On = False
-                    tick.tick2On = True
+                self.axes.tick_params(axis='y', which='minor', left=False, right=True)
+
             # hide tick label
             if self.yTickShowTicksCBox.currentIndex() == 3:
-                for tick in ticks:
-                    tick.tick1On = False
-                    tick.tick2On = False
+                self.axes.tick_params(axis='y', which='minor', left=False, right=False)
+
 
         # If minor ticks are disabled, remove them
         if self.yTickShowMinorTicksCBox.currentIndex() == 0:
             ticks = self.axes.get_yaxis().get_minor_ticks()
             if ticks:
-                for tick in ticks:
-                    tick.tick1On = False
-                    tick.tick2On = False
+                self.axes.tick_params(axis='y', which='minor', left=False, right=False)
 
     def uponButtonClicked(self, button):
-        if button.text() == 'Apply':
+        if 'Apply' in button.text():
             self.changeAxisPropsOnAxes()
-        if button.text() == 'Cancel':
+        if 'Cancel' in button.text():
             self.done(QDialog.Rejected)
-        if button.text() == 'OK':
+        if 'OK' in button.text():
             self.changeAxisPropsOnAxes()
             self.done(QDialog.Accepted)
 
@@ -961,7 +946,68 @@ class DialogAxisProps(QDialogAxisPropsBase, Ui_DialogAxisProps):
             self.yTickMinorTickLenLineEdit.setEnabled(False)
             self.yTickMinorTickWidthLineEdit.setEnabled(False)
 
+    def save_colorbar(self):
+        length = float(self.cbarLength.currentText())
+        width = float(self.cbarWidth.currentText())
+        orientation = self.cbarOrientation.currentText()
 
+        if orientation == 'horizontal':
+            size = (length, width)
+        else:
+            size = (width, length)
+        fig = plt.figure(figsize=size)
+        ax = fig.add_subplot(111)
+        cbar = fig.colorbar(self.image, ax, orientation=orientation)
+
+        if orientation == 'horizontal':
+            if self.colorScaleStatus == 'Logarithm of map':
+                ticks = cbar.ax.get_xticklabels()
+                ticklabels = list(map(lambda x: r'2$^{{{0}}}$'.format(x.get_text()), ticks))
+                cbar.ax.set_xticklabels(ticklabels)
+            labels = cbar.ax.get_xticklabels()
+        else:
+            if self.colorScaleStatus == 'Logarithm of map':
+                ticks = cbar.ax.get_yticklabels()
+                ticklabels = list(map(lambda x: r'2$^{{{0}}}$'.format(x.get_text()), ticks))
+                cbar.ax.set_yticklabels(ticklabels)
+            labels = cbar.ax.get_yticklabels()
+
+        for label in labels:
+            label.set_fontsize(int(self.cbarTickLabelFontSizeCBox.currentText()))
+
+        if self.cbarLabelLineEdit.text():
+            cbar.set_label(self.cbarLabelLineEdit.text(), fontsize=int(self.cbarLabelFontSizeCBox.currentText()))
+
+        fig.tight_layout()
+
+        ## Save colorbat as file
+        # Get list of all available formats
+        formatGroups = fig.canvas.get_supported_filetypes_grouped()
+
+        # Make full list of formats
+        file_choices = 'Image formats ('
+        for desc in formatGroups:
+            for imgFormat in formatGroups[desc]:
+                file_choices += ' *.{0}'.format(imgFormat)
+        file_choices += ')'
+
+        # Make list format by each category
+        for desc in formatGroups:
+            file_choices += ';;{0} ('.format(desc)
+            for imgFormat in formatGroups[desc]:
+                file_choices += ' *.{0}'.format(imgFormat)
+            file_choices += ')'
+
+        # Just added for any formats
+        file_choices += ";;All formats (*.*)"
+
+        path = QFileDialog.getSaveFileName(self, 'Save colorbar file', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
+
+        if path[0]:
+            fig.savefig(path[0], dpi=300)
+
+        del fig
 
 # Dialog box to select and load genomic data
 pathToThisUI = os.path.join(PathToUIs, 'genomicDataSelector.ui')
@@ -1076,7 +1122,7 @@ class DialogGenomicsDataSelector(QDialogGenomicsDataSelectorBase, Ui_DialogGenom
     def on_button_clicked(self, button):
         """Do when Open/Abort button is clicked
         """
-        if button.text() == "Open":
+        if "Open" in button.text():
             if self.dataNameListWidget.currentItem() is not None:
                 chroms = self.chromNameListWidget.currentItem().text()
                 resolution = self.chromResolutionListWidget.currentItem().text()
@@ -1099,7 +1145,7 @@ class DialogGenomicsDataSelector(QDialogGenomicsDataSelectorBase, Ui_DialogGenom
                 self.whereToPlot = self.plotAtComboBox.currentText().lower()
                 self.accept()
 
-        if button.text() == "Abort":
+        if "Abort" in button.text():
             self.reject()
 
 
@@ -1131,7 +1177,8 @@ class DialogTextFileSelector(QDialogTextFileSelectorBase, Ui_DialogTextFileSelec
         """
         # A dialog box will be displayed to select a text file and path will be stored in the cell
         file_choices = " text file (*.txt *.dat)"
-        path = QFileDialog.getOpenFileName(self, 'Select a text file', '', file_choices)
+        path = QFileDialog.getOpenFileName(self, 'Select a text file', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             self.fileNameLineEdit.setText( path[0] )
 
@@ -1178,12 +1225,12 @@ class DialogTextFileSelector(QDialogTextFileSelectorBase, Ui_DialogTextFileSelec
     def onOkCancelButtonsClicked(self, button):
         """Do when final OK or Cancel buttons are clicked by user
         """
-        if button.text() == 'OK':
+        if 'OK' in button.text():
             if self.parseDisplayedOptions():
                 self.done(QDialog.Accepted)
             else:
                 return
-        if button.text() == 'Cancel':
+        if 'Cancel' in button.text():
             self.done(QDialog.Rejected)
 
 # Dialog box to choose and load genomic data
@@ -1296,7 +1343,8 @@ class DialogCorrelationBetweenMaps(QDialogCorrelationMapsBase, Ui_DialogCorrelat
         """
         # A dialog box will be displayed to select a text file and path will be stored in the cell
         file_choices = " ccmap file (*.ccmap)"
-        path = QFileDialog.getOpenFileName(self, 'Load File', '', file_choices)
+        path = QFileDialog.getOpenFileName(self, 'Load File', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             self.firstMapInputLineEdit.setText( path[0] )
 
@@ -1305,7 +1353,8 @@ class DialogCorrelationBetweenMaps(QDialogCorrelationMapsBase, Ui_DialogCorrelat
         """
         # A dialog box will be displayed to select a text file and path will be stored in the cell
         file_choices = " ccmap file (*.ccmap)"
-        path = QFileDialog.getOpenFileName(self, 'Load File', '', file_choices)
+        path = QFileDialog.getOpenFileName(self, 'Load File', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             self.secondMapInputLineEdit.setText( path[0] )
 
@@ -1501,7 +1550,8 @@ class DialogCorrelationBetweenMaps(QDialogCorrelationMapsBase, Ui_DialogCorrelat
         """
         # A dialog box will be displayed to select a text file and path will be stored in the cell
         file_choices = " text file (*.txt *.dat)"
-        path = QFileDialog.getSaveFileName(self, 'Save Output File', '', file_choices)
+        path = QFileDialog.getSaveFileName(self, 'Save Output File', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             outfile = path[0]
             ext = os.path.splitext(outfile)[1]
@@ -1531,7 +1581,7 @@ class AxesProperties:
         self.get_from_axes()
 
     def init_xlabel_dict(self):
-        xLabel = dict()
+        xLabel = OrderedDict()
         xLabel['Text'] = None
         xLabel['Show Label'] = None
         xLabel['Font Name'] = None
@@ -1540,7 +1590,7 @@ class AxesProperties:
         return xLabel
 
     def init_yLabel_dict(self):
-        yLabel = dict()
+        yLabel = OrderedDict()
         yLabel['Text'] = None
         yLabel['Show Label'] = None
         yLabel['Font Name'] = None
@@ -1549,7 +1599,7 @@ class AxesProperties:
         return yLabel
 
     def init_xTickLabel_dict(self):
-        xTickLabel = dict()
+        xTickLabel = OrderedDict()
         xTickLabel['Label Position'] = None
         xTickLabel['Label Rotation'] = None
         xTickLabel['Font Name'] = None
@@ -1566,7 +1616,7 @@ class AxesProperties:
         return xTickLabel
 
     def init_yTickLabel_dict(self):
-        yTickLabel = dict()
+        yTickLabel = OrderedDict()
         yTickLabel['Label Position'] = None
         yTickLabel['Label Rotation'] = None
         yTickLabel['Font Name'] = None
@@ -1840,44 +1890,27 @@ class AxesProperties:
             self.axes.get_xaxis().set_minor_locator(minorLocator)
 
         # Tick position and Tick-label position
-        ticks = self.axes.get_xaxis().get_major_ticks()
-        if self.xTickLabel['Minor Ticks Visible']:
-            ticks = ticks + self.axes.get_xaxis().get_minor_ticks()
-
         if self.xTickLabel['Tick Position'] == 'both':
-            for tick in ticks:
-                tick.tick1On = True
-                tick.tick2On = True
+            self.axes.tick_params(axis='x', which='both', bottom=True, top=True)
         if self.xTickLabel['Tick Position'] == 'bottom':
-            for tick in ticks:
-                tick.tick1On = True
-                tick.tick2On = False
+            self.axes.tick_params(axis='x', which='both', bottom=True, top=False)
         if self.xTickLabel['Tick Position'] == 'top':
-            for tick in ticks:
-                tick.tick1On = False
-                tick.tick2On = True
+            self.axes.tick_params(axis='x', which='both', bottom=False, top=True)
         if self.xTickLabel['Tick Position'] == 'none':
-            for tick in ticks:
-                tick.tick1On = False
-                tick.tick2On = False
+            self.axes.tick_params(axis='x', which='both', bottom=False, top=False)
 
         ticks = self.axes.get_xaxis().get_major_ticks()
         if self.xTickLabel['Label Position'] == 'both':
-            for tick in ticks:
-                tick.label1On = True
-                tick.label2On = True
+            self.axes.tick_params(axis='x', which='major', labelbottom=True, labeltop=True)
+
         if self.xTickLabel['Label Position'] == 'bottom':
-            for tick in ticks:
-                tick.label1On = True
-                tick.label2On = False
+            self.axes.tick_params(axis='x', which='major', labelbottom=True, labeltop=False)
+
         if self.xTickLabel['Label Position'] == 'top':
-            for tick in ticks:
-                tick.label1On = False
-                tick.label2On = True
+            self.axes.tick_params(axis='x', which='major', labelbottom=False, labeltop=True)
+
         if self.xTickLabel['Label Position'] == 'none':
-            for tick in ticks:
-                tick.label1On = False
-                tick.labelOn = False
+            self.axes.tick_params(axis='x', which='major', labelbottom=False, labeltop=False)
 
         #Setting tick-label padding
         self.axes.xaxis.set_tick_params(pad=self.xTickLabel['padding'])
@@ -1915,44 +1948,27 @@ class AxesProperties:
             self.axes.get_yaxis().set_minor_locator(minorLocator)
 
         # Tick position and Tick-label position
-        ticks = self.axes.get_yaxis().get_major_ticks()
-        if self.yTickLabel['Minor Ticks Visible']:
-            ticks = ticks + self.axes.get_yaxis().get_minor_ticks()
-
         if self.yTickLabel['Tick Position'] == 'both':
-            for tick in ticks:
-                tick.tick1On = True
-                tick.tick2On = True
+            self.axes.tick_params(axis='y', which='both', left=True, right=True)
         if self.yTickLabel['Tick Position'] == 'left':
-            for tick in ticks:
-                tick.tick1On = True
-                tick.tick2On = False
+            self.axes.tick_params(axis='y', which='both', left=True, right=False)
         if self.yTickLabel['Tick Position'] == 'right':
-            for tick in ticks:
-                tick.tick1On = False
-                tick.tick2On = True
+            self.axes.tick_params(axis='y', which='both', left=False, right=True)
         if self.yTickLabel['Tick Position'] == 'none':
-            for tick in ticks:
-                tick.tick1On = False
-                tick.tick2On = False
+            self.axes.tick_params(axis='y', which='both', left=False, right=False)
 
-        ticks = self.axes.get_yaxis().get_major_ticks()
         if self.yTickLabel['Label Position'] == 'both':
-            for tick in ticks:
-                tick.label1On = True
-                tick.label2On = True
+            self.axes.tick_params(axis='y', which='major', labelleft=True, labelright=True)
+
         if self.yTickLabel['Label Position'] == 'left':
-            for tick in ticks:
-                tick.label1On = True
-                tick.label2On = False
+            self.axes.tick_params(axis='y', which='major', labelleft=True, labelright=False)
+
         if self.yTickLabel['Label Position'] == 'right':
-            for tick in ticks:
-                tick.label1On = False
-                tick.label2On = True
+            self.axes.tick_params(axis='y', which='major', labelleft=False, labelright=True)
+
         if self.yTickLabel['Label Position'] == 'none':
-            for tick in ticks:
-                tick.label1On = False
-                tick.labelOn = False
+            self.axes.tick_params(axis='y', which='major', labelleft=False, labelright=False)
+
 
         #Setting tick-label padding
         self.axes.yaxis.set_tick_params(pad=self.yTickLabel['padding'])
@@ -1995,6 +2011,23 @@ class AxesProperties:
         self.setXTickLabelPropsToAxes()
         self.setYTickLabelPropsToAxes()
 
+    def exportAttrsAsDict(self):
+        data = OrderedDict()
+        self.get_from_axes()
+        data['xLabel'] = self.xLabel.copy()
+        data['yLabel'] = self.yLabel.copy()
+        data['xTickLabel'] = self.xTickLabel.copy()
+        data['yTickLabel'] = self.yTickLabel.copy()
+        return data
+
+    def setAttrsFromDict(self, data):
+        self.xLabel = data['xLabel']
+        self.yLabel = data['yLabel']
+        self.xTickLabel = data['xTickLabel']
+        self.yTickLabel = data['yTickLabel']
+        self.set_to_axes() # Set new props to axis
+
+
 
 class menuRightClick(QMenu):
     def __init__(self, ):
@@ -2011,6 +2044,8 @@ class menuRightClick(QMenu):
         self.actionList[2] = self.actionXtickLabel
         self.actionYtickLabel = self.addAction("Edit Y-ticks Label...")
         self.actionList[3] = self.actionYtickLabel
+        self.actionColorBar = self.addAction("Save colorbar...")
+        self.actionList[4] = self.actionColorBar
 
 # Dialog box to change page size by custom length
 # Dialog box to choose and load genomic data
@@ -2304,7 +2339,7 @@ class DialogUserColorMap(DialogUserColorMapBase, Ui_DialogUserColorMap):
             self.cmapNameLineEdit.setFocus(True)
             return
 
-        colorInfo = dict()
+        colorInfo = OrderedDict()
         colorInfo['name'] = name
         colorInfo['colors'] = self.getColorDictFromTable()
 
@@ -2335,7 +2370,8 @@ class DialogUserColorMap(DialogUserColorMapBase, Ui_DialogUserColorMap):
 
         # A dialog box will be displayed to select a file and path will be stored in the cell
         file_choices = " json file (*.json);;All Files(*.*)"
-        path = QFileDialog.getSaveFileName(self, 'Select or Create File', '', file_choices, options=QFileDialog.DontConfirmOverwrite)
+        path = QFileDialog.getSaveFileName(self, 'Select or Create File', guiHelpers.lastVisitedDir, file_choices, options=QFileDialog.DontConfirmOverwrite)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             outDir = os.path.dirname( path[0] )
             baseName = os.path.basename( path[0] )
@@ -2355,7 +2391,8 @@ class DialogUserColorMap(DialogUserColorMapBase, Ui_DialogUserColorMap):
         """
         # A dialog box will be displayed to select a json file
         file_choices = " json file (*.json);;All Files(*.*)"
-        path = QFileDialog.getOpenFileName(self, 'Load File', '', file_choices)
+        path = QFileDialog.getOpenFileName(self, 'Load File', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if not path[0]:
             return
 
@@ -2481,7 +2518,7 @@ def add_colormaps_to_combobox(cbox):
     icon_path = os.path.join(DirToThisScript, 'icons')
     icon_path = os.path.join(icon_path, 'cmaps')
 
-    cmap = dict()
+    cmap = OrderedDict()
     for i in range(len(cmap_lists)):
         cmap[i] = cmap_lists[i]
 
@@ -2533,9 +2570,9 @@ def segmentDataColorMapToColorInfo(colormap):
                     └------ values -> color
 
     """
-    colorInfo = dict()
+    colorInfo = OrderedDict()
     colorInfo['name'] = colormap.name
-    colorInfo['colors'] = dict()
+    colorInfo['colors'] = OrderedDict()
     for i in range(len(colormap._segmentdata['blue'])):
         value = colormap._segmentdata['blue'][i][0]
         r = colormap._segmentdata['red'][i][1]

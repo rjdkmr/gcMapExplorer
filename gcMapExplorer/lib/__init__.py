@@ -7,4 +7,5 @@ __all__ = [ 'ccmap',
             'normalizeKnightRuiz',
             'genomicsDataHandler',
             'corrMatrix',
-            'statDist']
+            'statDist',
+            'compartments']

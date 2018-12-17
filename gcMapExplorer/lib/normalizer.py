@@ -861,7 +861,7 @@ def normalizeCCMapByMCFS(ccMap, stats='median', vmin=None, vmax=None, stype='o/e
             normCore.normalizeByAvgContactByDivision(ccMapObj.matrix, avgContacts, Out=normCCMap.matrix)
 
         if stype == 'o-e':
-            normCore.normalizeByAvgContactBySubstraction(ccMapObj.matrix, avgContacts, Out=normCCMap.matrix)
+            normCore.normalizeByAvgContactBySubtraction(ccMapObj.matrix, avgContacts, Out=normCCMap.matrix)
 
         marray = np.ma.masked_equal(normCCMap.matrix, 0.0, copy=False)
         normCCMap.minvalue = marray.min()

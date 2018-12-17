@@ -29,6 +29,9 @@ from PyQt5.QtGui import *
 from PyQt5.uic import loadUiType
 
 
+'''Show this directory in file-dialog'''
+lastVisitedDir = os.getcwd()
+
 # Determine absolute path to UIs directory. Relative path from this directory does not work.
 DirToThisScript = os.path.dirname(os.path.abspath(__file__))
 PathToUIs = os.path.join(DirToThisScript, 'UIs')

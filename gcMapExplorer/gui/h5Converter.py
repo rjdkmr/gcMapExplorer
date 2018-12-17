@@ -35,6 +35,8 @@ from gcMapExplorer import lib as gmlib
 
 from gcMapExplorer.config import getConfig
 
+from . import guiHelpers
+
 # get configuration
 config = getConfig()
 
@@ -266,7 +268,8 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
         """
         # A dialog box will be displayed to select a file and path will be stored in the cell
         file_choices = " dataset files (*.bigWig *.wig *.bed);;All Files(*.*)"
-        path = QFileDialog.getOpenFileName(self, 'Open File', '', file_choices)
+        path = QFileDialog.getOpenFileName(self, 'Open File', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             self.inFileLineEdit.setText(path[0])
         self.checkInputFileFormat(fromButton=True)
@@ -311,7 +314,8 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
         """
         # A dialog box will be displayed to select a file and path will be stored in the cell
         file_choices = " h5/hdf5 files (*.h5 *.hdf5);;All Files(*.*)"
-        path = QFileDialog.getSaveFileName(self, 'Select or Create File', '', file_choices, options=QFileDialog.DontConfirmOverwrite)
+        path = QFileDialog.getSaveFileName(self, 'Select or Create File', guiHelpers.lastVisitedDir, file_choices, options=QFileDialog.DontConfirmOverwrite)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             self.h5FileLineEdit.setText(os.path.normpath(path[0]))
         self.validateH5OutFile()
@@ -474,7 +478,8 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
         """
         # A dialog box will be displayed to select a file and path will be stored in the cell
         file_choices = " Binary Executable (* *.exe)"
-        path = QFileDialog.getOpenFileName(self, 'Open File', '', file_choices)
+        path = QFileDialog.getOpenFileName(self, 'Open File', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             self.bigWigInfoLineEdit.setText(path[0])
         self.checkBigWigInfoProgram(fromButton=True)
@@ -499,7 +504,8 @@ class DialogOther1DFormatLoader(DialogOther1DFormatLoaderBase, Ui_DialogOther1DF
         """
         # A dialog box will be displayed to select a file and path will be stored in the cell
         file_choices = " Binary Executable (*)"
-        path = QFileDialog.getOpenFileName(self, 'Open File', '', file_choices)
+        path = QFileDialog.getOpenFileName(self, 'Open File', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             self.bigWigToWigPathLineEdit.setText(path[0])
         self.checkBigWigToWigProgram(fromButton=True)

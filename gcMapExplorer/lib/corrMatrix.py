@@ -26,6 +26,7 @@ import scipy as sp
 import logging
 
 from . import gcmap as gmp
+from . import ccmap as cmp
 from .ccmap import checkCCMapObjectOrFile
 from . import util
 
@@ -66,7 +67,8 @@ def calculateCorrMatrixForCCMap(inputCCMap, logspace=False, maskvalue=0.0, vmin=
         Maximum threshold value for normalization. If contact frequency is greater than
         or equal to this threshold value, this value is discarded during normalization.
     outFile : str
-        Name of output ccmap file, to save directly the correlation matrix as a ccmap file. In case of this option, ``None`` will return.
+        Name of output ccmap file, to save directly the correlation matrix as a ccmap file.
+        In case of this option, ``None`` will return.
     workDir : str
         Path to the directory where temporary intermediate files are generated.
         If ``None``, files are generated in the temporary directory according to the main configuration.
@@ -75,7 +77,8 @@ def calculateCorrMatrixForCCMap(inputCCMap, logspace=False, maskvalue=0.0, vmin=
     Returns
     -------
     ccMapObj : :class:`gcMapExplorer.lib.ccmap.CCMAP` or ``None``
-        Normalized Contact map. When ``outFile`` is provided, ``None`` is returned. In case of any other error, ``None`` is returned.
+        Correlation matrix as ccmap object. When ``outFile`` is provided, ``None`` is returned.
+        In case of any other error, ``None`` is returned.
 
     """
 
@@ -237,9 +240,9 @@ def calculateCorrMatrixForGCMaps(gcMapInputFile, gcMapOutFile, logspace=False, m
             if vmin is not None or vmax is not None:
                 ccMap.make_editable()
                 if vmin is not None:
-                    ccMap.matrix[np.nonzero(ccMap.matrix <= vmin)] = mask
+                    ccMap.matrix[np.nonzero(ccMap.matrix <= vmin)] = maskvalue
                 if vmax is not None:
-                    ccMap.matrix[np.nonzero(ccMap.matrix >= vmax)] = mask
+                    ccMap.matrix[np.nonzero(ccMap.matrix >= vmax)] = maskvalue
                 ccMap.matrix.flush()
                 ccMap.make_unreadable()
 

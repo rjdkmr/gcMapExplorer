@@ -35,6 +35,7 @@ Features
 * Contact maps can be **zoomed in/out** from finest resolution to whole chromosome level.
 * Rich customizations of **color scale for contact maps** visualization
 * Rich customizations of **X- and Y- axis properties**.
+* **Save visualization states and view-points** for later browsing
 
 * `Normalization of contact maps`_ by
     * **Iterative Correction** (IC)
@@ -50,6 +51,7 @@ Features
   - much faster than above format to read/write but not compact. Suitable for performing calculations.
 * `A GUI interface and commands <http://gcmapexplorer.readthedocs.io/en/latest/about_gcmap_file.html#convert-hi-c-data-to-gcmap>`_
   to convert Coordinate Sparse, Pair Coordinate Sparse, HOMER Interaction matrix, Bin-Contact formats into the new gcmap and ccmap formats.
+* Command `to convert juicebox/juicer hic format to gcmap <<http://gcmapexplorer.readthedocs.io/en/latest/commands/hic2gcmap.html>`_.
 * Interface and commands to `convert bigWig/wig/bed file to genomic track dataset h5 file`_.
 * Interface and commands for `Normalization of contact maps`_.
 * Publication ready images at one click.

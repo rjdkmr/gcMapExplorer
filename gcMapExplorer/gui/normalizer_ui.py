@@ -163,7 +163,8 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
         """
         # A dialog box will be displayed to select a text file and path will be stored in the cell
         file_choices = " map files (*.ccmap *.gcmap *.hicmap);; All files (*.*)"
-        path = QFileDialog.getOpenFileName(self, 'Open File', '', file_choices)
+        path = QFileDialog.getOpenFileName(self, 'Open File', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             self.inputFileLineEdit.setText(path[0])
             self.setFileFormat(self.inputFileLineEdit, self.inputFormatCBox)   # Set input file format
@@ -199,7 +200,8 @@ class ImporterWindow(ImporterWindowBase, Ui_ImporterWindow):
         """
         # A dialog box will be displayed to select a text file and path will be stored in the cell
         file_choices = " gcmap or ccmap file (*.gcmap *.ccmap);;All files(*.*)"
-        path = QFileDialog.getSaveFileName(self, 'Select or Create File', '', file_choices, options=QFileDialog.DontConfirmOverwrite)
+        path = QFileDialog.getSaveFileName(self, 'Select or Create File', guiHelpers.lastVisitedDir, file_choices, options=QFileDialog.DontConfirmOverwrite)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             self.outFileLineEdit.setText(path[0])
             self.setFileFormat(self.outFileLineEdit, self.outFormatCBox)   # Set input file format

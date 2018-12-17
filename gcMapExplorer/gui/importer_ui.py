@@ -124,7 +124,8 @@ class cooMatFormatTabWidgetHelper:
         """
         # A dialog box will be displayed to select a text file and path will be stored in the cell
         file_choices = " Text file (*.txt *.*)"
-        path = QFileDialog.getOpenFileName(self, 'Load File', '', file_choices)
+        path = QFileDialog.getOpenFileName(self, 'Load File', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
 
         # Make list of input files
         inputFiles, xlabels, ylabels = [], [], []
@@ -198,7 +199,8 @@ class cooMatFormatTabWidgetHelper:
 
         # A dialog box will be displayed to select a text file and path will be stored in the cell
         file_choices = " Text file (*.txt *.*)"
-        path = QFileDialog.getOpenFileName(self, 'Load File', '', file_choices)
+        path = QFileDialog.getOpenFileName(self, 'Load File', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             # Add input file to first column
             self.cooMatIOTable.item(row, 0).setText(path[0])
@@ -234,7 +236,8 @@ class cooMatFormatTabWidgetHelper:
         """
         # A dialog box will be displayed to select a text file and path will be stored in the cell
         file_choices = " Archive file (*.zip *.tar.gz *.tar.bz2)"
-        path = QFileDialog.getOpenFileName(self, 'Open File', '', file_choices)
+        path = QFileDialog.getOpenFileName(self, 'Open File', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             self.cooMatArchivFileLineEdit.setText(path[0])
 
@@ -257,7 +260,8 @@ class cooMatFormatTabWidgetHelper:
         """
         # A dialog box will be displayed to select a text file and path will be stored in the cell
         file_choices = " gcmap file (*.gcmap);;All files(*.*)"
-        path = QFileDialog.getSaveFileName(self, 'Select or Create File', '', file_choices, options=QFileDialog.DontConfirmOverwrite)
+        path = QFileDialog.getSaveFileName(self, 'Select or Create File', guiHelpers.lastVisitedDir, file_choices, options=QFileDialog.DontConfirmOverwrite)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             self.cooMatGCMapOutLineEdit.setText(path[0])
 
@@ -423,7 +427,8 @@ class homerFormatTabWidgetHelper:
         """
         # A dialog box will be displayed to select a text file and path will be stored in the cell
         file_choices = " Text file (*.txt *.dat);; All file (*.*)"
-        path = QFileDialog.getOpenFileName(self, 'Open File', '', file_choices)
+        path = QFileDialog.getOpenFileName(self, 'Open File', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             self.homerInputFileLineEdit.setText(path[0])
 
@@ -446,7 +451,8 @@ class homerFormatTabWidgetHelper:
         """
         # A dialog box will be displayed to select a text file and path will be stored in the cell
         file_choices = " gcmap file (*.gcmap);;All files(*.*)"
-        path = QFileDialog.getSaveFileName(self, 'Select or Create File', '', file_choices, options=QFileDialog.DontConfirmOverwrite)
+        path = QFileDialog.getSaveFileName(self, 'Select or Create File', guiHelpers.lastVisitedDir, file_choices, options=QFileDialog.DontConfirmOverwrite)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             self.homerGCMapOutLineEdit.setText(path[0])
 
@@ -571,7 +577,8 @@ class binContactFormatTabWidgetHelper:
         """
         # A dialog box will be displayed to select a text file and path will be stored in the cell
         file_choices = " Text file (*.txt *.dat);; All file (*.*)"
-        path = QFileDialog.getOpenFileName(self, 'Open File', '', file_choices)
+        path = QFileDialog.getOpenFileName(self, 'Open File', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             self.binContactInputBinFileLineEdit.setText(path[0])
 
@@ -580,7 +587,8 @@ class binContactFormatTabWidgetHelper:
         """
         # A dialog box will be displayed to select a text file and path will be stored in the cell
         file_choices = " Text file (*.txt *.dat);; All file (*.*)"
-        path = QFileDialog.getOpenFileName(self, 'Open File', '', file_choices)
+        path = QFileDialog.getOpenFileName(self, 'Open File', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             self.binContactInputContactFileLineEdit.setText(path[0])
 
@@ -603,7 +611,8 @@ class binContactFormatTabWidgetHelper:
         """
         # A dialog box will be displayed to select a text file and path will be stored in the cell
         file_choices = " gcmap file (*.gcmap);;All files(*.*)"
-        path = QFileDialog.getSaveFileName(self, 'Select or Create File', '', file_choices, options=QFileDialog.DontConfirmOverwrite)
+        path = QFileDialog.getSaveFileName(self, 'Select or Create File', guiHelpers.lastVisitedDir, file_choices, options=QFileDialog.DontConfirmOverwrite)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             self.binContactGCMapOutLineEdit.setText(path[0])
 
@@ -734,7 +743,8 @@ class pairCooMatFormatTabWidgetHelper:
         """
         # A dialog box will be displayed to select a text file and path will be stored in the cell
         file_choices = " Text file (*.txt *.dat);; All file (*.*)"
-        path = QFileDialog.getOpenFileName(self, 'Open File', '', file_choices)
+        path = QFileDialog.getOpenFileName(self, 'Open File', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             self.pairCooMatInputFileLineEdit.setText(path[0])
 
@@ -757,7 +767,8 @@ class pairCooMatFormatTabWidgetHelper:
         """
         # A dialog box will be displayed to select a text file and path will be stored in the cell
         file_choices = " gcmap file (*.gcmap);;All files(*.*)"
-        path = QFileDialog.getSaveFileName(self, 'Select or Create File', '', file_choices, options=QFileDialog.DontConfirmOverwrite)
+        path = QFileDialog.getSaveFileName(self, 'Select or Create File', guiHelpers.lastVisitedDir, file_choices, options=QFileDialog.DontConfirmOverwrite)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
         if path[0]:
             self.pairCooMatGCMapOutLineEdit.setText(path[0])
 

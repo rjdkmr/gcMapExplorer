@@ -138,3 +138,43 @@ this box, right click on plot and choose the axis properties.
       :alt: Screen snapshot of Axis Properties interface in Browser
 
       Axis Properties interface in Browser
+
+Save and Load View Points
+-------------------------
+Visualization state can be also saved as view-points. To add a view Points,
+select ``View Points`` in ``settings`` at left panel. Then, click on ``Add``
+buttons. It will add the current visualization state in the list. One can add
+as many as view points in the list.
+
+.. figure:: images/view-point.png
+      :scale: 100%
+      :alt: Screen snapshot of view-point list
+
+      List of stored view-points in browser
+
+Each view-point store all settings of the plot. By double-clicking on a
+view-point, it can be loaded as it was stored.
+
+More importantly, all these view-points can be saved in a file for later viewing. Click on
+``File`` -> ``Save Visual State and View Points`` to save exact visualization states and
+all view-points as a file.
+
+The saved file can be opened by clicking on ``File`` -> ``Load Visual State and View Points``. The file can be
+also loaded directly by following command.
+
+::
+
+    gcMapExplorer browser visual_states.gvs
+
+
+Save color-bar
+--------------
+The browser does not display a color-bar. However, a color-bar can be saved as an image
+file, separately. To save the color-bar, right click on map and select ``Save colorbar...``.
+Input the information, and save the color-bar as image file.
+
+.. figure:: images/color-bar-dialog.png
+      :scale: 100%
+      :alt: Screen snapshot of color-bar interface
+
+      Generate color-bar.

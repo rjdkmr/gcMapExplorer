@@ -1044,7 +1044,7 @@ def changeGCMapCompression(infile, outfile, compression, logHandler=None):
                 outHdf5.pop(mapName)
 
             if inHdf5[mapName].attrs['compression'] == compression:
-                logger.info('Group [{0}] is already compressed by requested {1} method. Skipping!!!' .format(mapName))
+                logger.info('Group [{0}] is already compressed by requested {1} method. Skipping!!!' .format(mapName, compression))
                 continue
 
             outHdf5.create_group(mapName)
@@ -1053,6 +1053,7 @@ def changeGCMapCompression(infile, outfile, compression, logHandler=None):
 
             outHdf5[mapName].attrs['compression'] = compression
 
+            logger.info('Compressing data for [{0}] ...'.format(mapName))
             for data in inHdf5[mapName].keys():
                 group = outHdf5[mapName]
                 dset = inHdf5[mapName][data]

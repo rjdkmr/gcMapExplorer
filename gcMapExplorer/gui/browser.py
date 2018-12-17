@@ -22,9 +22,10 @@
 
 import sys, os, random
 from enum import Enum
-import pdb
+from collections import OrderedDict
 import numpy as np
 import math
+import json
 from numpy import ma
 import h5py
 np.seterr(all='ignore')
@@ -36,11 +37,12 @@ from PyQt5.QtPrintSupport import *
 from PyQt5.uic import loadUiType
 
 import matplotlib as mpl
+import matplotlib.style as mplstyle
+mplstyle.use('fast')
 from matplotlib import figure as mplFigure
-from matplotlib import widgets as malWidgets
+from matplotlib import widgets as mplWidgets
 mpl.use("Qt5Agg")
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
@@ -49,6 +51,7 @@ import gcMapExplorer.lib as gmlib
 from . import browserHelpers
 from . import guiHelpers
 from . import h5Converter
+
 
 # Determine absolute path to UIs directory. Relative path from this directory does not work.
 DirToThisScript = os.path.dirname(os.path.abspath(__file__))
@@ -77,10 +80,30 @@ def main():
     app.exec_()
     app.exit()
 
+class PlotAreaScroller(QScrollArea):
+
+    disableScroll = pyqtSignal(bool)
+
+    def __init__(self, parent=None):
+        super(PlotAreaScroller, self).__init__(parent=parent)
+        self.scroll = True
+        self.disableScroll.connect(self.updateScrollPorps)
+
+    def wheelEvent(self, ev):
+        if ev.type() == QEvent.Wheel:
+            if not self.scroll:
+                ev.ignore()
+            else:
+                QScrollArea.wheelEvent(self, ev)
+
+    def updateScrollPorps(self, scroll):
+        self.scroll = scroll
+
 class GenomicDataSetSubPlotHelper:
     ''' This is a helper class for genomic dataset subplots.
         Do not use it separately.
     '''
+
     def connectGenomicDatasetOptions(self):
         # Connect y-scalar for genomic plots
         self.genomicDataYScalingSlider.valueChanged.connect(self.changeYScaleGenomicSubplotSlider)
@@ -114,7 +137,8 @@ class GenomicDataSetSubPlotHelper:
         file_choices += ";;Text file (*.txt *.dat)"
         file_choices += ";;All files (*.*)"
 
-        path = QFileDialog.getOpenFileName(self, 'Load File', '/home', file_choices)
+        path = QFileDialog.getOpenFileName(self, 'Load File', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
 
         # If a file is selected by user
         if path[0]:
@@ -213,12 +237,16 @@ class GenomicDataSetSubPlotHelper:
         self.genomicDataYScalingSlider.setValue(self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yscaleSlider)
         self.genomicDataYScalingSpinBox.setValue(self.hiCmapAxes[hidx].genomicPlotAxes[gidx].yscaleSpinbox)
 
-        self.hiCmapAxes[hidx].doNotPlot = False
+        # change value of line-width
+        self.genomicDataLineWidthSpinBox.setValue(self.hiCmapAxes[hidx].genomicPlotAxes[gidx].plotLineWidth)
 
-        # Change color and linewidth
+        # Change color
         color = self.hiCmapAxes[hidx].genomicPlotAxes[gidx].plotColor
         style = 'background-color: rgb({0}, {1}, {2});'.format(int(color[0]*255), int(color[1]*255), int(color[2]*255))
         self.genomicDataColorButton.setStyleSheet(style)
+
+        self.hiCmapAxes[hidx].doNotPlot = False
+
 
     def makeGenomicSupPlotOptionsInactive(self):
         # At first entire group box is enabled for interaction with user
@@ -437,7 +465,6 @@ class GenomicDataSetSubPlotHelper:
 
         self.percentileValueLineEdit.setText(str(percentile))
 
-
     def changeGenomicDatasetPlotColor(self):
         """ Set the color of genomic dataset plot
         """
@@ -554,6 +581,8 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
 
         self.colorMapsDictionary = None
         """ List of color maps """
+        self.externalColorMaps = None
+        """ Dictionary of external color maps """
 
         self.press_on_plot = None
         self.figure = None
@@ -562,6 +591,9 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         """ List of HiC Map axis """
         self.ActiveHiCmapAxis = None
         """ index to the active HiC Map axis """
+
+        self.viewPointsList = OrderedDict()
+        """ List of view points """
 
         self.marker = None
         self.markerColor = (1, 0, 0)  # Default Red
@@ -585,6 +617,16 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         # Add options to toolbar. In GUI designer these options are outside of toolbars
         self.add_options_to_toolbar()
 
+        # Add scroll area for plot, added manually because of scrolling issue
+        self.scrollAreaPlot = PlotAreaScroller(self.centralWidget)
+        self.scrollAreaPlot.setAlignment(Qt.AlignHCenter|Qt.AlignVCenter)
+        self.splitter = QSplitter(self.centralWidget)         # Splitter for options and plot
+        self.splitter.addWidget(self.scrollAreaOptions)
+        self.splitter.addWidget(self.scrollAreaPlot)
+        self.centralWidgetLayout = QHBoxLayout()              # Layout for option and plot
+        self.centralWidgetLayout.addWidget(self.splitter)
+        self.centralWidget.setLayout(self.centralWidgetLayout)
+
         # Connect menus and actions to methods
         self.add_menu_triggered_action()
 
@@ -595,11 +637,9 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         # Embed matplotlib canvas inside scroll area
         self.embed_mpl_canvas_in_mainwindow()
 
-        #TODO: temporary added to load map from command line
+        #Load visualization state file from command-line
         if len(sys.argv) > 2:
-            self.add_new_ccmap_axes()
-            self.enable_gui_options()
-            self.InitMapImage(sys.argv[2], 'ccmap')
+            self.loadVisualState(filename=sys.argv[2])
 
 
     def closeEvent(self, event):
@@ -646,11 +686,13 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
 
         '''
         # Connects File menu
-        self.actionLoad_Hi_C_Map_file.triggered.connect(self.open_map_pyobj)
-        self.actionAdd_Hi_C_Map.triggered.connect(self.open_map_pyobj)
+        self.actionLoad_Hi_C_Map_file.triggered.connect(self.load_map_file)
+        self.actionAdd_Hi_C_Map.triggered.connect(self.load_map_file)
         self.actionSave_plot.triggered.connect(self.save_plot)
         self.actionQuit.triggered.connect(self.close)
         self.actionPrint.triggered.connect(self.printPlot)
+        self.actionSaveVisualState.triggered.connect(self.saveVisualState)
+        self.actionLoadVisualState.triggered.connect(self.loadVisualState)
 
         # Create new action-group for page-size
         self.actionGroupPageSize = QActionGroup(self)
@@ -691,6 +733,7 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         self.axisTreeWidget.itemClicked.connect(self.make_ccmap_active_on_click)
         self.axisTreeWidget.currentItemChanged.connect(self.make_ccmap_active_on_click)
         self.axisTreeWidget.customContextMenuRequested.connect(self.ShowRightClickMenuTreeWidget)
+        #self.axisTreeWidget.itemChanged.connect(self.make_ccmap_active_on_click)
 
         # Reset maps
         self.reset_maps_button.clicked.connect(self.ResetMap)
@@ -730,6 +773,11 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         self.cmapCBox.currentIndexChanged.connect(self.change_color_map_types)
         self.interpolation = browserHelpers.get_interpolation_dict()
         self.interpolationCBox.currentIndexChanged.connect(self.change_interpolation_method)
+
+        # View-points widgets
+        self.viewPointAddButton.pressed.connect(self.addViewPoint)
+        self.viewPointListWidget.itemDoubleClicked.connect(self.loadViewPoint)
+        self.viewPointRemoveButton.pressed.connect(self.removeViewPoint)
 
         # Connect go to options
         self.gotoXbox.setValidator(QIntValidator())
@@ -900,6 +948,8 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         self.cidrelease = self.canvas.mpl_connect('button_release_event', self.release_on_canvas)
         self.cidmotion = self.canvas.mpl_connect('motion_notify_event', self.motion_on_canvas)
         self.cidscroll = self.canvas.mpl_connect('scroll_event', self.scroll_on_canvas)
+        self.cidaxesleave = self.canvas.mpl_connect('axes_leave_event', self.axes_leave_event)
+        self.cidfigureleave = self.canvas.mpl_connect('figure_leave_event', self.axes_leave_event)
         # Bind the 'pick' event for clicking on one of the bars
         #
         #self.cidpick = self.canvas.mpl_connect('pick_event', self.on_pick)
@@ -1049,8 +1099,10 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
 
             if Dialog.PageOrientation == 'Portrait':
                 self.actionPlotOrientationPortrait.setChecked(True)
+                self.PageOrientation = 'Portrait'
             else:
                 self.actionPlotOrientationLandscape.setChecked(True)
+                self.PageOrientation = 'Landscape'
 
             Dialog.close()
             del Dialog
@@ -1071,6 +1123,7 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
             NewPageOrientation = 'Portrait'
 
         self.figsize = self.figsize[::-1]
+        self.PageOrientation = NewPageOrientation
 
         if old_figsize != self.figsize:
             self.resize_mpl_figure()
@@ -1137,7 +1190,7 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
             self.hiCmapAxes = []
 
             # Initialize and append new ccmap axis object into hic-map list
-            self.hiCmapAxes.append(CCMAPAXIS(0, ax))
+            self.hiCmapAxes.append(CCMAPAXIS(0, ax, parent=self))
             self.hiCmapAxes[0].title = os.path.splitext(pathToMapFile)[0]
 
             # Add this ccmap axis to the tree widget
@@ -1199,7 +1252,7 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
             # Add new axes object for new ccmap
             ax = self.figure.add_subplot(1, mid_idx, i+1, sharey=self.hiCmapAxes[0].ax)
             ax.set_aspect('equal', 'box-forced')
-            self.hiCmapAxes.append(CCMAPAXIS(i, ax))
+            self.hiCmapAxes.append(CCMAPAXIS(i, ax, parent=self))
 
             # generate title
             self.hiCmapAxes[i].title = os.path.splitext(pathToMapFile)[0]
@@ -1267,8 +1320,8 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
 
             minvalue, maxvalue = self.hiCmapAxes[aidx].colorRangeMinValue, self.hiCmapAxes[aidx].colorRangeMaxValue
             if self.hiCmapAxes[aidx].colorScaleStatus == 'Logarithm of map':
-                minvalue = np.log(self.hiCmapAxes[aidx].colorRangeMinValue)
-                maxvalue = np.log(self.hiCmapAxes[aidx].colorRangeMaxValue)
+                minvalue = np.log2(self.hiCmapAxes[aidx].colorRangeMinValue)
+                maxvalue = np.log2(self.hiCmapAxes[aidx].colorRangeMaxValue)
 
             # Update color scale slider and spinbox
             self.color_scale_spin_box.setRange(minvalue, maxvalue)
@@ -1367,79 +1420,68 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         # Change contact map list
         self.changeMapNamesInComboBox(aidx)
 
-    def open_map_pyobj(self):
+    def load_map_file(self, dummy=None, filename=None, mapName=None, resolution=None):
         ''' To load new python object when clicked on Load Contact Map object
 
         This also add new ccmap axes instance to self.hiCmapAxes list.
 
         '''
-        Load = True
 
-        # This portion is from previous version. Now, it does not work as ccmap object is par of CCMAPAXIS class.
-        # Here kept for reference
-        if hasattr(self, 'ccmap'):
-            if self.ccmap is not None:
-                msg = '''Hi-C map object is already loaded...
-                         Clcik OK to remove previously loaded Python MAP object
-                      '''
-                msgBox = QMessageBox()
-                msgBox.setWindowTitle('Warning')
-                msgBox.setText('Hi-C map object is already loaded...')
-                msgBox.setInformativeText('Clcik OK to remove previously loaded Python MAP object')
-                msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-                msgBox.setDefaultButton(QMessageBox.Cancel);
-                pressed_button = msgBox.exec_()
-                if pressed_button == QMessageBox.Ok:
-                    Load = True
-                else:
-                    Load = False
+        if filename is None:
+            # A dialog box will be displayed to select a ccmap file
+            file_choices = "Contact Map File (*.ccmap *.gcmap);;Hi-C contact map File (*.hicmap);;Chromosomal " \
+                           "contact map file (*.ccmap);;Genome Contact Map File (*.gcmap)"
+            path = QFileDialog.getOpenFileName(self, 'Load Map File', guiHelpers.lastVisitedDir, file_choices)
+            guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
+            if not path[0]:
+                return
+            filename = path[0]
 
-        # A dialog box will be displayed to select a ccmap file
-        file_choices = "Contact Map File (*.ccmap *.gcmap);;Hi-C contact map File (*.hicmap);;Chromosomal contact map file (*.ccmap);;Genome Contact Map File (*.gcmap)"
-        path = QFileDialog.getOpenFileName(self, 'Load Map File', '', file_choices)
+        file_extension = os.path.splitext(filename)[1]
+        self.status_bar.clearMessage()
+        self.status_bar.showMessage('Loading file : {0}' .format(filename))
 
-        # if user select a file
-        if path[0]:
-            file_extension = os.path.splitext(path[0])[1]
-            self.status_bar.clearMessage()
-            self.status_bar.showMessage('Loading file : {0}' .format(path[0]))
+        fileType = None
+        if file_extension == '.ccmap' or file_extension == '.hicmap':
+            fileType = 'ccmap'
+        elif file_extension == '.gcmap':
+            fileType = 'gcmap'
+        else:
+            raise IOError ('File not end with gcmap, ccmap or hicmap. File may not be compatible.')
 
-            fileType = None
-            if file_extension == '.ccmap' or file_extension == '.hicmap':
-                fileType = 'ccmap'
-            elif file_extension == '.gcmap':
-                fileType = 'gcmap'
-            else:
-                raise IOError ('File not end with gcmap, ccmap or hicmap. File may not be compatible.')
-
-            dialog = None
-            if fileType == 'gcmap':
-                dialog = browserHelpers.GCMapSelectorDialog(path[0])
-                dialog.exec_()
-                if dialog.result() != QDialog.Accepted:
-                    dialog.close()
-                    del dialog
-                    return
-
-            # Add new CCMAPAXIS instance and respective matplotlib axes instance
-            self.add_new_ccmap_axes(path[0])
-
-            # If first time, enable all options
-            if self.hiCmapAxes is not None:
-                if len(self.hiCmapAxes) == 1:
-                    self.enable_gui_options()
-
-            # Initialize plot
-            if fileType == 'gcmap':
-                self.InitMapImage(path[0], fileType, mapName=dialog.mapName, resolution=dialog.resolution)
+        # In case when file is open by action menu, prompt a dialog to select map-name and resolution
+        if fileType == 'gcmap':
+            if mapName is None:
+                dialog = None
+                if fileType == 'gcmap':
+                    dialog = browserHelpers.GCMapSelectorDialog(filename)
+                    dialog.exec_()
+                    if dialog.result() != QDialog.Accepted:
+                        dialog.close()
+                        del dialog
+                        return
+                mapName = dialog.mapName
+                resolution = dialog.resolution
                 dialog.close()
                 del dialog
-            else:
-                self.InitMapImage(path[0], fileType)
 
-            # Add treewidget item to tree widget
-            self.axisTreeWidget.setCurrentItem(self.hiCmapAxes[self.ActiveHiCmapAxis].treeWidgetItem)
-            self.status_bar.showMessage('{0} loaded.' .format(path[0]))
+        # Add new CCMAPAXIS instance and respective matplotlib axes instance
+        self.add_new_ccmap_axes(filename)
+
+        # If first time, enable all options
+        if self.hiCmapAxes is not None:
+            if len(self.hiCmapAxes) == 1:
+                self.enable_gui_options()
+
+        # Initialize plot
+        if fileType == 'gcmap':
+            self.InitMapImage(filename, fileType, mapName=mapName, resolution=resolution)
+        else:
+            self.InitMapImage(filename, fileType)
+
+        # Add treewidget item to tree widget
+        self.axisTreeWidget.setCurrentItem(self.hiCmapAxes[self.ActiveHiCmapAxis].treeWidgetItem)
+        self.status_bar.showMessage('{0} loaded.' .format(filename))
 
     def InitMapImage(self, path, fileType, mapName=None, resolution=None):
         """Initialize map plot for first time
@@ -1690,11 +1732,15 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         if dialog.resultColorInfo is None:
             return
 
+        if self.externalColorMaps is None:
+            self.externalColorMaps = OrderedDict()
+
         # Get color information
         colorInfo = dialog.resultColorInfo
         idx = self.cmapCBox.findText(colorInfo['name'], Qt.MatchExactly)
         if idx == -1:
             browserHelpers.add_external_colormap_to_combobox(self.cmapCBox, self.colorMapsDictionary, colorInfo)
+            self.externalColorMaps[colorInfo['name']] = browserHelpers.colorInfoToSegmentDataColorMap(colorInfo)
         else:
             self.colorMapsDictionary[idx] = browserHelpers.colorInfoToSegmentDataColorMap(colorInfo)
             browserHelpers.change_colormap_icon_to_combobox(self.cmapCBox, idx, colorInfo)
@@ -1734,11 +1780,11 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         self.markerLineWidth = self.markerLineWidthSpinBox.value()
 
         if self.markerCBox.currentIndex() == 1:
-            self.marker = malWidgets.MultiCursor(self.canvas, axis_list, horizOn=True, color=self.markerColor, linewidth=self.markerLineWidth)
+            self.marker = mplWidgets.MultiCursor(self.canvas, axis_list, horizOn=True, color=self.markerColor, linewidth=self.markerLineWidth)
         elif self.markerCBox.currentIndex() == 2:
-            self.marker = malWidgets.MultiCursor(self.canvas, axis_list, horizOn=True, vertOn=False, color=self.markerColor, linewidth=self.markerLineWidth)
+            self.marker = mplWidgets.MultiCursor(self.canvas, axis_list, horizOn=True, vertOn=False, color=self.markerColor, linewidth=self.markerLineWidth)
         elif self.markerCBox.currentIndex() == 3:
-            self.marker = malWidgets.MultiCursor(self.canvas, axis_list, horizOn=False, color=self.markerColor, linewidth=self.markerLineWidth)
+            self.marker = mplWidgets.MultiCursor(self.canvas, axis_list, horizOn=False, color=self.markerColor, linewidth=self.markerLineWidth)
         else:
             pass
 
@@ -1844,6 +1890,84 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         if draw:
             for i in range(len(self.hiCmapAxes)):
                 self.hiCmapAxes[i].rangeXY = (xrange, yrange)
+            self.canvas.draw()
+
+    def changeMapSize(self, map_xrange, map_yrange):
+        """ It changes the size of the map on zoom in and zoom out.
+
+        It also changes the resolution if possible
+        """
+        if map_xrange[0] < 0:
+            map_xrange[0] = 0
+        if map_yrange[0] < 0:
+            map_yrange[0] = 0
+        if map_xrange[1] > self.hiCmapAxes[self.ActiveHiCmapAxis].ccmap.shape[0]:
+            map_xrange[1] = self.hiCmapAxes[self.ActiveHiCmapAxis].ccmap.shape[0]
+        if map_yrange[1] > self.hiCmapAxes[self.ActiveHiCmapAxis].ccmap.shape[1]:
+            map_yrange[1] = self.hiCmapAxes[self.ActiveHiCmapAxis].ccmap.shape[1]
+
+        # Always make a square map. Below two conditions are implemented to restrain the map as a square.
+        # Never be an rectangle
+        # Idea here is that to decrease the longer axis and make it equal to shorter axis.
+        # This way, zoom in and out at the end of any axis works fine.
+        xlength = map_xrange[1] - map_xrange[0]
+        ylength = map_yrange[1] - map_yrange[0]
+
+        if xlength < ylength:
+            if map_yrange[0] == 0:
+                map_yrange[1] = map_yrange[1] - (ylength - xlength)
+            elif map_yrange[1] ==  self.hiCmapAxes[self.ActiveHiCmapAxis].ccmap.shape[1]:
+                map_yrange[0] = map_yrange[0] + (ylength - xlength)
+            else:
+                if (ylength - xlength) % 2 == 0:
+                    map_yrange[0] = map_yrange[0] + int( (ylength - xlength)/2 )
+                    map_yrange[1] = map_yrange[1] - int( (ylength - xlength)/2 )
+                else:
+                    map_yrange[0] = map_yrange[0] + math.ceil(  (ylength - xlength)/2 )
+                    map_yrange[1] = map_yrange[1] - math.floor( (ylength - xlength)/2 )
+
+        if ylength < xlength:
+            if map_xrange[0] == 0:
+                map_xrange[1] = map_xrange[1] - (xlength - ylength)
+            elif map_xrange[1] ==  self.hiCmapAxes[self.ActiveHiCmapAxis].ccmap.shape[0]:
+                map_xrange[0] = map_xrange[0] + (xlength - ylength)
+            else:
+                if (xlength - ylength) % 2 == 0:
+                    map_xrange[0] = map_xrange[0] + int( (xlength - ylength)/2 )
+                    map_xrange[1] = map_xrange[1] - int( (xlength - ylength)/2 )
+                else:
+                    map_xrange[0] = map_xrange[0] + math.ceil(  (xlength - ylength)/2 )
+                    map_xrange[1] = map_xrange[1] - math.floor( (xlength - ylength)/2 )
+
+        # Do not go below this zoom
+        if (map_xrange[1] - map_xrange[0]) < self.zoomBinsSpinBox.minimum():
+            return
+
+        # Do not go above this zoom
+        if (map_xrange[1] - map_xrange[0]) > self.zoomBinsSpinBox.maximum():
+            return
+
+        # To check if new xrange and yrange is available for all maps. If not do not update the plot.
+        draw = True
+        for i in range(len(self.hiCmapAxes)):
+            if self.hiCmapAxes[i].ccmap.shape[1] < map_yrange[1] or self.hiCmapAxes[i].ccmap.shape[0] < map_xrange[1]:
+                draw = False
+
+
+        if draw:
+            # If resolution interchange is allowed
+            if self.interchangeableResolutions is not None:
+                new_map_xrange, new_map_yrange = self.tryChangingResolutionsAll(map_xrange, map_yrange)
+
+                # In case when change in resolution not possible, continue with original zoom
+                if new_map_xrange is not None and new_map_xrange is not None:
+                    map_xrange = new_map_xrange
+                    map_yrange = new_map_xrange
+
+            for i in range(len(self.hiCmapAxes)):
+                self.hiCmapAxes[i].rangeXY = (map_xrange, map_yrange)
+            self.binsDisplayed = map_xrange[1] - map_xrange[0]
+            self.zoomBinsSpinBox.setValue(int(self.binsDisplayed))
             self.canvas.draw()
 
     def do_zoom_in(self):
@@ -2187,6 +2311,12 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         self.label_mij = obj.ax.text(event.xdata, event.ydata, '{0}, {1}, {2:.3f}' .format(obj.xticklabels[mi], obj.yticklabels[mj],obj.ccmap.matrix[mi][mj]) )
         self.canvas.draw()
 
+    def axes_leave_event(self,event):
+        """ When mouse pointer leave axis.
+            Enable scrolling
+        """
+        self.scrollAreaPlot.disableScroll.emit(True)
+
     def press_on_canvas(self, event):
         'on button press we will see if the mouse is over us and store some data'
         if self.hiCmapAxes is None:  return
@@ -2229,6 +2359,8 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
                 self.canvas.draw()
             return
 
+        # Disable scrolling
+        self.scrollAreaPlot.disableScroll.emit(False)
 
         if temp_subplot_axes is not None:
             self.motion_on_canvas_on_subplots(event, temp_subplot_axes)
@@ -2250,7 +2382,7 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
 
         if temp_ccmap_axis.colorScaleStatus == 'Logarithm of map':
             if map_value != 0:
-                map_value = np.log(map_value)
+                map_value = np.log2(map_value)
 
         mapUnitSize = gmlib.util.resolutionToBinsize(temp_ccmap_axis.mapUnit)
         self.status_bar.showMessage('|  Real X = {0:,}  |  Real Y = {1:,}  |  X = {2}  |  Y = {3}  |  Value = {4:.6f}  |' .format(
@@ -2401,84 +2533,6 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
 
         # If new map size is fine, try to change the map size on the interface
         self.changeMapSize(map_xrange, map_yrange)
-
-    def changeMapSize(self, map_xrange, map_yrange):
-        """ It changes the size of the map on zoom in and zoom out.
-
-        It also changes the resolution if possible
-        """
-        if map_xrange[0] < 0:
-            map_xrange[0] = 0
-        if map_yrange[0] < 0:
-            map_yrange[0] = 0
-        if map_xrange[1] > self.hiCmapAxes[self.ActiveHiCmapAxis].ccmap.shape[0]:
-            map_xrange[1] = self.hiCmapAxes[self.ActiveHiCmapAxis].ccmap.shape[0]
-        if map_yrange[1] > self.hiCmapAxes[self.ActiveHiCmapAxis].ccmap.shape[1]:
-            map_yrange[1] = self.hiCmapAxes[self.ActiveHiCmapAxis].ccmap.shape[1]
-
-        # Always make a square map. Below two conditions are implemented to restrain the map as a square.
-        # Never be an rectangle
-        # Idea here is that to decrease the longer axis and make it equal to shorter axis.
-        # This way, zoom in and out at the end of any axis works fine.
-        xlength = map_xrange[1] - map_xrange[0]
-        ylength = map_yrange[1] - map_yrange[0]
-
-        if xlength < ylength:
-            if map_yrange[0] == 0:
-                map_yrange[1] = map_yrange[1] - (ylength - xlength)
-            elif map_yrange[1] ==  self.hiCmapAxes[self.ActiveHiCmapAxis].ccmap.shape[1]:
-                map_yrange[0] = map_yrange[0] + (ylength - xlength)
-            else:
-                if (ylength - xlength) % 2 == 0:
-                    map_yrange[0] = map_yrange[0] + int( (ylength - xlength)/2 )
-                    map_yrange[1] = map_yrange[1] - int( (ylength - xlength)/2 )
-                else:
-                    map_yrange[0] = map_yrange[0] + math.ceil(  (ylength - xlength)/2 )
-                    map_yrange[1] = map_yrange[1] - math.floor( (ylength - xlength)/2 )
-
-        if ylength < xlength:
-            if map_xrange[0] == 0:
-                map_xrange[1] = map_xrange[1] - (xlength - ylength)
-            elif map_xrange[1] ==  self.hiCmapAxes[self.ActiveHiCmapAxis].ccmap.shape[0]:
-                map_xrange[0] = map_xrange[0] + (xlength - ylength)
-            else:
-                if (xlength - ylength) % 2 == 0:
-                    map_xrange[0] = map_xrange[0] + int( (xlength - ylength)/2 )
-                    map_xrange[1] = map_xrange[1] - int( (xlength - ylength)/2 )
-                else:
-                    map_xrange[0] = map_xrange[0] + math.ceil(  (xlength - ylength)/2 )
-                    map_xrange[1] = map_xrange[1] - math.floor( (xlength - ylength)/2 )
-
-        # Do not go below this zoom
-        if (map_xrange[1] - map_xrange[0]) < self.zoomBinsSpinBox.minimum():
-            return
-
-        # Do not go above this zoom
-        if (map_xrange[1] - map_xrange[0]) > self.zoomBinsSpinBox.maximum():
-            return
-
-        # To check if new xrange and yrange is available for all maps. If not do not update the plot.
-        draw = True
-        for i in range(len(self.hiCmapAxes)):
-            if self.hiCmapAxes[i].ccmap.shape[1] < map_yrange[1] or self.hiCmapAxes[i].ccmap.shape[0] < map_xrange[1]:
-                draw = False
-
-
-        if draw:
-            # If resolution interchange is allowed
-            if self.interchangeableResolutions is not None:
-                new_map_xrange, new_map_yrange = self.tryChangingResolutionsAll(map_xrange, map_yrange)
-
-                # In case when change in resolution not possible, continue with original zoom
-                if new_map_xrange is not None and new_map_xrange is not None:
-                    map_xrange = new_map_xrange
-                    map_yrange = new_map_xrange
-
-            for i in range(len(self.hiCmapAxes)):
-                self.hiCmapAxes[i].rangeXY = (map_xrange, map_yrange)
-            self.binsDisplayed = map_xrange[1] - map_xrange[0]
-            self.zoomBinsSpinBox.setValue(int(self.binsDisplayed))
-            self.canvas.draw()
 
     def tryChangingResolutionsAll(self, map_xrange, map_yrange):
         """ Try to change resolutions of all maps given the threshold of map shape
@@ -2631,7 +2685,8 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         # Just added for any formats
         file_choices += ";;All formats (*.*)"
 
-        path = QFileDialog.getSaveFileName(self, 'Save image file', '', file_choices)
+        path = QFileDialog.getSaveFileName(self, 'Save image file', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
 
         if path[0]:
             self.figure.savefig(path[0], dpi=300)
@@ -2706,7 +2761,15 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
     def processRightClickItem(self, selectedItem, temp_axis):
         if self.menuRightClick is None: return
 
-        for i in range(4):
+        # Check for image-colorbar
+        if hasattr(temp_axis, 'image'):
+            image = temp_axis.image
+            colorScaleStatus = temp_axis.colorScaleStatus
+        else:
+            image = None
+            colorScaleStatus = None
+
+        for i in range(5):
             if self.menuRightClick.actionList[i] is selectedItem:
 
                 if self.DialogAxisProps is not None:
@@ -2715,11 +2778,14 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
                         self.DialogAxisProps = None
 
                 if self.DialogAxisProps is None:
-                    self.DialogAxisProps = browserHelpers.DialogAxisProps(self.canvas, i, temp_axis.ax, axesProps=temp_axis.axes_props)
+                    self.DialogAxisProps = browserHelpers.DialogAxisProps(self.canvas, i, temp_axis.ax,
+                                                                          axesProps=temp_axis.axes_props, image=image,
+                                                                          colorScaleStatus=colorScaleStatus)
                     self.DialogAxisProps.show()
                 else:
                     if temp_axis.ax is not self.DialogAxisProps.axes:
-                        self.DialogAxisProps.update_axes(temp_axis.ax, axesProps=temp_axis.axes_props)
+                        self.DialogAxisProps.update_axes(temp_axis.ax, axesProps=temp_axis.axes_props,
+                                                         image=image, colorScaleStatus=colorScaleStatus)
 
                     self.DialogAxisProps.tabWidgetAxisProps.setCurrentIndex(i)
                     self.DialogAxisProps.activateWindow()
@@ -2762,6 +2828,373 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         del self.corrDialog
         self.corrDialog = None
         '''
+
+    def saveVisualState(self):
+        """ Save visual states amd all view points
+        """
+
+        if self.hiCmapAxes is None:
+            return
+
+        # Start dictionary to be dumped as jsnon
+        states = OrderedDict()
+
+        # Include unique keyword for verification
+        states['magic-string'] = 'gcMapExplorer visual state and view points'
+
+        # Save pagetype and page size:
+        states['page-setting'] = OrderedDict()
+        states['page-setting']['width'] = self.figsize[0]
+        states['page-setting']['height'] = self.figsize[1]
+        states['page-setting']['page-type'] = int(self.PageType.value)
+        states['page-setting']['orientation'] = self.PageOrientation
+
+
+        # Extract files information
+        states['files'] = OrderedDict()
+        for i in range(len(self.hiCmapAxes)):
+            states['files'][i] = self.hiCmapAxes[i].exportAttrsForGlobalViewPoint()
+
+        # If no viewpoint is saved then abort
+        if not self.viewPointsList:
+            msg = '''              No view points found...\nPlease add view points to save visual state.
+                  '''
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle('Warning')
+            msgBox.setText(msg)
+            msgBox.setStandardButtons(QMessageBox.Cancel)
+            msgBox.setDefaultButton(QMessageBox.Cancel)
+            pressed_button = msgBox.exec_()
+            return
+
+        # Add any external colormaps
+        if self.externalColorMaps is not None:
+            states['external-colormaps'] = OrderedDict()
+            for name in self.externalColorMaps:
+                states['external-colormaps'][name] = browserHelpers.segmentDataColorMapToColorInfo(
+                    self.externalColorMaps[name])
+
+        # extract and store all view-points
+        states['view-points'] = self.viewPointsList
+
+        # Save file
+        # A dialog box will be displayed to select a file and path will be stored in the cell
+        file_choices = " gcMapExplorer Visual State file (*.gvs);;All Files(*.*)"
+        path = QFileDialog.getSaveFileName(self, 'Select or Create File', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
+        if path[0]:
+            outDir = os.path.dirname( path[0] )
+            baseName = os.path.basename( path[0] )
+            extension = os.path.splitext( baseName )[1]
+
+            if not (extension == '.gvs'):
+                outName = os.path.join(outDir, baseName+'.gvs')
+            else:
+                outName = path[0]
+
+            fout =  open( outName, "w" )
+            json.dump(states, fout, indent=4, separators=(',', ':'))
+            fout.close()
+
+    def loadPageSizeFromVisualState(self, dataDict):
+        """ Helper function to resize the page according to the input visual-states
+        """
+        # Determine page-type enum
+        for key in ePageType:
+            if ePageType[key.name].value == int(dataDict['page-type']):
+                self.PageType = ePageType[key.name]
+
+        # Get figure size
+        if self.PageType == ePageType.Custom:
+            self.figsize = (float(dataDict['width']),
+                            float(dataDict['height']))
+        else:
+            if dataDict['orientation'] == 'Portrait':
+                self.figsize = PageSize[self.PageType]
+            else:
+                self.figsize = PageSize[self.PageType][::-1]
+
+        # Check orientation menu in GUI
+        if dataDict['orientation'] == 'Portrait':
+            self.actionPlotOrientationPortrait.setChecked(True)
+        else:
+            self.actionPlotOrientationLandscape.setChecked(True)
+
+        # Check or uncheck page size in maib menu
+        if self.PageType == ePageType.A5:
+            self.actionPlotSizeA5.setChecked(True)
+        else:
+            self.actionPlotSizeA5.setChecked(False)
+
+        if self.PageType == ePageType.A4:
+            self.actionPlotSizeA4.setChecked(True)
+        else:
+            self.actionPlotSizeA4.setChecked(False)
+
+        if self.PageType == ePageType.A3:
+            self.actionPlotSizeA3.setChecked(True)
+        else:
+            self.actionPlotSizeA3.setChecked(False)
+
+        if self.PageType == ePageType.A2:
+            self.actionPlotSizeA2.setChecked(True)
+        else:
+            self.actionPlotSizeA2.setChecked(False)
+
+        if self.PageType == ePageType.A1:
+            self.actionPlotSizeA1.setChecked(True)
+        else:
+            self.actionPlotSizeA1.setChecked(False)
+
+        if self.PageType == ePageType.A0:
+            self.actionPlotSizeA0.setChecked(True)
+        else:
+            self.actionPlotSizeA0.setChecked(False)
+
+        if self.PageType == ePageType.Letter:
+            self.actionPlotSizeLetter.setChecked(True)
+        else:
+            self.actionPlotSizeLetter.setChecked(False)
+
+        if self.PageType == ePageType.Custom:
+            self.actionPlotSizeCustom.setChecked(True)
+        else:
+            self.actionPlotSizeCustom.setChecked(False)
+
+        # Create new page and embed in GUI
+        self.embed_mpl_canvas_in_mainwindow()
+
+    def loadVisualState(self, checked=None, filename=None):
+        """ Load visual states and store all viewpoints
+
+        Arguments
+        ---------
+        checked : bool
+            It comes with Qt signal when user press the menu button. It just says
+            whether menu is checked or unchecked. Therefore, here it is of no use.
+        filename : None
+            If filename is provided than state and viewpoints will be
+            directly read from this file. Otherwise a dialog box
+            is used to select the file, when user press menu button.
+        """
+
+        # Get filename through dialog-box
+        if filename is None:
+            # A dialog box will be displayed to select a file
+            file_choices = " gcMapExplorer Visual State file (*.gvs);;All Files(*.*)"
+            path = QFileDialog.getOpenFileName(self, 'Load File', guiHelpers.lastVisitedDir, file_choices)
+            guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
+            if not path[0]:
+                return
+            filename = path[0]
+
+        # Read the file
+        try:
+            with open( filename, "r") as fin:
+                visualStates = json.load(fin, object_pairs_hook=OrderedDict)
+        except:
+            msgBox = QMessageBox(self)
+            msgBox.setWindowModality(Qt.WindowModal)
+            msgBox.setWindowTitle('Warning')
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText(' Not able to read from file.')
+            msgBox.setStandardButtons(QMessageBox.Cancel)
+            msgBox.exec_()
+            msgBox.close()
+            return
+
+        # Check for magic-string to confirm that this file is created by gcMapExplorer
+        if 'magic-string' not in visualStates:
+            msgBox = QMessageBox(self)
+            msgBox.setWindowModality(Qt.WindowModal)
+            msgBox.setWindowTitle('Error')
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText('Not a gcMapExplorer Visual State file ')
+            msgBox.setStandardButtons(QMessageBox.Cancel)
+            msgBox.exec_()
+            msgBox.close()
+            return
+
+        # If by chance magic-string keyword is there, further check that this file is created by gcMapExplorer
+        if visualStates['magic-string'] != 'gcMapExplorer visual state and view points':
+            msgBox = QMessageBox(self)
+            msgBox.setWindowModality(Qt.WindowModal)
+            msgBox.setWindowTitle('Error')
+            msgBox.setIcon(QMessageBox.Information)
+            msgBox.setText('Not a gcMapExplorer Visual State file ')
+            msgBox.setStandardButtons(QMessageBox.Cancel)
+            msgBox.exec_()
+            msgBox.close()
+            return
+
+        # If browser already contains plots, remove all of them
+        if self.hiCmapAxes is not None:
+            self.axisTreeWidget.clear()
+            self.hiCmapAxes = None
+            self.disconnect_mouse_events_from_canvas()  # Disconnect all events
+            self.embed_mpl_canvas_in_mainwindow()       # Destroy old canvas, generate and embed new canvas
+            self.menuAddGenomicDataset.clear()          # Remove all menu action form main menu
+            self.actionDummy = QAction('dummy')         # Added dummy action
+            self.addAction(self.actionDummy)            # which is removed when new maps are added
+
+        # Set pagetype and page size:
+        self.loadPageSizeFromVisualState(visualStates['page-setting'])
+
+        # Get mapname and resolution for first time plot
+        mapNames = []
+        resolution = None
+        for label in visualStates['view-points']:
+            for index in visualStates['view-points'][label]['settings']:
+                if 'mapName' in visualStates['view-points'][label]['settings'][index]:
+                    mapNames.append(visualStates['view-points'][label]['settings'][index]['mapName'])
+                else:
+                    mapNames.append(None)
+            if 'resolution' in visualStates['view-points'][label]:
+                resolution = visualStates['view-points'][label]['resolution']
+            break
+
+        # Load all files for the first time
+        for index in visualStates['files']:
+            idx= int(index)
+            self.load_map_file(filename=visualStates['files'][index]['filename'], mapName=mapNames[idx],
+                               resolution=resolution)
+
+            if 'data-files' not in visualStates['files'][index]:
+                continue
+
+            for gpa_index in visualStates['files'][index]['data-files']:
+                if self.hiCmapAxes[idx].genomicPlotAxes is None:
+                    self.hiCmapAxes[idx].genomicPlotAxes = []
+                gpa = GenomicDataPlotAxis(int(gpa_index), self.hiCmapAxes[idx])
+                gpa_data = visualStates['files'][index]['data-files'][gpa_index]
+                gpa.loadGenomicDataHdf5(gpa_data['filename'], (mapNames[idx], resolution, gpa_data['coarse-method']),
+                                        gpa_data['plotLocation'], self.filesOpened)
+                self.loadDataToPlot(gpa)
+
+        # Add all view-points to listwidget
+        self.viewPointsList = OrderedDict()
+        self.viewPointListWidget.clear()
+        for label in visualStates['view-points']:
+            self.viewPointsList[label] = visualStates['view-points'][label]
+            self.viewPointListWidget.addItem(label)
+
+        # Load any external colormaps
+        if 'external-colormaps' in visualStates:
+            self.externalColorMaps = OrderedDict()
+            for name in visualStates['external-colormaps']:
+                colorInfo = OrderedDict()
+                colorInfo['name'] = visualStates['external-colormaps'][name]['name']
+                colorInfo['colors'] = OrderedDict()
+                for key in visualStates['external-colormaps'][name]['colors']:
+                    # Check if color is readable
+                    color = visualStates['external-colormaps'][name]['colors'][key]
+                    if not browserHelpers.mplColors.is_color_like(color):
+                        raise ValueError
+                    colorInfo['colors'][float(key)] = color
+                browserHelpers.add_external_colormap_to_combobox(self.cmapCBox, self.colorMapsDictionary, colorInfo)
+                self.externalColorMaps[colorInfo['name']] = browserHelpers.colorInfoToSegmentDataColorMap(colorInfo)
+
+        # Load first view-point properly
+        first_item = self.viewPointListWidget.item(0)
+        self.viewPointListWidget.setCurrentItem(first_item)
+        self.loadViewPoint(first_item)
+
+    def addViewPoint(self):
+        """ Add a new view-point
+        """
+        viewPoint = OrderedDict()
+
+        # Store xrange, yrange and bins, which are same for all the plots
+        viewPoint['xrange'] = self.hiCmapAxes[0].xrange[0]
+        viewPoint['yrange'] = self.hiCmapAxes[0].yrange[0]
+        viewPoint['bins'] = self.binsDisplayed
+        label = ''
+
+        # Store resolution of each map and add resolution as label for view-point
+        for i in range(len(self.hiCmapAxes)):
+            if self.hiCmapAxes[i].resolution is not None:
+                viewPoint['resolution'] = self.hiCmapAxes[i].resolution
+                label += self.hiCmapAxes[i].resolution
+                break
+
+        # Save settings of each map and data-plots as index of each map
+        viewPoint['settings'] = OrderedDict()
+        for i in range(len(self.hiCmapAxes)):
+            viewPoint['settings'][i] = self.hiCmapAxes[i].exportSettingsForLocalViewPoint()
+            #print(viewPoint['settings'][i]['mapName'], viewPoint['settings'][i]['axes-props']['xLabel']['Text'])
+
+        # Construct a label
+        label += '-{0}-{1}-{2}'.format(viewPoint['bins'], viewPoint['xrange'], viewPoint['yrange'])
+
+        # Add index nnumber as suffix. If two label name is same, labels should be always unique
+        idx = 0
+        tmpLabel = label + '-' + str(idx)
+        while True:
+            if tmpLabel in list(self.viewPointsList.keys()):
+                idx += 1
+            else:
+                break
+            tmpLabel = label + '-' + str(idx)
+        label += '-' + str(idx)
+
+        # Add view-points to list-widget and a member dictionary
+        self.viewPointsList[label] = viewPoint
+        self.viewPointListWidget.addItem(label)
+
+    def removeViewPoint(self):
+        """ Remove view point from list and dictionary
+        """
+        item_to_removes = self.viewPointListWidget.selectedItems()
+        if item_to_removes:
+            for item in item_to_removes:
+                self.viewPointsList.pop(item.text())
+                self.viewPointListWidget.takeItem(self.viewPointListWidget.row(item))
+        del item_to_removes
+
+    def loadViewPoint(self, item):
+        """ Load a view point when double-clicked on list-widget
+        """
+        self.status_bar.showMessage('Loading veiw point...')
+
+        viewPoint = self.viewPointsList[item.text()]
+
+        # Construct xrange and yrange
+        xrange = [int(viewPoint['xrange']), int(viewPoint['xrange']) + int(viewPoint['bins'])]
+        yrange = [int(viewPoint['yrange']), int(viewPoint['yrange']) + int(viewPoint['bins'])]
+
+        # Get resolution
+        resolution = None
+        if 'resolution' in viewPoint:
+            resolution = viewPoint['resolution']
+
+        # Change mapname and resolution
+        prev_active_idx = self.ActiveHiCmapAxis
+        for index in viewPoint['settings']:
+            idx = int(index)
+            self.axisTreeWidget.setCurrentItem(self.hiCmapAxes[idx].treeWidgetItem, 0)       # Activate current map
+            self.contactMapNameCBox.setCurrentText(viewPoint['settings'][index]['mapName'])  # Change mapName
+            self.hiCmapAxes[idx].resolution = resolution                                     # Change resolution value
+            self.hiCmapAxes[idx].ccmap.changeResolution(resolution)                          # Change resolution in map
+            self.hiCmapAxes[idx].updatePropsForResolution()                               # Update ticks for resolution
+            # Change resolution of data-plots
+            if self.hiCmapAxes[idx].genomicPlotAxes is not None and resolution is not None:
+                for gpa in self.hiCmapAxes[idx].genomicPlotAxes:
+                    gpa.changeResolution(resolution)
+            self.currentResolutionIndex = self.interchangeableResolutions.index(resolution)  # Store resolution index
+
+        # change xrange and yrange
+        self.changeMapSize(xrange, yrange)
+
+        # Change plot visualization settings
+        for index in viewPoint['settings']:
+            idx = int(index)
+            self.hiCmapAxes[idx].updateLocalViewPoint(viewPoint['settings'][index])
+
+        # revert back active map
+        self.axisTreeWidget.setCurrentItem(self.hiCmapAxes[prev_active_idx].treeWidgetItem, 0)
+
+        self.status_bar.showMessage('Loaded view-point.')
+
 
 class GenomicDataPlotAxis:
 
@@ -2924,6 +3357,34 @@ class GenomicDataPlotAxis:
             self.setDataArray()
 
         dialog.close()
+
+    def loadGenomicDataHdf5(self, filename, dataToBeShowed, plotLocation, filesOpened):
+        """Dialog box to select genomic displayed_dataset
+        A dialog box will be opened and content of hdf5 file will be read.
+        User will have option to select chromosome, resolution and data.
+        If user select dataset, define self.shownDataset and self.plotLocation.
+        It also select data Aarray using setDataArray().
+
+        Overall, calling this method, following variables will be available for use:
+
+            * self.shownDataset
+            * self.plotLocation
+            * self.dataArray
+            * self.ylimit
+            * self.yScaleSteps
+
+        """
+        if filename not in filesOpened:
+            self.hdf5Hand = gmlib.genomicsDataHandler.HDF5Handler(filename)
+            filesOpened[filename] = self.hdf5Hand
+        else:
+            self.hdf5Hand = filesOpened[filename]
+
+        self.hdf5Hand.open()
+        self.shownDataset = dataToBeShowed
+        self.plotLocation = plotLocation
+        self.setDataArray()
+
 
     def readDataFromTextFile(self, filename):
         """Read data from a text file
@@ -3202,19 +3663,85 @@ class GenomicDataPlotAxis:
 
         self.axes_props.set_to_axes()
 
+    def exportAttrsForGlobalViewPoint(self):
+        """ Export constant attribute for this plot as dictionary
+        """
+        data = OrderedDict()
+        if self.hdf5Hand is None:
+            return None
+        data['filename'] = os.path.abspath(self.hdf5Hand.filename)
+        data['coarse-method'] = self.shownDataset[2]
+        data['plotLocation'] = self.plotLocation
+        return data
+
+    def exportSettingsForLocalViewPoint(self):
+        """ Export plot-settings and axes-settings for current view-point
+        """
+        data = OrderedDict()
+        if self.hdf5Hand is None:
+            return None
+        data['plotLineWidth'] = self.plotLineWidth
+        data['plotColorRed'] = self.plotColor[0]
+        data['plotColorGreen'] = self.plotColor[1]
+        data['plotColorBlue'] = self.plotColor[2]
+        data['yscaleSpinbox'] = str(self.yscaleSpinbox)
+        data['ylimit-lower'] = str(self._ylimit[0])
+        data['ylimit-upper'] = str(self._ylimit[1])
+        data['axes-props']  = self.axes_props.exportAttrsAsDict().copy()
+        return data
+
+    def updateLocalViewPoint(self, data):
+        """ Update plot-settings and axes-settings according to input dictionary (view-point)
+        """
+        # AT first activate this plot through treewidget
+        last_tree_widget_item = self.hiCmapAxis.parent.axisTreeWidget.currentItem()
+        self.hiCmapAxis.parent.axisTreeWidget.setCurrentItem(self.treeWidgetItem, 0)
+
+        self.hiCmapAxis.parent.genomicDataLineWidthSpinBox.setValue(float(data['plotLineWidth']))
+
+        # Change plot color
+        color = (float(data['plotColorRed']), float(data['plotColorGreen']), float(data['plotColorBlue']))
+        qcolor = QColor.fromRgb(int(color[0] * 255), int(color[1] * 255), int(color[2] * 255), 255)
+        self.plotColor = color
+        # Set background color of button
+        style = 'background-color: rgb({0}, {1}, {2});'.format(qcolor.red(), qcolor.green(), qcolor.blue())
+        self.hiCmapAxis.parent.genomicDataColorButton.setStyleSheet(style)
+        self.updatePlot()
+
+        # Maximum and minimum value of y-scale
+        self.hiCmapAxis.parent.genomicDataYScalingMaxLineEdit.blockSignals(True)
+        self.hiCmapAxis.parent.genomicDataYScalingMaxLineEdit.setText(data['ylimit-upper'])
+        self.hiCmapAxis.parent.genomicDataYScalingMaxLineEdit.blockSignals(False)
+        self.hiCmapAxis.parent.genomicDataYScalingMinLineEdit.setText(data['ylimit-lower'])
+        self.hiCmapAxis.parent.genomicDataYScalingSpinBox.setValue(float(data['yscaleSpinbox']))
+
+        # Update axis properties
+        self.update_axes_props()
+        self.axes_props.setAttrsFromDict(data['axes-props'])
+        self.update_axes_props()
+        self.hiCmapAxis.parent.canvas.draw()
+
+        # Reset active plot in treewidget
+        self.hiCmapAxis.parent.axisTreeWidget.setCurrentItem(last_tree_widget_item, 0)
+
+
+
 class CCMAPAXIS:
-    def __init__(self, index, ax):
+    def __init__(self, index, ax, parent=None):
         self.index = index                      # Current index to parent instance
         self.ax = ax                            # matplotlib axes instance
+        self.parent = parent                    # main window class
         self.axes_props = None                  # AxesProperties instance
 
         self.fileType = None                    # Type of file loaded ccmap or gcmap
+        self.filename = None                    # Name of file loaded
 
         self.image = None                       # ax.imshow instance
         self.ccmap = None                       # CCMAP instance
         self.mapUnit = '10kb'                   # Unit of map in resolution
         self.resolution = None
         self.title = None                       # title of ccmap
+        self.mapName = None                     # Name of map
         self.xrange = None                      # Current upper and lower limit of x-axis
         self.yrange = None                      # Current upper and lower limit of y-axis
 
@@ -3328,15 +3855,15 @@ class CCMAPAXIS:
         minvalue = None
         maxvalue = None
         if self._colorScaleStatus == 'Logarithm of map':
-            minvalue = np.log(self.colorRangeMinValue)
-            maxvalue = np.log(self.colorRangeMaxValue)
+            minvalue = np.log2(self.colorRangeMinValue)
+            maxvalue = np.log2(self.colorRangeMaxValue)
             self.color_scale_steps = np.linspace(minvalue , maxvalue, 101, endpoint=True)
             self.color_scale_steps = np.linspace(self.color_scale_steps[1] , maxvalue, 101, endpoint=True)
 
         if self._colorScaleStatus == 'Change color logarithmically':
             minvalue = self.colorRangeMinValue
             maxvalue = self.colorRangeMaxValue
-            self.color_scale_steps = np.linspace( np.log(minvalue), np.log(maxvalue), 101, endpoint=True)
+            self.color_scale_steps = np.linspace( np.log2(minvalue), np.log2(maxvalue), 101, endpoint=True)
             self.color_scale_steps = np.exp(self.color_scale_steps)
 
         if self._colorScaleStatus == 'Change color linearly':
@@ -3514,6 +4041,7 @@ class CCMAPAXIS:
         self.yticklabels = None
 
     def set_ccmap(self, path, fileType, mapName=None, resolution=None, filesOpened=None):
+        self.filename = os.path.abspath(path)
         if fileType == 'ccmap':
             self.ccmap = gmlib.ccmap.load_ccmap(path)
             self.fileType = 'ccmap'
@@ -3531,6 +4059,7 @@ class CCMAPAXIS:
 
             self.ccmap = gmlib.gcmap.GCMAP(filesOpened[path], mapName=mapName, resolution=resolution)
             self.fileType = 'gcmap'
+            self.mapName = mapName
 
             # In case if minimum value is zero, change it
             if self.ccmap.minvalue == 0:
@@ -3600,6 +4129,53 @@ class CCMAPAXIS:
         self.vmin = minvalue
         self.vmax = maxvalue
 
+    def save_colorbar(self, cbarType, parentWidget):
+        if cbarType == 'horizontal':
+            size = (5,1)
+        else:
+            size = (1,5)
+        fig = plt.figure(figsize=size)
+        ax = fig.add_subplot(111)
+        cbar = fig.colorbar(self.image, ax, orientation=cbarType)
+
+        if cbarType == 'horizontal':
+            labels = cbar.ax.get_xticklabels()
+        else:
+            labels = cbar.ax.get_yticklabels()
+        for label in labels:
+            label.set_fontsize(18)
+
+        fig.tight_layout()
+
+        ## Save colorbat as file
+        # Get list of all available formats
+        formatGroups = fig.canvas.get_supported_filetypes_grouped()
+
+        # Make full list of formats
+        file_choices = 'Image formats ('
+        for desc in formatGroups:
+            for imgFormat in formatGroups[desc]:
+                file_choices += ' *.{0}'.format(imgFormat)
+        file_choices += ')'
+
+        # Make list format by each category
+        for desc in formatGroups:
+            file_choices += ';;{0} ('.format(desc)
+            for imgFormat in formatGroups[desc]:
+                file_choices += ' *.{0}'.format(imgFormat)
+            file_choices += ')'
+
+        # Just added for any formats
+        file_choices += ";;All formats (*.*)"
+
+        path = QFileDialog.getSaveFileName(parentWidget, 'Save colorbar file', guiHelpers.lastVisitedDir, file_choices)
+        guiHelpers.lastVisitedDir = os.path.dirname(path[0]) if path is not None else False
+
+        if path[0]:
+            fig.savefig(path[0], dpi=300)
+
+        del fig
+
     def makeMapImage(self, replot=False):
         ''' Make image of map for the given range
         '''
@@ -3615,7 +4191,7 @@ class CCMAPAXIS:
         # Change log by masking zero and filled it with minimum value
         if self.colorScaleStatus == 'Logarithm of map':
             minvalue = self.color_scale_steps[0] - (self.color_scale_steps[1] - self.color_scale_steps[0])
-            new_matrix = ma.log(matrix)
+            new_matrix = ma.log2(matrix)
             matrix = new_matrix.filled(minvalue)
 
         if self.image is None:
@@ -3633,6 +4209,8 @@ class CCMAPAXIS:
 
         else:
             self.image.set_data( matrix )
+
+        #self.image.set_rasterized(True)
 
         self.update_axes_props()
 
@@ -3697,6 +4275,82 @@ class CCMAPAXIS:
 
         else:
             self.interchangeableCMapNames = None
+
+    def exportAttrsForGlobalViewPoint(self):
+        """ Export constant attribute for this plot as dictionary
+        """
+        data = OrderedDict()
+        data['fileType'] = self.fileType
+        data['filename'] = self.filename
+        if self.genomicPlotAxes is not None:
+            data['data-files'] = OrderedDict()
+            for i in range(len(self.genomicPlotAxes)):
+                data['data-files'][i] = self.genomicPlotAxes[i].exportAttrsForGlobalViewPoint()
+        return data
+
+    def exportSettingsForLocalViewPoint(self):
+        """ Export plot-settings and axes-settings for current view-point
+        """
+        data = dict()
+        if self.mapName is not None:
+            data['mapName'] = self.mapName
+        data['colorScaleStatus'] = self._colorScaleStatus
+        data['colorRangeMaxValue'] = str(self.colorRangeMaxValue)
+        data['colorRangeMinValue'] = str(self.colorRangeMinValue)
+        data['color_scale_spinbox_value'] = str(self._color_scale_spinbox_value)
+        data['interpolation'] = self._interpolation
+        data['axes-props'] = self.axes_props.exportAttrsAsDict()
+
+        if not isinstance(self._colormap, str):
+            data['external-cmap'] = 1
+            data['colormap'] = self._colormap.name
+        else:
+            data['external-cmap'] = 0
+            data['colormap'] = self._colormap
+
+        if self.genomicPlotAxes is not None:
+            data['data-plots-settings'] = OrderedDict()
+            for i in range(len(self.genomicPlotAxes)):
+                data['data-plots-settings'][i] = self.genomicPlotAxes[i].exportSettingsForLocalViewPoint()
+
+        return data
+
+    def updateLocalViewPoint(self, data):
+        """ Update plot-settings and axes-settings according to input dictionary (view-point)
+        """
+        last_tree_widget_item = self.parent.axisTreeWidget.currentItem()
+        self.parent.axisTreeWidget.setCurrentItem(self.treeWidgetItem, 0)
+
+        # Start updating plot, changing values in GUI updates both GUI and plots simultaneously
+        # Change color scaling type, also resets min, max, slider and spinbox
+        returnPressed = QKeyEvent(QEvent.KeyPress, Qt.Key_Return, Qt.NoModifier)
+        self.parent.colorScaleTypeSelectorComboBox.setCurrentText(data['colorScaleStatus'])
+        self.parent.lineEditMinColorRange.setText(data['colorRangeMinValue']) # change max value in gui and plot
+        self.parent.lineEditMaxColorRange.setText(data['colorRangeMaxValue']) # change min value in gui and plot
+        QCoreApplication.sendEvent(self.parent.lineEditMinColorRange, returnPressed)   # Emulate return-pressed
+        QCoreApplication.sendEvent(self.parent.lineEditMaxColorRange, returnPressed)   # Emulate return-pressed
+        self.parent.color_scale_spin_box.setValue(float(data['color_scale_spinbox_value'])) # spinbox and slider value
+        self.parent.interpolationCBox.setCurrentText(data['interpolation']) # change interpolation
+
+        # Change color map
+        if data['external-cmap'] == 1:
+            if data['colormap'] in self.parent.externalColorMaps:
+                self.parent.cmapCBox.setCurrentText(data['colormap'])
+        else:
+            self.parent.cmapCBox.setCurrentText(data['colormap'])
+
+        # Update axis properties
+        self.update_axes_props()
+        self.axes_props.setAttrsFromDict(data['axes-props'])
+        self.update_axes_props()
+        self.parent.canvas.draw()
+
+        # Update plot-settings and axes-settings for genomic plots
+        if 'data-plots-settings' in data:
+            for i in data['data-plots-settings']:
+                self.genomicPlotAxes[int(i)].updateLocalViewPoint(data['data-plots-settings'][i])
+
+        self.parent.axisTreeWidget.setCurrentItem(last_tree_widget_item, 0)
 
 
 if __name__=="__main__":
