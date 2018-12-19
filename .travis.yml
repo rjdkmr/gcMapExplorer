@@ -33,6 +33,7 @@ env:
     # $PYPIPASSWORD
     secure: qo57dxY6zF76pgz34Qq5a4W0o/ra9hMCAg6xivX7XOehE6vyN/tQkm5V9ZknvXEnwHZDDPu3568Tmdm4D59FtNsOedZHNrtroCKnOZnRZfsWhQYDzK7/7QnlqWBbPRdw9AgdipND3RK85gySsne7SUlDRrF2DRvKefxgeXPysR8URRHDbcCPxFDkdKbpXOEbn2ur8hC1ipKwqxEWkK5fQEmayYkNQOFmnjyRukGoH5JT48QOMJUsDWLfrDq6kpyAI3nk4RNw32tgavOQ28UCefj8gf/JXbsqVq8hW/L4LQLN7eai97hqz3Ew4MsqleDDroY88axTkMJG/dBg55YASs7ZwJYaIMBrryAAmXj+uB4TzDN/uKdZpkPek6WzuLKmcOb7K1WCYuqTPXbEdsJSkKtxz9xFGF9P1/jKFcQK0t+RalvL+i11hGsrkDfNu4xehmdKHzKiyUcH7wxOWc3iG4kbmmYUMY0Ynf+zSCE/GJ2ABRp24k1dfwJnd1WflqhGyIcd3jrzGX7zEI4TWPA/37XYx9S6fG7MdX2vbJliRGxzWWUKXECcSRqZH8bx3gdUeM00zbBS9v7xfYVcu9c3VxhxOz3U5XKzbozeffysOhpRuxMAze6M+fH6pF/Yq335qB699Qm4JctP30itXTH463fpc4L1/kQ+YoRJ16VFjSs=
 
+
 before_install:
   - |
     if [[ $TRAVIS_OS_NAME != 'osx' ]]; then
@@ -188,13 +189,15 @@ after_success:
   # succeed the first time and will be skipped by twine in subsiquent attempts.
   - |
     pip install --upgrade twine
+    export TWINE_USERNAME=rjdkmr
+    export TWINE_PASSWORD=$PYPIPASSWORD
     if [[ $TRAVIS_OS_NAME != 'osx' ]]; then
       pip wheel --no-deps --no-cache-dir -w wheels .
       auditwheel show wheels/*.whl
       auditwheel repair wheels/*.whl
-      twine upload -u rjdkmr -p $PYPIPASSWORD --skip-existing wheelhouse/*
+      twine upload --skip-existing wheelhouse/*
       python setup.py sdist
     else
       python setup.py sdist bdist_wheel
     fi
-    twine upload -u rjdkmr -p $PYPIPASSWORD --skip-existing dist/*
+    twine upload --skip-existing dist/*
