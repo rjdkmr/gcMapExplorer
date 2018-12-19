@@ -51,7 +51,7 @@ setup(
 
     # Required packages
     install_requires = [ 'appdirs>=1.4', 'numpy>=1.6',  'scipy>=0.9', 'matplotlib>=1.1.0', 'dask>=0.7.3',
-                         'toolz>=0.7.4', 'psutil>=5.2.0', 'h5py>=2.2.1', 'Cython>=0.23.0', 'sklearn>=0.19.0' ],
+                         'toolz>=0.7.4', 'psutil>=5.2.0', 'h5py>=2.2.1', 'Cython>=0.23.0', 'scikit-learn>=0.19.0' ],
     #ext_modules = cythonize("gcMapExplorer/lib/*.pyx", compiler_directives={'embedsignature': True}),
     ext_modules = cythonize(ext_modules, compiler_directives={'embedsignature': True}),
     include_dirs=[numpy.get_include()],
