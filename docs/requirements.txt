@@ -6,6 +6,7 @@ dask>=0.7.3
 toolz>=0.7.4
 h5py>=2.2.1
 psutil>=5.2.0
+sklearn>=0.19
 Cython>=0.22.0
 nbsphinx>=0.2.8
 jupyter_client>=4.1.0

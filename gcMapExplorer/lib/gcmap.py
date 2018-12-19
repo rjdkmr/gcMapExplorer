@@ -549,10 +549,10 @@ class GCMAP:
 
         except (KeyboardInterrupt, SystemExit) as e:
             # map might be incomplete, remove it
-            if resolution in self.hdf5[self.groupName]:
-                self.hdf5[self.groupName].pop(resolution)
-            if resolution+'-bNoData' in self.hdf5[self.groupName]:
-                self.hdf5[self.groupName].pop(resolution+'-bNoData')
+            if self.resolution in self.hdf5[self.groupName]:
+                self.hdf5[self.groupName].pop(self.resolution)
+            if self.resolution+'-bNoData' in self.hdf5[self.groupName]:
+                self.hdf5[self.groupName].pop(self.resolution+'-bNoData')
 
             if inputCMap is not None:
                 del inputCMap
@@ -563,10 +563,10 @@ class GCMAP:
 
         except Exception as e:
             # map might be incomplete, remove it
-            if resolution in self.hdf5[self.groupName]:
-                self.hdf5[self.groupName].pop(resolution)
-            if resolution+'-bNoData' in self.hdf5[self.groupName]:
-                self.hdf5[self.groupName].pop(resolution+'-bNoData')
+            if self.resolution in self.hdf5[self.groupName]:
+                self.hdf5[self.groupName].pop(self.resolution)
+            if self.resolution+'-bNoData' in self.hdf5[self.groupName]:
+                self.hdf5[self.groupName].pop(self.resolution+'-bNoData')
 
             if inputCMap is not None:
                 del inputCMap
@@ -739,7 +739,7 @@ def loadGCMapAsCCMap(filename, mapName=None, chromAtX=None, chromAtY=None, resol
     elif isinstance(filename, h5py.File):
         hdf5 = filename
     else:
-        raise TypeError ('{0} is not a gcmap file or h5py.File instance'.format(hdf5))
+        raise TypeError ('{0} is not a gcmap file or h5py.File instance'.format(filename))
 
     # Working and output directory
     if workDir is None:
@@ -884,7 +884,7 @@ def addCCMap2GCMap(cmap, filename, scaleoffset=None, compression='lzf', generate
         hdf5 = filename
         filename = hdf5.filename
     else:
-        raise TypeError ('{0} is not a gcmap file or h5py.File instance'.format(hdf5))
+        raise TypeError ('{0} is not a gcmap file or h5py.File instance'.format(filename))
 
     cmap.make_readable()
 

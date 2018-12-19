@@ -594,8 +594,8 @@ def export_cmap(ccmap, outfile, doNotWriteZeros=True):
                 if doNotWriteZeros:
                     if ccmap.matrix[i][j] != 0:
                         fout.write('{0}\t{1}\t{2}\n'.format(i, j, ccmap.matrix[i][j] ))
-                    else:
-                        fout.write('{0}\t{1}\t{2}\n'.format(i, j, ccmap.matrix[i][j] ))
+                else:
+                    fout.write('{0}\t{1}\t{2}\n'.format(i, j, ccmap.matrix[i][j] ))
 
     except (SystemExit, KeyboardInterrupt) as e:
         del ccmap

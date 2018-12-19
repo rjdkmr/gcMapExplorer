@@ -30,8 +30,8 @@ matrix:
 
 env:
   global:
-    # PYPIPASSWORD=...
-    - secure: "eAreGa6ZBtzasZrZp32Hac3oxO+dmC2noOM+kcJA39yla4sQqdXCF0kot1VWuUXnbQ22khyGa68Rm59+pmlpExdNKikMWwm2j+DiRMJh/BimuwcXSG5Fw0rfSYmyL88QDdklBk0kzeXNdicjoKC8Ka+aiPraQ+OKhyyyKvj4Q6EMRvtd/YFg5R2xVucySHWxdvZX7ryJQIxUUN4me0mcGYZ61/W0ErGrpwk0+FcJA0TYZtyBD4CUvNdXgl0D+Wl0mAsh2bN0forMpr4U9pqoN8AUx4+1YNuQ9njh0fn/9zvQsTSPIwYsiEBbbtefKl+z3ucbTuvj1Kkgxo5ahdEyr5GBLc7gYyh9HMK4bqqSWg3bnkkpfpqM1pLvr3pZWiw1DLSRYKpahUQLwRnXtLaMVN+J4IJeg/1KkxOhbLUi6ahls0sXXLbxRMnWyaPFWiUsS4dU+diiec1csW0mwMSOeXgODaszY+3ZOLUtOdKoGU/CTYmrzYZRaMuB45XVECBMy8QExSP64HGvtVi3LtypK2J/B//fTkKc30WVICrrsBalY0DjgedrSzgAriVOAwsSzxtXYbCPHOrJ4lzJwU4ikAUPJyLCRJ+gb2GLgC+unNfj5etfJGPG95a+AEyFFepFHEJNtnOQTmy7MIGCCHkp+JTo+qe9b/yjCpGoBvO6f2Y="
+    # $PYPIPASSWORD
+    secure: qo57dxY6zF76pgz34Qq5a4W0o/ra9hMCAg6xivX7XOehE6vyN/tQkm5V9ZknvXEnwHZDDPu3568Tmdm4D59FtNsOedZHNrtroCKnOZnRZfsWhQYDzK7/7QnlqWBbPRdw9AgdipND3RK85gySsne7SUlDRrF2DRvKefxgeXPysR8URRHDbcCPxFDkdKbpXOEbn2ur8hC1ipKwqxEWkK5fQEmayYkNQOFmnjyRukGoH5JT48QOMJUsDWLfrDq6kpyAI3nk4RNw32tgavOQ28UCefj8gf/JXbsqVq8hW/L4LQLN7eai97hqz3Ew4MsqleDDroY88axTkMJG/dBg55YASs7ZwJYaIMBrryAAmXj+uB4TzDN/uKdZpkPek6WzuLKmcOb7K1WCYuqTPXbEdsJSkKtxz9xFGF9P1/jKFcQK0t+RalvL+i11hGsrkDfNu4xehmdKHzKiyUcH7wxOWc3iG4kbmmYUMY0Ynf+zSCE/GJ2ABRp24k1dfwJnd1WflqhGyIcd3jrzGX7zEI4TWPA/37XYx9S6fG7MdX2vbJliRGxzWWUKXECcSRqZH8bx3gdUeM00zbBS9v7xfYVcu9c3VxhxOz3U5XKzbozeffysOhpRuxMAze6M+fH6pF/Yq335qB699Qm4JctP30itXTH463fpc4L1/kQ+YoRJ16VFjSs=
 
 before_install:
   - |
@@ -150,6 +150,7 @@ install:
     pip install --upgrade scipy
     pip install --upgrade matplotlib
     pip install --upgrade h5py
+    pip install --upgrade sklearn
 
     if [[ $TRAVIS_OS_NAME != 'osx' ]]; then
       pip install auditwheel
@@ -176,8 +177,11 @@ after_success:
     echo "index-servers ="                             >> ~/.pypirc
     echo "    pypi"                                    >> ~/.pypirc
     echo "[pypi]"                                      >> ~/.pypirc
-    echo "username=rjdkmr"                             >> ~/.pypirc
-    echo "password=$PYPIPASSWORD"                      >> ~/.pypirc
+    echo "    username: rjdkmr"                         >> ~/.pypirc
+    echo "    password: $PYPIPASSWORD"                  >> ~/.pypirc
+    echo "[server-login]"                              >> ~/.pypirc
+    echo "    username: rjdkmr"                         >> ~/.pypirc
+    echo "    password: $PYPIPASSWORD"                  >> ~/.pypirc
 
   # For OS X and tags only, build a Python source distribution and "binary
   # wheel" and upload these to PyPI. Note that the source upload will only
@@ -188,9 +192,9 @@ after_success:
       pip wheel --no-deps --no-cache-dir -w wheels .
       auditwheel show wheels/*.whl
       auditwheel repair wheels/*.whl
-      twine upload --skip-existing wheelhouse/*
+      twine upload -u rjdkmr -p $PYPIPASSWORD --skip-existing wheelhouse/*
       python setup.py sdist
     else
       python setup.py sdist bdist_wheel
     fi
-    twine upload --skip-existing dist/*
+    twine upload -u rjdkmr -p $PYPIPASSWORD --skip-existing dist/*
