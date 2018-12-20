@@ -29,10 +29,10 @@ from os import path
 from Cython.Build import cythonize
 import numpy
 
-here = path.abspath(path.dirname(__file__))
+this_directory = path.abspath(path.dirname(__file__))
 
-def read(fname):
-    return open(path.join(path.dirname(__file__), fname)).read()
+with open(path.join(this_directory, 'README.rst'), encoding='utf-8') as f:
+    long_description = f.read()
 
 exec(open('gcMapExplorer/_version.py').read())
 
@@ -71,7 +71,8 @@ setup(
     author_email = "rjdkmr@gmail.com",
     url = 'https://github.com/rjdkmr/gcMapExplorer',
     description = "A platform to visualize and analyze genome contact maps",
-    long_description = read('README.rst'),
+    long_description = long_description,
+    long_description_content_type = 'text/x-rst',
     keywords = ["Hi-C", "Genome Contact Map Explorer", "Contact Map Explorer", "3D Genome Organization"],
     license = 'GNU General Public License v3 (GPLv3)',
     classifiers = [
