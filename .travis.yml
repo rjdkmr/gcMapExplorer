@@ -180,9 +180,6 @@ after_success:
     echo "[pypi]"                                      >> ~/.pypirc
     echo "    username: rjdkmr"                         >> ~/.pypirc
     echo "    password: $PYPIPASSWORD"                  >> ~/.pypirc
-    echo "[server-login]"                              >> ~/.pypirc
-    echo "    username: rjdkmr"                         >> ~/.pypirc
-    echo "    password: $PYPIPASSWORD"                  >> ~/.pypirc
 
   # For OS X and tags only, build a Python source distribution and "binary
   # wheel" and upload these to PyPI. Note that the source upload will only
@@ -195,9 +192,9 @@ after_success:
       pip wheel --no-deps --no-cache-dir -w wheels .
       auditwheel show wheels/*.whl
       auditwheel repair wheels/*.whl
-      twine upload --skip-existing wheelhouse/*
+      twine upload -u rjdkmr -p $PYPIPASSWORD --skip-existing wheelhouse/*
       python setup.py sdist
     else
       python setup.py sdist bdist_wheel
     fi
-    twine upload --skip-existing dist/*
+    twine upload -u rjdkmr -p $PYPIPASSWORD --skip-existing dist/*
