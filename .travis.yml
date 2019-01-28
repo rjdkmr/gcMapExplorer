@@ -12,19 +12,59 @@ python:
   - 3.6
 
 matrix:
+  exclude:
+  - os: osx
+    python: 3.4
+  - os: osx
+    python: 3.5
+  - os: osx
+    python: 3.6
   include:
     - os: osx
       python: 3.4
       language: generic
       env: TOXENV=py34
+      osx_image: xcode10.1
     - os: osx
       python: 3.5
       language: generic
       env: TOXENV=py35
+      osx_image: xcode10.1
     - os: osx
       python: 3.6
       language: generic
       env: TOXENV=py36
+      osx_image: xcode10.1
+    - os: osx
+      python: 3.4
+      language: generic
+      env: TOXENV=py34
+      osx_image: xcode9.2
+    - os: osx
+      python: 3.5
+      language: generic
+      env: TOXENV=py35
+      osx_image: xcode9.2
+    - os: osx
+      python: 3.6
+      language: generic
+      env: TOXENV=py36
+      osx_image: xcode9.2
+    - os: osx
+      python: 3.4
+      language: generic
+      env: TOXENV=py34
+      osx_image: xcode8
+    - os: osx
+      python: 3.5
+      language: generic
+      env: TOXENV=py35
+      osx_image: xcode8
+    - os: osx
+      python: 3.6
+      language: generic
+      env: TOXENV=py36
+      osx_image: xcode8
   allow_failures:
     - os: osx
 
@@ -156,8 +196,6 @@ install:
       pip install auditwheel
     else
       pip install --upgrade coverage coveralls flake8 pep8
-      export CC=gcc
-      export CXX=g++
       pip install psutil
       export CC=gcc-5
       export CXX=g++-5
