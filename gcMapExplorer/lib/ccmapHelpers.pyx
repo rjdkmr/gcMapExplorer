@@ -207,7 +207,7 @@ def get_nonzeros_index(matrix, threshold_percentile=None, threshold_data_occup=N
 		raise AssertionError("Both 'threshold_percentile' and 'threshold_count_ratio' cannot be used simultaneously!")
 
 	# Make false if number of zeros is less than threshold
-	if threshold_percentile is not None:
+	if threshold_percentile is not None and zero_count.any():
 		percentile = np.percentile(zero_count[zero_count != 0], threshold_percentile)
 		# print( (zero_count==0).sum(), zero_count.shape, percentile,  np.amin(zero_count[zero_count > 0]), np.amax(zero_count))
 		for i in range(mx):
@@ -220,7 +220,7 @@ def get_nonzeros_index(matrix, threshold_percentile=None, threshold_data_occup=N
 					#print(i, zero_count[i], percentile)
 
 	# Make false if number of zeros is less than threshold
-	if threshold_data_occup is not None:
+	if threshold_data_occup is not None and zero_count.any():
 		for i in range(mx):
 			if bData[i]:
 				if zero_count[i]/mx >=  (1.0 - threshold_data_occup):
