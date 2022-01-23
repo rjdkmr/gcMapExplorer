@@ -986,10 +986,10 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
         while i < len(self.hiCmapAxes):
             if i == 0:
                 ax = self.figure.add_subplot(1, mid_idx, i+1)
-                ax.set_aspect('equal', 'box-forced')
+                ax.set_aspect('equal', 'box')
             else:
                 ax = self.figure.add_subplot(1, mid_idx, i+1, sharey=self.hiCmapAxes[0].ax)
-                ax.set_aspect('equal', 'box-forced')
+                ax.set_aspect('equal', 'box')
             self.hiCmapAxes[i].update_axes(ax) # Replotted both ccmap and any subplots here
             self.ActiveHiCmapAxis = i
             i = i+1
@@ -1236,13 +1236,13 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
                         Therefore, for first one, axes is generated differently.
                     '''
                     ax = self.figure.add_subplot(1, mid_idx, i+1)
-                    ax.set_aspect('equal', 'box-forced')
+                    ax.set_aspect('equal', 'box')
                     ax.set_xlim(0, self.binsDisplayed)
                 else:
                     ''' Other axes-plots share its axis with first plot.
                     '''
                     ax = self.figure.add_subplot(1, mid_idx, i+1, sharey=self.hiCmapAxes[0].ax)
-                    ax.set_aspect('equal', 'box-forced')
+                    ax.set_aspect('equal', 'box')
                     ax.set_xlim(0, self.binsDisplayed)
 
                 # Update axes_props object with new axes object. Also, plot is updated here
@@ -1251,7 +1251,7 @@ class Main(QMainWindow, Ui_MainWindow, GenomicDataSetSubPlotHelper):
 
             # Add new axes object for new ccmap
             ax = self.figure.add_subplot(1, mid_idx, i+1, sharey=self.hiCmapAxes[0].ax)
-            ax.set_aspect('equal', 'box-forced')
+            ax.set_aspect('equal', 'box')
             self.hiCmapAxes.append(CCMAPAXIS(i, ax, parent=self))
 
             # generate title
